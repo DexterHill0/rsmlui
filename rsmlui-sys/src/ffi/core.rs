@@ -2,7 +2,7 @@
 mod ffi {
 
     unsafe extern "C++" {
-        include!("rsmlui-sys/include/Core.h");
+        include!("rsmlui/Core.h");
 
         fn get_version() -> String;
     }

@@ -1,6 +1,6 @@
 #include <RmlUi/Core/Core.h>
 
-#include "rsmlui-sys/include/Core.h"
+#include "rsmlui/Core.h"
 
 namespace rsmlui {
 rust::String get_version() {

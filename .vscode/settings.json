@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "${workspaceFolder}/rsmlui-sys"
+    "cmake.sourceDirectory": "${workspaceFolder}/rsmlui-sys",
+    "clangd.arguments": [
+        "--compile-commands-dir=${workspaceFolder}/rsmlui-sys"
+    ]
 }

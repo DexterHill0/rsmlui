@@ -1,5 +1,5 @@
 #pragma once
-#include "Common.h"
+#include "rust/cxx.h"
 
 namespace rsmlui {
 rust::String get_version();

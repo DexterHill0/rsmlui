@@ -1,38 +1,43 @@
 cmake_minimum_required(VERSION 3.22)
-project(rsmlui_sys_lib)
+project(rsmlui-sys-lib)
 
-include(cmake/CPM.cmake)
+add_subdirectory(RmlUi RmlUi-build EXCLUDE_FROM_ALL)
 
-set(CARGO_TARGET_DIR ${CMAKE_SOURCE_DIR}/target)
-set(CXX_BRIDGE_DIR ${CARGO_TARGET_DIR}/cxxbridge)
+if(NOT DEFINED RMLUI_OUTPUT_NAME)
+    message(FATAL_ERROR "RMLUI_OUTPUT_NAME must be set")
+endif()
 
-add_library(${PROJECT_NAME} STATIC dummy.cpp)
+if(NOT DEFINED RSMLUI_SYS_LIB_NAME)
+    message(FATAL_ERROR "RSMLUI_SYS_LIB_NAME must be set")
+endif()
 
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/rsmlui_config.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/rsmlui_config.h
+if(NOT DEFINED RSMLUI_CXX_INCLUDE_DIR)
+    message(FATAL_ERROR "RSMLUI_CXX_INCLUDE_DIR must be set")
+endif()
+
+# build the cpp files so theyre included in intellisense
+file(GLOB_RECURSE RSMLUI_CXX_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/cxx/*.cpp"
 )
 
-CPMAddPackage(
-    NAME RmlUi
-    GIT_TAG 6.1
-    GITHUB_REPOSITORY mikke89/RmlUi
-    OPTIONS "BUILD_SHARED_LIBS OFF" "RMLUI_STATIC_LIB" "RMLUI_FONT_ENGINE none" "RMLUI_DEBUG" "RMLUI_NO_THIRDPARTY_CONTAINERS" "RMLUI_DISABLE_INCLUDE_WINDOWS" "UNICODE" "_UNICODE" "WIN32_LEAN_AND_MEAN"
+add_library(${RSMLUI_SYS_LIB_NAME} STATIC ${RSMLUI_CXX_SRCS})
+
+target_link_libraries(${RSMLUI_SYS_LIB_NAME} PUBLIC RmlUi::RmlUi)
+
+target_include_directories(${RSMLUI_SYS_LIB_NAME} 
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/RmlUi/Include
+        ${RSMLUI_CXX_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC RmlUi::RmlUi)
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC user32)
+    target_link_libraries(${RSMLUI_SYS_LIB_NAME} PUBLIC user32)
     set_target_properties(
-        ${PROJECT_NAME} 
+        ${RSMLUI_SYS_LIB_NAME}
         PROPERTIES
         MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
     )
 endif()
-
-target_include_directories(${PROJECT_NAME} PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CXX_BRIDGE_DIR}/rust
-    ${CMAKE_SOURCE_DIR}
-)
