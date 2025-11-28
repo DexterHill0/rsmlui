@@ -1,0 +1,10 @@
+#pragma once
+#define BUILD_SHARED_LIBS false
+#define RMLUI_STATIC_LIB true
+#define RMLUI_FONT_ENGINE "none"
+#define RMLUI_DEBUG true
+#define RMLUI_NO_THIRDPARTY_CONTAINERS true
+#define RMLUI_DISABLE_INCLUDE_WINDOWS true
+#define UNICODE true
+#define _UNICODE true
+#define WIN32_LEAN_AND_MEAN true

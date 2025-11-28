@@ -1,0 +1,12 @@
+[package]
+name = "rsmlui-sys"
+version = "0.1.0"
+edition = "2024"
+
+[build-dependencies]
+cmake = "0.1"
+bindgen = "0.72.0"
+cxx-build = "1.0"
+
+[dependencies]
+cxx = "1.0"

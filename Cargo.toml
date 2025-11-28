@@ -1,0 +1,3 @@
+[workspace]
+members = ["rsmlui", "rsmlui-sys"]
+resolver = "3"
