@@ -5,13 +5,18 @@ if(NOT DEFINED RSMLUI_SYS_LIB_NAME)
     message(FATAL_ERROR "RSMLUI_SYS_LIB_NAME must be set")
 endif()
 
-# build the cpp files so theyre included in intellisense
-file(GLOB_RECURSE RSMLUI_CXX_SRCS
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/cxx/*.cpp"
+# create a dummy cpp file with all the headers for intellisense purposes
+file(GLOB_RECURSE RSMLUI_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/rsmlui/*.h"
 )
 
+file(REMOVE "dummy_source.cpp")
+foreach(filename ${RSMLUI_HEADERS})
+    file(APPEND "dummy_source.cpp" "#include \"${filename}\"")
+endforeach(filename)
+
 # make a dummy library for the intellisense
-add_library(${RSMLUI_SYS_LIB_NAME} STATIC ${RSMLUI_CXX_SRCS})
+add_library(${RSMLUI_SYS_LIB_NAME} STATIC dummy_source.cpp)
 
 # include freetype if requested. variable is set in build.rs
 if (DEFINED RMLUI_FONT_ENGINE AND "${RMLUI_FONT_ENGINE}" STREQUAL "freetype")

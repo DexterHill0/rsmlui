@@ -1,3 +1,10 @@
+use cxx::{type_id, ExternType};
+
+unsafe impl ExternType for crate::Rml_Input_KeyIdentifier {
+    type Id = type_id!("rsmlui::KeyIdentifier");
+    type Kind = cxx::kind::Trivial;
+}
+
 #[cxx::bridge(namespace = "rsmlui")]
 mod ffi {
     unsafe extern "C++" {
@@ -6,6 +13,8 @@ mod ffi {
         type Context = crate::context::Context;
         type SystemInterface;
         type RenderInterface;
+
+        type KeyIdentifier = crate::Rml_Input_KeyIdentifier;
 
         fn initialize(window_name: String, width: i32, height: i32, allow_resize: bool) -> bool;
         fn shutdown();
@@ -17,7 +26,7 @@ mod ffi {
             context: *mut Context,
             key_down_callback: unsafe fn(
                 context: *mut Context,
-                key: i32,
+                key: KeyIdentifier,
                 key_modifier: i32,
                 native_dp_ratio: f32,
                 priority: bool,
@@ -30,20 +39,6 @@ mod ffi {
         fn begin_frame();
         fn present_frame();
     }
-
-    unsafe extern "C++" {
-        type KeyDownCallback;
-    }
-
-    // extern "Rust" {
-    //     fn my_key_down_callback(
-    //         context: *mut Context,
-    //         key: i32, // TODO Rml::Input::KeyIdentifier enum?
-    //         key_modifier: i32,
-    //         native_dp_ratio: f32,
-    //         priority: bool,
-    //     ) -> bool;
-    // }
 }
 
 pub use ffi::*;

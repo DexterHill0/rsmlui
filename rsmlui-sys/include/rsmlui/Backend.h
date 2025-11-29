@@ -36,7 +36,7 @@ inline auto process_events(
     Context* context,
     rust::Fn<bool(
         Context* ctx,
-        int32_t key,
+        KeyIdentifier key,
         int32_t key_modifier,
         float native_dp_ratio,
         bool priority
@@ -53,7 +53,7 @@ inline auto process_events(
            bool priority) -> bool {
         return stored_rust_callback(
             ctx,
-            static_cast<int32_t>(key),
+            key,
             key_modifier,
             native_dp_ratio,
             priority
