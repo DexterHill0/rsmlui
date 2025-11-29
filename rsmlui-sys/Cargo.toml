@@ -7,6 +7,17 @@ edition = "2024"
 cmake = "0.1"
 bindgen = "0.72.0"
 cxx-build = "1.0"
+cc = "1.0"
 
 [dependencies]
 cxx = "1.0"
+
+[features]
+default = ["freetype"]
+
+cosmic-text = []
+freetype = []
+
+backend-win32-gl2 = ["renderer-gl2", "platform-win32"]
+platform-win32 = []
+renderer-gl2 = []

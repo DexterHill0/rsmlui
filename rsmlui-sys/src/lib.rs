@@ -1,4 +1,5 @@
-// pub mod bindings;
-// pub mod ffi;
+mod bindings;
+mod ffi;
 
-pub fn test_lib() {}
+pub use bindings::*;
+pub use ffi::*;

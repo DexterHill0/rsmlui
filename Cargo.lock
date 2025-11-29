@@ -324,6 +324,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "raw"
+version = "0.1.0"
+dependencies = [
+ "rsmlui-sys",
+]
+
+[[package]]
 name = "regex"
 version = "1.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -361,6 +368,7 @@ name = "rsmlui-sys"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "cc",
  "cmake",
  "cxx",
  "cxx-build",

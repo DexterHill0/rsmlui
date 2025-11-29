@@ -1,0 +1,26 @@
+<rml>
+<head>
+<title>Demo Sample</title>
+<style>
+    rml, body {
+        width: 100%;
+        height: 100%;
+        background: white;
+    }
+    
+    div {
+        display: block;
+        width: 200px;
+        height: 200px;
+        background: red;
+        cursor: pointer;
+    }
+</style>
+</head>
+
+<body >
+
+    <div>rdfgdfgfgsdsfgddrg</div>
+
+</body>
+</rml>

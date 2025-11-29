@@ -1,0 +1,11 @@
+[package]
+name = "raw"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rsmlui-sys = { path = "../../rsmlui-sys", features = [
+    "freetype",
+    "renderer-gl2",
+    "backend-win32-gl2",
+] }
