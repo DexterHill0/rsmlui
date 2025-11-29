@@ -2,8 +2,8 @@
 mod ffi {
     #[namespace = "Rml"]
     unsafe extern "C++" {
-        type SystemInterface = crate::ffi::backend::SystemInterface;
-        type RenderInterface = crate::ffi::backend::RenderInterface;
+        type SystemInterface = crate::ffi::system_interface::SystemInterface;
+        type RenderInterface = crate::ffi::render_interface::RenderInterface;
 
         type Context = crate::context::Context;
     }

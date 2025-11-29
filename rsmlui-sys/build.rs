@@ -119,12 +119,18 @@ fn main() {
         .allowlist_type("Rml::ClipMaskOperation")
         .allowlist_type("Rml::BlendMode")
         .allowlist_type("Rml::Vertex")
+        .allowlist_type("Rml::Vector2f")
+        .allowlist_type("Rml::Vector2i")
+        .allowlist_type("Rml::Log_Type")
         .allowlist_var("")
         .allowlist_function("")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: true,
         })
         .translate_enum_integer_types(true)
+        .respect_cxx_access_specs(true)
+        .flexarray_dst(true)
+        .raw_line("#![allow(unused_variables, non_camel_case_types)]")
         .clang_args(
             DEFINTIONS
                 .iter()
@@ -143,7 +149,8 @@ fn main() {
     // used for intellisense
     let mut bridge = cxx_build::bridges(&[
         "src/ffi/core.rs",
-        "src/ffi/renderer.rs",
+        "src/ffi/render_interface.rs",
+        "src/ffi/system_interface.rs",
         "src/ffi/backend.rs",
         "src/ffi/context.rs",
         "src/ffi/element_document.rs",

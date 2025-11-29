@@ -17,8 +17,8 @@ mod ffi {
 
     extern "C++" {
         type Context = crate::context::Context;
-        type SystemInterface;
-        type RenderInterface = crate::renderer::RenderInterface;
+        type SystemInterface = crate::system_interface::SystemInterface;
+        type RenderInterface = crate::render_interface::RenderInterface;
     }
 
     #[namespace = "rsmlui::backend"]
