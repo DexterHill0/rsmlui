@@ -1,29 +1,27 @@
 cmake_minimum_required(VERSION 3.22)
 project(rsmlui-sys-lib)
 
+
 if(NOT DEFINED RSMLUI_SYS_LIB_NAME)
     message(FATAL_ERROR "RSMLUI_SYS_LIB_NAME must be set")
 endif()
 
-# create a dummy cpp file with all the headers for intellisense purposes
-file(GLOB_RECURSE RSMLUI_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/rsmlui/*.h"
-)
+if(NOT DEFINED RSMLUI_DUMMY_SOURCES_DIR)
+    message(FATAL_ERROR "RSMLUI_DUMMY_SOURCES_DIR must be set")
+endif()
 
-file(REMOVE "dummy_source.cpp")
-foreach(filename ${RSMLUI_HEADERS})
-    file(APPEND "dummy_source.cpp" "#include \"${filename}\"")
-endforeach(filename)
+
+set(SOURCES_NORMAL "")
+cmake_path(NORMAL_PATH RSMLUI_DUMMY_SOURCES_DIR OUTPUT_VARIABLE SOURCES_NORMAL)
+# create a dummy cpp file with all the headers for intellisense purposes
+file(GLOB_RECURSE RSMLUI_SOURCES "${SOURCES_NORMAL}/*.cpp")
 
 # make a dummy library for the intellisense
-add_library(${RSMLUI_SYS_LIB_NAME} STATIC dummy_source.cpp)
+add_library(${RSMLUI_SYS_LIB_NAME} STATIC ${RSMLUI_SOURCES})
 
 # include freetype if requested. variable is set in build.rs
 if (DEFINED RMLUI_FONT_ENGINE AND "${RMLUI_FONT_ENGINE}" STREQUAL "freetype")
     include(cmake/FetchFreetype.cmake)
-    
-    message("BINARY DIR ${freetype_BINARY_DIR}")
-    message("INCLUDe DIR ${freetype_SOURCE_DIR}")
 
     set(Freetype_ROOT "${freetype_BINARY_DIR}" CACHE PATH "")
     set(FREETYPE_INCLUDE_DIRS "${freetype_SOURCE_DIR}/include" CACHE PATH "")
@@ -47,6 +45,6 @@ target_include_directories(${RSMLUI_SYS_LIB_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/RmlUi/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/RmlUi/Backends
         ${RSMLUI_CXX_INCLUDE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${CMAKE_CURRENT_BINARY_DIR}
 )

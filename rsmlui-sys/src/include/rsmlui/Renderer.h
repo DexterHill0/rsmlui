@@ -1,7 +1,6 @@
 #pragma once
 #include <RmlUi/Core/RenderInterface.h>
 
-#include "rsmlui/Types.h"
 #include "rust/cxx.h"
 
 namespace rsmlui {
