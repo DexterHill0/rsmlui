@@ -1,20 +1,29 @@
 use cxx::{type_id, ExternType};
 
 unsafe impl ExternType for crate::Rml_Input_KeyIdentifier {
-    type Id = type_id!("rsmlui::KeyIdentifier");
+    type Id = type_id!("Rml::Input::KeyIdentifier");
     type Kind = cxx::kind::Trivial;
 }
 
-#[cxx::bridge(namespace = "rsmlui")]
+#[cxx::bridge]
 mod ffi {
-    unsafe extern "C++" {
-        include!("rsmlui/Backend.h");
 
+    #[namespace = "Rml::Input"]
+    extern "C++" {
+        type KeyIdentifier = crate::Rml_Input_KeyIdentifier;
+    }
+
+    #[namespace = "Rml"]
+
+    extern "C++" {
         type Context = crate::context::Context;
         type SystemInterface;
-        type RenderInterface;
+        type RenderInterface = crate::renderer::RenderInterface;
+    }
 
-        type KeyIdentifier = crate::Rml_Input_KeyIdentifier;
+    #[namespace = "rsmlui::backend"]
+    unsafe extern "C++" {
+        include!("rsmlui/Backend.h");
 
         fn initialize(window_name: String, width: i32, height: i32, allow_resize: bool) -> bool;
         fn shutdown();

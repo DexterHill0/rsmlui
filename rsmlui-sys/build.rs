@@ -91,11 +91,6 @@ fn main() {
         "src/ffi/element_document.rs",
     ]);
     let bridge = bridge
-        // .file("src/cxx/Core.cpp")
-        // .file("src/cxx/Backend.cpp")
-        // .file("src/cxx/Renderer.cpp")
-        // .file("src/cxx/Context.cpp")
-        // .file("src/cxx/ElementDocument.cpp")
         .flag_if_supported("/std:c++20")
         .include(&cxx_include_dir)
         .include("./include")

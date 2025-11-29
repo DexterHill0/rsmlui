@@ -21,6 +21,9 @@ fn main() {
     let context = core::create_context("main".into(), 800, 600);
 
     if context.is_null() {
+        core::shutdown();
+        backend::shutdown();
+
         panic!("failed to create context!");
     }
 
@@ -32,6 +35,9 @@ fn main() {
     };
 
     if document.is_null() {
+        core::shutdown();
+        backend::shutdown();
+
         panic!("failed to create document!");
     }
 
@@ -67,4 +73,7 @@ fn main() {
 
         backend::present_frame();
     }
+
+    core::shutdown();
+    backend::shutdown();
 }

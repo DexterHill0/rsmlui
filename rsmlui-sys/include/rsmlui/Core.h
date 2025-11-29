@@ -3,11 +3,6 @@
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/Math.h>
 
-#include <cstdint>
-#include <cstdio>
-#include <memory>
-
-#include "rsmlui/Types.h"
 #include "rust/cxx.h"
 
 namespace rsmlui {
@@ -21,17 +16,21 @@ inline auto initialise() -> bool {
     return Rml::Initialise();
 }
 
+inline void shutdown() {
+    Rml::Shutdown();
+}
+
 // TODO: vectors
 inline auto create_context(rust::String name, int width, int height)
-    -> Context* {
+    -> Rml::Context* {
     return Rml::CreateContext(name.c_str(), {width, height});
 }
 
-inline void set_system_interface(SystemInterface* system_interface) {
+inline void set_system_interface(Rml::SystemInterface* system_interface) {
     Rml::SetSystemInterface(system_interface);
 }
 
-inline void set_render_interface(RenderInterface* render_interface) {
+inline void set_render_interface(Rml::RenderInterface* render_interface) {
     Rml::SetRenderInterface(render_interface);
 }
 } // namespace rsmlui

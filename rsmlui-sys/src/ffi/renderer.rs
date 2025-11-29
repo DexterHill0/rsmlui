@@ -1,15 +1,19 @@
 use crate::bindings::Rml_Vertex;
 
-#[cxx::bridge(namespace = "rsmlui::render_interface")]
+#[cxx::bridge]
 mod ffi {
     extern "Rust" {
         type Rml_Vertex;
     }
 
+    #[namespace = "Rml"]
+    extern "C++" {
+        type RenderInterface;
+    }
+
+    #[namespace = "rsmlui::render_interface"]
     unsafe extern "C++" {
         include!("rsmlui/Renderer.h");
-
-        // type RenderInterface;
 
         // // Opaque placeholder types
         // type Vector2f;
@@ -110,3 +114,5 @@ mod ffi {
         // unsafe fn render_interface_release_shader(ri: *mut RenderInterface, shader: usize);
     }
 }
+
+pub use ffi::*;

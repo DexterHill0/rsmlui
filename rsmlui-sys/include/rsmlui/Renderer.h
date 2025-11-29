@@ -6,8 +6,6 @@
 
 namespace rsmlui {
 namespace render_interface {
-    using namespace rsmlui;
-
     // inline auto render_interface_compile_geometry(
     //     RenderInterface* interface,
     //     Span<const Vertex> vertices,
