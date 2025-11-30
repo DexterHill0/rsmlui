@@ -1,12 +1,12 @@
 use glam::IVec2;
-use rsmlui_sys::utils::IntoPtr;
 
 use crate::{
     core::context::Context,
     errors::RsmlUiError,
     interfaces::{
-        renderer::{IntoRenderInterfacePtr, RenderInterface, RenderInterfaceExtAdapter},
-        system::{IntoSystemInterfacePtr, SystemInterface, SystemInterfaceExtAdapter},
+        backend::{Backend, BackendGuard},
+        renderer::IntoRenderInterfacePtr,
+        system::IntoSystemInterfacePtr,
     },
     utils::conversions::IntoSys,
 };
@@ -50,6 +50,16 @@ impl RsmlUi {
 
     pub fn set_render_interface<R: IntoRenderInterfacePtr>(&mut self, render_interface: R) {
         unsafe { rsmlui_sys::core::set_render_interface(render_interface.into_ptr()) }
+    }
+
+    pub fn use_backend<B: Backend>(&mut self, backend: &mut BackendGuard<B>) {
+        if let Some(render_interface) = backend.get_render_interface() {
+            self.set_render_interface(render_interface);
+        }
+
+        if let Some(system_interface) = backend.get_system_interface() {
+            self.set_system_interface(system_interface);
+        }
     }
 }
 

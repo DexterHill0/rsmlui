@@ -18,21 +18,12 @@ fn main() -> Result<(), RsmlUiError> {
     let mut app = RsmlUi::initialise()?;
 
     backend.set_event_callback(|event| {
-        println!("processing!");
+        println!("processing {:?}", event.key);
 
         return true;
     });
 
-    app.set_system_interface(
-        backend
-            .get_system_interface()
-            .expect("failed to get system interface"),
-    );
-    app.set_render_interface(
-        backend
-            .get_render_interface()
-            .expect("failed to get render interface"),
-    );
+    app.use_backend(&mut backend);
 
     let mut context = app
         .create_context("main", dimensions)

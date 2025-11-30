@@ -5,10 +5,7 @@ use glam::IVec2;
 use crate::{
     core::context::Context,
     errors::RsmlUiError,
-    interfaces::{
-        renderer::{IntoRenderInterfacePtr, RenderInterface},
-        system::{IntoSystemInterfacePtr, SystemInterface},
-    },
+    interfaces::{renderer::IntoRenderInterfacePtr, system::IntoSystemInterfacePtr},
     utils::input::KeyCode,
 };
 
