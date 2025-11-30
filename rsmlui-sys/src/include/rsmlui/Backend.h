@@ -1,4 +1,5 @@
 #pragma once
+#include <RmlUi/Core/Math.h>
 #include <RmlUi_Backend.h>
 
 #include "rust/cxx.h"
@@ -7,14 +8,13 @@ namespace rsmlui {
 namespace backend {
     inline auto initialize(
         rust::String window_name,
-        int32_t width,
-        int32_t height,
+        Rml::Vector2i dimensions,
         bool allow_resize
     ) -> bool {
         return Backend::Initialize(
             window_name.c_str(),
-            width,
-            height,
+            dimensions.x,
+            dimensions.y,
             allow_resize
         );
     }

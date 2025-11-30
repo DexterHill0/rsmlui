@@ -1,22 +1,32 @@
 use glam::{IVec2, Vec2};
-use rsmlui_sys::Rml_Vector2f;
+use rsmlui_sys::{Rml_Vector2f, Rml_Vector2i};
 
-impl From<IVec2> for Rml_Vector2i {
-    fn from(value: IVec2) -> Self {
+pub(crate) trait IntoSys {
+    type Output;
+
+    fn into_sys(self) -> Self::Output;
+}
+
+impl IntoSys for IVec2 {
+    type Output = Rml_Vector2i;
+
+    fn into_sys(self) -> Self::Output {
         Rml_Vector2i {
             _phantom_0: std::marker::PhantomData,
-            x: value.x,
-            y: value.y,
+            x: self.x,
+            y: self.y,
         }
     }
 }
 
-impl From<Vec2> for Rml_Vector2f {
-    fn from(value: Vec2) -> Self {
+impl IntoSys for Vec2 {
+    type Output = Rml_Vector2f;
+
+    fn into_sys(self) -> Self::Output {
         Rml_Vector2f {
             _phantom_0: std::marker::PhantomData,
-            x: value.x,
-            y: value.y,
+            x: self.x,
+            y: self.y,
         }
     }
 }

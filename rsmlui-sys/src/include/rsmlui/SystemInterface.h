@@ -6,7 +6,7 @@
 #include "src/ffi/system_interface.rs.h"
 
 namespace rsmlui {
-namespace system_interface {
+namespace rust_system_interface {
     struct RustSystemInterface: public Rml::SystemInterface {
         RustSystemInterface(RustInterfaceOpaque* obj) : rust_interface(obj) {}
 
@@ -27,11 +27,15 @@ namespace system_interface {
         RustInterfaceOpaque* rust_interface;
     };
 
-    inline auto rust_system_interface_new(RustInterfaceOpaque* obj)
-        -> std::unique_ptr<RustSystemInterface> {
-        return std::make_unique<RustSystemInterface>(obj);
-    }
+} // namespace rust_system_interface
 
+namespace system_interface {
+    inline auto rust_system_interface_new(RustInterfaceOpaque* obj)
+        -> std::unique_ptr<rust_system_interface::RustSystemInterface> {
+        return std::make_unique<rust_system_interface::RustSystemInterface>(
+            obj
+        );
+    }
 } // namespace system_interface
 
 } // namespace rsmlui

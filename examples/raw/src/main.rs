@@ -1,7 +1,11 @@
-use rsmlui_sys::{backend, context, core, element_document};
+use rsmlui_sys::{backend, context, core, element_document, Rml_Vector2i};
 
 fn main() {
-    let success = backend::initialize("rsmlui-sys basic demo".into(), 800, 600, true);
+    let success = backend::initialize(
+        "rsmlui-sys raw demo".into(),
+        Rml_Vector2i::new(800, 600),
+        true,
+    );
 
     if !success {
         panic!("failed to initialize backend!");
@@ -18,7 +22,7 @@ fn main() {
         panic!("failed to initialize rmlui!");
     }
 
-    let context = core::create_context("main".into(), 800, 600);
+    let context = core::create_context("main".into(), Rml_Vector2i::new(800, 600));
 
     if context.is_null() {
         core::shutdown();
@@ -27,12 +31,8 @@ fn main() {
         panic!("failed to create context!");
     }
 
-    let document = unsafe {
-        context::context_load_document(
-            context,
-            "D:/Dexter/Documents/Projects/rsmlui/examples/raw/src/test.rml".into(),
-        )
-    };
+    let document =
+        unsafe { context::context_load_document(context, "../../assets/basic.rml".into()) };
 
     if document.is_null() {
         core::shutdown();

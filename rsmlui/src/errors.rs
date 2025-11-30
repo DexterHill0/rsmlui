@@ -4,4 +4,13 @@ use thiserror::Error;
 pub enum RsmlUiError {
     #[error("no font engine was installed")]
     MissingFontEngine,
+
+    #[error("failed to render")]
+    ContextRenderFailed,
+
+    #[error("failed to update context")]
+    ContextUpdateFailed,
+
+    #[error("failed to initialize backend")]
+    BackendInitializeFailed,
 }

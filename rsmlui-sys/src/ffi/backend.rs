@@ -7,7 +7,6 @@ unsafe impl ExternType for crate::Rml_Input_KeyIdentifier {
 
 #[cxx::bridge]
 mod ffi {
-
     #[namespace = "Rml::Input"]
     extern "C++" {
         type KeyIdentifier = crate::Rml_Input_KeyIdentifier;
@@ -19,13 +18,15 @@ mod ffi {
         type Context = crate::context::Context;
         type SystemInterface = crate::system_interface::SystemInterface;
         type RenderInterface = crate::render_interface::RenderInterface;
+
+        type Vector2i = crate::Rml_Vector2i;
     }
 
     #[namespace = "rsmlui::backend"]
     unsafe extern "C++" {
         include!("rsmlui/Backend.h");
 
-        fn initialize(window_name: String, width: i32, height: i32, allow_resize: bool) -> bool;
+        fn initialize(window_name: String, dimensions: Vector2i, allow_resize: bool) -> bool;
         fn shutdown();
 
         fn get_system_interface() -> *mut SystemInterface;

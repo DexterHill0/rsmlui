@@ -1,4 +1,29 @@
-use crate::bindings::Rml_Vertex;
+use crate::{bindings::Rml_Vertex, utils::IntoPtr};
+
+pub trait RenderInterfaceExt {}
+
+impl IntoPtr<RenderInterface> for *mut RenderInterface {
+    fn into_ptr(self) -> *mut RenderInterface {
+        self
+    }
+}
+
+impl<T: RenderInterfaceExt + 'static> IntoPtr<RenderInterface> for T {
+    fn into_ptr(self) -> *mut RenderInterface {
+        // TODO: fix
+        let boxed_trait: Box<dyn RenderInterfaceExt> = Box::new(self);
+
+        let raw = Box::into_raw(boxed_trait) as *mut RenderInterface;
+
+        raw
+
+        // let unique = unsafe { rust_system_interface_new(raw) };
+        // // drops rust's ownership so RmlUi can take ownership and control the lifetime of the interface
+        // let raw_cpp_ptr = cxx::UniquePtr::into_raw(unique);
+
+        // raw_cpp_ptr as *mut SystemInterface
+    }
+}
 
 #[cxx::bridge]
 mod ffi {

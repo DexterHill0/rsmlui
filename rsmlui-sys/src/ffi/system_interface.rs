@@ -21,21 +21,41 @@ pub struct RustInterfaceOpaque {
     _private: [u8; 0],
 }
 
-// impl<T: SystemInterfaceExt> From<T> for *mut SystemInterface {
-//     fn from(value: T) -> Self {
-//         let trait_obj: Box<dyn SystemInterfaceExt> = Box::new(value);
-
-//         unsafe { Box::into_raw(Box::new(trait_obj)) as *mut SystemInterface }
-//     }
+// pub trait IntoSystemInterfacePtr {
+//     fn into_ptr(self) -> *mut rsmlui_sys::system_interface::SystemInterface;
 // }
 
-unsafe fn ext_get_elapsed_time(interface_ptr: *mut RustInterfaceOpaque) -> f64 {
-    let interface = unsafe { &mut *(interface_ptr as *mut Box<dyn SystemInterfaceExt>) };
-    interface.get_elapsed_time()
+impl IntoPtr<SystemInterface> for *mut SystemInterface {
+    fn into_ptr(self) -> *mut SystemInterface {
+        self
+    }
 }
 
-unsafe fn ext_drop_interface(interface_ptr: *mut RustInterfaceOpaque) {
-    unsafe { Box::from_raw(interface_ptr as *mut Box<dyn SystemInterfaceExt>) };
+impl<T: SystemInterfaceExt + 'static> IntoPtr<SystemInterface> for T {
+    fn into_ptr(self) -> *mut SystemInterface {
+        let boxed_trait: Box<dyn SystemInterfaceExt> = Box::new(self);
+
+        let raw = Box::into_raw(boxed_trait) as *mut RustInterfaceOpaque;
+
+        let unique = unsafe { rust_system_interface_new(raw) };
+        // drops rust's ownership so RmlUi can take ownership and control the lifetime of the interface
+        let raw_cpp_ptr = cxx::UniquePtr::into_raw(unique);
+
+        raw_cpp_ptr as *mut SystemInterface
+    }
+}
+
+unsafe fn ext_get_elapsed_time(opaque_ptr: *mut RustInterfaceOpaque) -> f64 {
+    std::panic::catch_unwind(|| {
+        let iface = unsafe { &mut *(opaque_ptr as *mut Box<dyn SystemInterfaceExt>) };
+        iface.get_elapsed_time()
+    })
+    .unwrap_or(0.0)
+}
+
+unsafe fn ext_drop_interface(opaque_ptr: *mut RustInterfaceOpaque) {
+    let boxed = unsafe { Box::from_raw(opaque_ptr as *mut Box<dyn SystemInterfaceExt>) };
+    drop(boxed);
 }
 
 #[cxx::bridge]
@@ -45,12 +65,15 @@ mod ffi {
         type SystemInterface;
     }
 
+    #[namespace = "rsmlui::rust_system_interface"]
+    unsafe extern "C++" {
+        #[doc(hidden)]
+        pub(self) type RustSystemInterface = crate::ffi::rust_system_interface::RustSystemInterface;
+    }
+
     #[namespace = "rsmlui::system_interface"]
     unsafe extern "C++" {
         include!("rsmlui/SystemInterface.h");
-
-        #[doc(hidden)]
-        pub(self) type RustSystemInterface = cxx::type_id!(RustSystemInterfaceImpl);
 
         #[doc(hidden)]
         pub(self) unsafe fn rust_system_interface_new(
@@ -67,3 +90,5 @@ mod ffi {
 }
 
 pub use ffi::*;
+
+use crate::utils::IntoPtr;
