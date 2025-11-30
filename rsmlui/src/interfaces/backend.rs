@@ -2,12 +2,11 @@ use std::ops::{Deref, DerefMut};
 
 use glam::IVec2;
 
-use crate::{
-    core::context::Context,
-    errors::RsmlUiError,
-    interfaces::{renderer::IntoRenderInterfacePtr, system::IntoSystemInterfacePtr},
-    utils::input::KeyCode,
-};
+use crate::core::context::Context;
+use crate::errors::RsmlUiError;
+use crate::interfaces::renderer::IntoRenderInterfacePtr;
+use crate::interfaces::system::IntoSystemInterfacePtr;
+use crate::utils::input::KeyCode;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct BackendOptions {

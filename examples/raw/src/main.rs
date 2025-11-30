@@ -1,4 +1,4 @@
-use rsmlui_sys::{backend, context, core, element_document, Rml_Vector2i};
+use rsmlui_sys::{Rml_Vector2i, backend, context, core, element_document};
 
 fn main() {
     let success = backend::initialize(

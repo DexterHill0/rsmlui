@@ -1,6 +1,6 @@
-use crate::{
-    render_interface::RenderInterfaceExt, system_interface::SystemInterfaceExt, utils::IntoPtr,
-};
+use crate::render_interface::RenderInterfaceExt;
+use crate::system_interface::SystemInterfaceExt;
+use crate::utils::IntoPtr;
 
 #[cxx::bridge]
 mod ffi {

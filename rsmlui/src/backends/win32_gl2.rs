@@ -1,18 +1,15 @@
-use std::{
-    cell::{RefCell, UnsafeCell},
-    sync::LazyLock,
-};
+use std::cell::{RefCell, UnsafeCell};
+use std::sync::LazyLock;
 
-use crate::{
-    core::context::Context,
-    errors::RsmlUiError,
-    interfaces::backend::{
-        Backend, BackendGuard, BackendOptions, ProcessEventContext, ProcessEventsOptions,
-    },
-    platforms::win32::PlatformWin32,
-    renderers::gl2::RendererGl2,
-    utils::{conversions::IntoSys, input::KeyCode},
+use crate::core::context::Context;
+use crate::errors::RsmlUiError;
+use crate::interfaces::backend::{
+    Backend, BackendGuard, BackendOptions, ProcessEventContext, ProcessEventsOptions,
 };
+use crate::platforms::win32::PlatformWin32;
+use crate::renderers::gl2::RendererGl2;
+use crate::utils::conversions::IntoSys;
+use crate::utils::input::KeyCode;
 
 pub struct BackendWin32Gl2 {
     callback: Option<Box<dyn for<'a> FnMut(ProcessEventContext<'a>) -> bool>>,
@@ -25,8 +22,8 @@ thread_local! {
 }
 
 impl Backend for BackendWin32Gl2 {
-    type SystemInterface = PlatformWin32;
     type RenderInterface = RendererGl2;
+    type SystemInterface = PlatformWin32;
 
     fn initialize_with_options<T: Into<String>>(
         window_name: T,

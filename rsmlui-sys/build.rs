@@ -1,6 +1,6 @@
+use std::fs;
 use std::io::Write;
-use std::path::Path;
-use std::{fs, path::PathBuf};
+use std::path::{Path, PathBuf};
 
 use cxx_build::CFG;
 

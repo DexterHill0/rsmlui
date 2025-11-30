@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use cxx::{type_id, ExternType};
+use cxx::{ExternType, type_id};
 
 unsafe impl ExternType for crate::Rml_Vector2f {
     type Id = type_id!("Rml::Vector2f");

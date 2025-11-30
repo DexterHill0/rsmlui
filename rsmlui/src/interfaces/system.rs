@@ -1,8 +1,10 @@
-use glam::Vec2;
-use rsmlui_sys::utils::IntoPtr;
 use std::path::PathBuf;
 
-use crate::{core::log::LogLevel, utils::cursor::Cursor};
+use glam::Vec2;
+use rsmlui_sys::utils::IntoPtr;
+
+use crate::core::log::LogLevel;
+use crate::utils::cursor::Cursor;
 
 pub trait SystemInterface {
     fn get_elapsed_time(&self) -> f64;

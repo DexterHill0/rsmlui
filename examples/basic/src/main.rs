@@ -1,10 +1,8 @@
-use rsmlui::{
-    backends::win32_gl2::BackendWin32Gl2,
-    core::core::RsmlUi,
-    errors::RsmlUiError,
-    glam::IVec2,
-    interfaces::backend::{Backend, BackendOptions, ProcessEventsOptions},
-};
+use rsmlui::backends::win32_gl2::BackendWin32Gl2;
+use rsmlui::core::core::RsmlUi;
+use rsmlui::errors::RsmlUiError;
+use rsmlui::glam::IVec2;
+use rsmlui::interfaces::backend::{Backend, BackendOptions, ProcessEventsOptions};
 
 fn main() -> Result<(), RsmlUiError> {
     let dimensions = IVec2::new(800, 600);

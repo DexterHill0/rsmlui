@@ -1,15 +1,11 @@
 use glam::IVec2;
 
-use crate::{
-    core::context::Context,
-    errors::RsmlUiError,
-    interfaces::{
-        backend::{Backend, BackendGuard},
-        renderer::IntoRenderInterfacePtr,
-        system::IntoSystemInterfacePtr,
-    },
-    utils::conversions::IntoSys,
-};
+use crate::core::context::Context;
+use crate::errors::RsmlUiError;
+use crate::interfaces::backend::{Backend, BackendGuard};
+use crate::interfaces::renderer::IntoRenderInterfacePtr;
+use crate::interfaces::system::IntoSystemInterfacePtr;
+use crate::utils::conversions::IntoSys;
 
 pub struct RsmlUi;
 

@@ -1,4 +1,5 @@
-use crate::{core::element_document::ElementDocument, errors::RsmlUiError};
+use crate::core::element_document::ElementDocument;
+use crate::errors::RsmlUiError;
 
 pub struct Context {
     pub(crate) raw: *mut rsmlui_sys::context::Context,

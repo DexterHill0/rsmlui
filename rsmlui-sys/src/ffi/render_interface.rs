@@ -1,4 +1,5 @@
-use crate::{bindings::Rml_Vertex, utils::IntoPtr};
+use crate::bindings::Rml_Vertex;
+use crate::utils::IntoPtr;
 
 pub trait RenderInterfaceExt {}
 

@@ -3,15 +3,9 @@
     "clangd.arguments": [
         "--compile-commands-dir=${workspaceFolder}/rsmlui-sys"
     ],
-    
     "rust-analyzer.rustfmt.overrideCommand": [
-        "rustup",
-        "run",
-        "nightly",
-        "--",
-        "rustfmt",
-        "--edition",
-        "2024",
-        "--"
+        "cargo",
+        "+nightly",
+        "format"
     ],
 }
