@@ -4,8 +4,9 @@ use std::{fs, path::PathBuf};
 
 use cxx_build::CFG;
 
-#[cfg(all(feature = "freetype", feature = "cosmic-text"))]
-compile_error!("Features `freetype` and `cosmic-text` are mutually exclusive. Enable only one.");
+// TODO: mutually exclusive but dont kill rust analyzer
+// #[cfg(all(feature = "freetype", feature = "cosmic-text"))]
+// compile_error!("Features `freetype` and `cosmic-text` are mutually exclusive. Enable only one.");
 
 const RSMLUI_SYS_LIB_NAME: &str = "rsmlui_dummy";
 const RMLUI_OUTPUT_NAME: &str = "rmlui";
@@ -32,13 +33,11 @@ const DEFINTIONS: &[(&str, &str)] = &[
 
 fn build_rmlui_renderer(bridge: &mut cc::Build) {
     #[cfg(feature = "backend-win32-gl2")]
-    bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_GL2.cpp");
-
-    #[cfg(feature = "renderer-gl2")]
-    bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
-
-    #[cfg(feature = "platform-win32")]
-    bridge.file("RmlUi/Backends/RmlUi_Platform_Win32.cpp");
+    {
+        bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_GL2.cpp");
+        bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
+        bridge.file("RmlUi/Backends/RmlUi_Platform_Win32.cpp");
+    };
 
     // required for vfuncs
     bridge.file("RmlUi/Source/Core/RenderInterface.cpp");
@@ -49,7 +48,7 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
 
 // globs the include headers and creates a dummy cpp source file
 // mainly used for intellisense purposes
-fn create_dummy_sources_from_headers(dummy_dir: &Path) -> Vec<String> {
+fn create_dummy_sources_from_headers(dummy_dir: &Path, ignore: &[&str]) -> Vec<String> {
     let mut cpp_files = Vec::new();
 
     if dummy_dir.exists() {
@@ -60,8 +59,10 @@ fn create_dummy_sources_from_headers(dummy_dir: &Path) -> Vec<String> {
     for entry in glob::glob("./src/include/rsmlui/**/*.h").expect("failed to read glob pattern") {
         match entry {
             Ok(path) => {
+                let filename = path.file_name().unwrap().to_str().unwrap();
+
                 // skip bindgen bindings file
-                if path.ends_with("Bindings.h") {
+                if ignore.contains(&filename) {
                     continue;
                 }
 
@@ -90,7 +91,7 @@ fn create_dummy_sources_from_headers(dummy_dir: &Path) -> Vec<String> {
                 writeln!(cpp_file, "#include \"{}\"", relative_include).unwrap();
 
                 cpp_files.push(cpp_path.to_string_lossy().into_owned());
-            }
+            },
             Err(e) => println!("failed to glob file: {:?}", e),
         }
     }
@@ -142,7 +143,9 @@ fn main() {
     bindings.write_to_file("src/bindings.rs").unwrap();
 
     let cpp_files_dir: PathBuf = "dummy_sources".into();
-    let cpp_files = create_dummy_sources_from_headers(&cpp_files_dir);
+    let mut cpp_files = create_dummy_sources_from_headers(&cpp_files_dir, &["Bindings.h"]);
+
+    // cpp_files.push("src/cxx/SystemInterface.cpp".into());
 
     // cxx MUST come before cmake so the codegenned headers exist
     // when cmake does the build, as these headers are part of the `compile_commands.json`

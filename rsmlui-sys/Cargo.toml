@@ -19,6 +19,4 @@ default = ["freetype"]
 cosmic-text = []
 freetype = []
 
-backend-win32-gl2 = ["renderer-gl2", "platform-win32"]
-platform-win32 = []
-renderer-gl2 = []
+backend-win32-gl2 = []

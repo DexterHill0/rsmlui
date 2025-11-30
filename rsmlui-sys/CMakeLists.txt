@@ -14,10 +14,12 @@ endif()
 set(SOURCES_NORMAL "")
 cmake_path(NORMAL_PATH RSMLUI_DUMMY_SOURCES_DIR OUTPUT_VARIABLE SOURCES_NORMAL)
 # create a dummy cpp file with all the headers for intellisense purposes
-file(GLOB_RECURSE RSMLUI_SOURCES "${SOURCES_NORMAL}/*.cpp")
+file(GLOB_RECURSE RSMLUI_DUMMY_SOURCES "${SOURCES_NORMAL}/*.cpp")
+
+file(GLOB_RECURSE RSMLUI_CXX_SOURCES "${CMAKE_SOURCE_DIR}/src/cxx/*.cpp")
 
 # make a dummy library for the intellisense
-add_library(${RSMLUI_SYS_LIB_NAME} STATIC ${RSMLUI_SOURCES})
+add_library(${RSMLUI_SYS_LIB_NAME} STATIC ${RSMLUI_DUMMY_SOURCES} ${RSMLUI_CXX_SOURCES})
 
 # include freetype if requested. variable is set in build.rs
 if (DEFINED RMLUI_FONT_ENGINE AND "${RMLUI_FONT_ENGINE}" STREQUAL "freetype")

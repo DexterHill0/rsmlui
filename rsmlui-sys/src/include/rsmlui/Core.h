@@ -21,9 +21,9 @@ inline void shutdown() {
 }
 
 // TODO: vectors
-inline auto create_context(rust::String name, int width, int height)
+inline auto create_context(rust::String name, Rml::Vector2i dimensions)
     -> Rml::Context* {
-    return Rml::CreateContext(name.c_str(), {width, height});
+    return Rml::CreateContext(name.c_str(), dimensions);
 }
 
 inline void set_system_interface(Rml::SystemInterface* system_interface) {

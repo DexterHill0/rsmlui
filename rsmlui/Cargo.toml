@@ -4,3 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
+
+glam = "0.30.9"
+thiserror = "2.0.17"
+
+[features]
+default = ["freetype"]
+
+cosmic-text = ["rsmlui-sys/cosmic-text"]
+freetype = ["rsmlui-sys/freetype"]
+
+backend-win32-gl2 = ["rsmlui-sys/backend-win32-gl2"]
