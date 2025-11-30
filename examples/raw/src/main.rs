@@ -1,4 +1,4 @@
-use rsmlui_sys::{Rml_Vector2i, backend, context, core, element_document};
+use rsmlui_sys::{backend, context, core, element_document, Rml_Vector2i};
 
 fn main() {
     let success = backend::initialize(
@@ -31,8 +31,7 @@ fn main() {
         panic!("failed to create context!");
     }
 
-    let document =
-        unsafe { context::context_load_document(context, "../../assets/basic.rml".into()) };
+    let document = unsafe { context::context_load_document(context, "../assets/basic.rml".into()) };
 
     if document.is_null() {
         core::shutdown();

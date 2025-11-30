@@ -23,12 +23,14 @@ fn main() -> Result<(), RsmlUiError> {
 
     app.use_backend(&mut backend);
 
+    app.load_font_face("../assets/Roboto.ttf")?;
+
     let mut context = app
         .create_context("main", dimensions)
         .expect("failed to create context");
 
     let document = context
-        .load_document("../../examples/assets/basic.rml")
+        .load_document("../assets/basic.rml")
         .expect("failed to create document");
 
     document.show();

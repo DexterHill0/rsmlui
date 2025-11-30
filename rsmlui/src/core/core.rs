@@ -40,6 +40,14 @@ impl RsmlUi {
         Some(Context { raw })
     }
 
+    pub fn load_font_face<T: Into<String>>(&mut self, path: T) -> Result<(), RsmlUiError> {
+        if !rsmlui_sys::core::load_font_face(path.into()) {
+            return Err(RsmlUiError::FontFaceLoadFailed);
+        }
+
+        Ok(())
+    }
+
     pub fn set_system_interface<I: IntoSystemInterfacePtr>(&mut self, system_interface: I) {
         unsafe { rsmlui_sys::core::set_system_interface(system_interface.into_ptr()) }
     }

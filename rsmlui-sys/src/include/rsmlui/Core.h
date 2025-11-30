@@ -33,4 +33,8 @@ inline void set_system_interface(Rml::SystemInterface* system_interface) {
 inline void set_render_interface(Rml::RenderInterface* render_interface) {
     Rml::SetRenderInterface(render_interface);
 }
+
+inline auto load_font_face(rust::String path) -> bool {
+    return Rml::LoadFontFace(path.c_str());
+}
 } // namespace rsmlui

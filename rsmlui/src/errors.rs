@@ -13,4 +13,7 @@ pub enum RsmlUiError {
 
     #[error("failed to initialize backend")]
     BackendInitializeFailed,
+
+    #[error("failed to load font face")]
+    FontFaceLoadFailed,
 }

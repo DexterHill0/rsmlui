@@ -23,6 +23,8 @@ mod ffi {
         fn initialise() -> bool;
         fn shutdown();
 
+        fn load_font_face(path: String) -> bool;
+
         fn create_context(name: String, dimensions: Vector2i) -> *mut Context;
 
         pub(self) unsafe fn set_system_interface(system_interface: *mut SystemInterface);
