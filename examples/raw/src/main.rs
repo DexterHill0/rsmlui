@@ -1,4 +1,4 @@
-use rsmlui_sys::{backend, context, core, element_document, Rml_Vector2i};
+use rsmlui_sys::{Rml_Vector2i, backend, context, core, element_document};
 
 fn main() {
     let success = backend::initialize(
@@ -22,6 +22,15 @@ fn main() {
         panic!("failed to initialize rmlui!");
     }
 
+    let success = core::load_font_face("../assets/Roboto.ttf".into());
+
+    if !success {
+        core::shutdown();
+        backend::shutdown();
+
+        panic!("failed to load font face!");
+    }
+
     let context = core::create_context("main".into(), Rml_Vector2i::new(800, 600));
 
     if context.is_null() {
@@ -41,8 +50,6 @@ fn main() {
     }
 
     unsafe { element_document::element_document_show(document) };
-
-    // TODO: shutdown
 
     let mut running = true;
 

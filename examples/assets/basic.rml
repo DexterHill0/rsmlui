@@ -6,6 +6,7 @@
         width: 100%;
         height: 100%;
         background: white;
+        font-family: "Roboto";
     }
     
     div {
@@ -14,8 +15,7 @@
         height: 200px;
         background: red;
         cursor: pointer;
-        color: green;
-        font-family: "Roboto";
+        color: orange;
         font-size: 50px;
     }
 </style>

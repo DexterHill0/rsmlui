@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(rsmlui-sys-lib)
 
+set(CMAKE_CXX_STANDARD 20)
 
 if(NOT DEFINED RSMLUI_SYS_LIB_NAME)
     message(FATAL_ERROR "RSMLUI_SYS_LIB_NAME must be set")

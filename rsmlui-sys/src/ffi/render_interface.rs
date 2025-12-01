@@ -1,30 +1,55 @@
 use crate::bindings::Rml_Vertex;
-use crate::utils::IntoPtr;
 
 pub trait RenderInterfaceExt {}
 
-impl IntoPtr<RenderInterface> for *mut RenderInterface {
-    fn into_ptr(self) -> *mut RenderInterface {
-        self
+#[repr(C)]
+pub(crate) struct InterfaceOpaque {
+    _private: [u8; 0],
+}
+
+pub struct RenderInterface {
+    // pub(crate) inner:
+    //     crate::interfaces::InterfaceOwner<'a, dyn RustRenderInterface, RmlRenderInterface>,
+    pub raw: *mut RmlRenderInterface,
+}
+
+impl From<Box<dyn RenderInterfaceExt>> for RenderInterface {
+    fn from(value: Box<dyn RenderInterfaceExt>) -> Self {
+        let raw_opaque = Box::into_raw(value) as *mut InterfaceOpaque;
+
+        todo!();
+        // let unique = unsafe { rust_system_interface_new(raw_opaque) };
+        // let raw_rml_interface = cxx::UniquePtr::into_raw(unique);
+
+        // Self {
+        //     // inner: InterfaceOwner::Rust(value),
+        //     raw: raw_rml_interface,
+        // }
     }
 }
 
-impl<T: RenderInterfaceExt + 'static> IntoPtr<RenderInterface> for T {
-    fn into_ptr(self) -> *mut RenderInterface {
-        // TODO: fix
-        let boxed_trait: Box<dyn RenderInterfaceExt> = Box::new(self);
+// impl IntoPtr<RenderInterface> for *mut RenderInterface {
+//     fn into_ptr(self) -> *mut RenderInterface {
+//         self
+//     }
+// }
 
-        let raw = Box::into_raw(boxed_trait) as *mut RenderInterface;
+// impl<T: RenderInterfaceExt + 'static> IntoPtr<RenderInterface> for T {
+//     fn into_ptr(self) -> *mut RenderInterface {
+//         // TODO: fix
+//         let boxed_trait: Box<dyn RenderInterfaceExt> = Box::new(self);
 
-        raw
+//         let raw = Box::into_raw(boxed_trait) as *mut RenderInterface;
 
-        // let unique = unsafe { rust_system_interface_new(raw) };
-        // // drops rust's ownership so RmlUi can take ownership and control the lifetime of the interface
-        // let raw_cpp_ptr = cxx::UniquePtr::into_raw(unique);
+//         raw
 
-        // raw_cpp_ptr as *mut SystemInterface
-    }
-}
+//         // let unique = unsafe { rust_system_interface_new(raw) };
+//         // // drops rust's ownership so RmlUi can take ownership and control the lifetime of the interface
+//         // let raw_cpp_ptr = cxx::UniquePtr::into_raw(unique);
+
+//         // raw_cpp_ptr as *mut SystemInterface
+//     }
+// }
 
 #[cxx::bridge]
 mod ffi {
@@ -34,7 +59,8 @@ mod ffi {
 
     #[namespace = "Rml"]
     extern "C++" {
-        type RenderInterface;
+        #[cxx_name = "RenderInterface"]
+        type RmlRenderInterface;
     }
 
     #[namespace = "rsmlui::render_interface"]
@@ -141,4 +167,4 @@ mod ffi {
     }
 }
 
-pub use ffi::*;
+pub use ffi::RmlRenderInterface;

@@ -1,13 +1,11 @@
-use crate::render_interface::RenderInterfaceExt;
-use crate::system_interface::SystemInterfaceExt;
-use crate::utils::IntoPtr;
-
 #[cxx::bridge]
 mod ffi {
     #[namespace = "Rml"]
     unsafe extern "C++" {
-        type SystemInterface = crate::ffi::system_interface::SystemInterface;
-        type RenderInterface = crate::ffi::render_interface::RenderInterface;
+        #[cxx_name = "SystemInterface"]
+        type RmlSystemInterface = crate::ffi::system_interface::RmlSystemInterface;
+        #[cxx_name = "RenderInterface"]
+        type RmlRenderInterface = crate::ffi::render_interface::RmlRenderInterface;
 
         type Context = crate::context::Context;
 
@@ -27,29 +25,35 @@ mod ffi {
 
         fn create_context(name: String, dimensions: Vector2i) -> *mut Context;
 
-        pub(self) unsafe fn set_system_interface(system_interface: *mut SystemInterface);
-        pub(self) unsafe fn set_render_interface(render_interface: *mut RenderInterface);
+        unsafe fn set_system_interface(system_interface: *mut RmlSystemInterface);
+        unsafe fn set_render_interface(render_interface: *mut RmlRenderInterface);
     }
 }
 
-pub unsafe fn set_system_interface_ext<I>(system_interface: I)
-where
-    I: SystemInterfaceExt,
-    I: IntoPtr<SystemInterface>,
-{
-    let ptr = system_interface.into_ptr();
+// /// Sets the [`SystemInterface`](https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/system.html) to a custom trait-based interface.
+// ///
+// // pub unsafe fn set_system_interface<I>(system_interface: I)
+// // where
+// //     I: InterfaceInstancer,
+// //     InterfaceState<I>: SystemInterfaceBehaviour,
+// // {
+// //     unsafe { ffi::set_system_interface(system_interface.into().raw) }
+// // }
 
-    dbg!(&ptr);
+// pub unsafe fn set_system_interface<I>(system_interface: &I)
+// where
+//     I: AsInterfacePtr<Interface = RmlSystemInterface>,
+// {
+//     unsafe { ffi::set_system_interface(system_interface.as_ptr()) }
+// }
 
-    unsafe { ffi::set_system_interface(ptr) }
-}
+// /// Sets the [`RenderInterface`](https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/render.html) to a custom trait-based interface.
+// ///
+// pub unsafe fn set_render_interface<I: Into<RenderInterface>>(render_interface: I) {
+//     unsafe { ffi::set_render_interface(render_interface.into().raw) }
+// }
 
-pub unsafe fn set_render_interface_ext<R>(render_interface: R)
-where
-    R: RenderInterfaceExt,
-    R: IntoPtr<RenderInterface>,
-{
-    unsafe { ffi::set_render_interface(render_interface.into_ptr()) }
-}
-
-pub use ffi::*;
+pub use ffi::{
+    create_context, get_version, initialise, load_font_face, set_render_interface,
+    set_system_interface, shutdown,
+};

@@ -133,6 +133,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "custom-interface"
+version = "0.1.0"
+dependencies = [
+ "rsmlui",
+]
+
+[[package]]
 name = "cxx"
 version = "1.0.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"

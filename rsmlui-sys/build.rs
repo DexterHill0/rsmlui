@@ -154,7 +154,6 @@ fn main() {
         "src/ffi/core.rs",
         "src/ffi/render_interface.rs",
         "src/ffi/system_interface.rs",
-        "src/ffi/rust_system_interface.rs",
         "src/ffi/backend.rs",
         "src/ffi/context.rs",
         "src/ffi/element_document.rs",

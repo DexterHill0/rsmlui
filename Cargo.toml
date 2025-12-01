@@ -1,3 +1,9 @@
 [workspace]
-members = [ "examples/basic","examples/raw", "rsmlui", "rsmlui-sys"]
+members = [
+    "examples/basic",
+    "examples/raw",
+    "examples/custom-interface",
+    "rsmlui",
+    "rsmlui-sys",
+]
 resolver = "3"

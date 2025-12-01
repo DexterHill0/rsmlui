@@ -16,8 +16,10 @@ mod ffi {
 
     extern "C++" {
         type Context = crate::context::Context;
-        type SystemInterface = crate::system_interface::SystemInterface;
-        type RenderInterface = crate::render_interface::RenderInterface;
+        #[cxx_name = "SystemInterface"]
+        type RmlSystemInterface = crate::system_interface::RmlSystemInterface;
+        #[cxx_name = "RenderInterface"]
+        type RmlRenderInterface = crate::render_interface::RmlRenderInterface;
 
         type Vector2i = crate::Rml_Vector2i;
     }
@@ -29,8 +31,8 @@ mod ffi {
         fn initialize(window_name: String, dimensions: Vector2i, allow_resize: bool) -> bool;
         fn shutdown();
 
-        fn get_system_interface() -> *mut SystemInterface;
-        fn get_render_interface() -> *mut RenderInterface;
+        fn get_system_interface() -> *mut RmlSystemInterface;
+        fn get_render_interface() -> *mut RmlRenderInterface;
 
         unsafe fn process_events(
             context: *mut Context,
@@ -51,4 +53,20 @@ mod ffi {
     }
 }
 
-pub use ffi::*;
+// pub fn get_system_interface() -> BorrowedInterface<SystemInterfaceMarker> {
+//     BorrowedInterface {
+//         raw: ffi::get_system_interface() as *mut InterfaceOpaque,
+//         _marker: std::marker::PhantomData,
+//     }
+// }
+
+// pub fn get_render_interface() -> RenderInterface {
+//     RenderInterface {
+//         raw: ffi::get_render_interface(),
+//     }
+// }
+
+pub use ffi::{
+    Context, begin_frame, get_render_interface, get_system_interface, initialize, present_frame,
+    process_events, request_exit, shutdown,
+};

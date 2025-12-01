@@ -1,24 +1,15 @@
-use rsmlui_sys::utils::IntoPtr;
+use rsmlui_sys::render_interface::RmlRenderInterface;
 
-pub trait RenderInterface {}
+use crate::interfaces::{InterfaceHandle, InterfaceMarker, RawInterface};
 
-pub(crate) trait IntoRenderInterfacePtr {
-    fn into_ptr(self) -> *mut rsmlui_sys::render_interface::RenderInterface;
+pub struct RenderInterfaceMarker;
+
+impl InterfaceMarker for RenderInterfaceMarker {
+    type Ptr = *mut RmlRenderInterface;
 }
 
-impl<T: RenderInterface + 'static> IntoRenderInterfacePtr for T {
-    fn into_ptr(self) -> *mut rsmlui_sys::render_interface::RenderInterface {
-        let adapter = RenderInterfaceExtAdapter { inner: self };
-
-        adapter.into_ptr()
+impl<I> Into<RawInterface<RenderInterfaceMarker>> for &mut InterfaceHandle<I> {
+    fn into(self) -> RawInterface<RenderInterfaceMarker> {
+        todo!();
     }
-}
-
-pub(crate) struct RenderInterfaceExtAdapter<T: RenderInterface> {
-    pub(crate) inner: T,
-}
-
-impl<T: RenderInterface> rsmlui_sys::render_interface::RenderInterfaceExt
-    for RenderInterfaceExtAdapter<T>
-{
 }

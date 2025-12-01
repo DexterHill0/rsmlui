@@ -2,12 +2,12 @@ use rsmlui::backends::win32_gl2::BackendWin32Gl2;
 use rsmlui::core::core::RsmlUi;
 use rsmlui::errors::RsmlUiError;
 use rsmlui::glam::IVec2;
-use rsmlui::interfaces::backend::{Backend, BackendOptions, ProcessEventsOptions};
+use rsmlui::interfaces::backend::{Backend, BackendOptions};
 
 fn main() -> Result<(), RsmlUiError> {
     let dimensions = IVec2::new(800, 600);
 
-    let mut backend = BackendWin32Gl2::initialize_with_options(
+    let backend = BackendWin32Gl2::initialize_with_options(
         "rsmlui basic demo",
         dimensions,
         BackendOptions { allow_resize: true },
@@ -15,17 +15,17 @@ fn main() -> Result<(), RsmlUiError> {
 
     let mut app = RsmlUi::initialise()?;
 
-    backend.set_event_callback(|event| {
-        println!("processing {:?}", event.key);
+    app.use_backend(backend);
 
-        return true;
-    });
+    // backend.set_event_callback(|event| {
+    //     println!("processing {:?}", event.key);
 
-    app.use_backend(&mut backend);
+    //     return true;
+    // });
 
     app.load_font_face("../assets/Roboto.ttf")?;
 
-    let mut context = app
+    let context = app
         .create_context("main", dimensions)
         .expect("failed to create context");
 
@@ -38,15 +38,15 @@ fn main() -> Result<(), RsmlUiError> {
     let mut running = true;
 
     while running {
-        running = backend.process_events(&mut context, ProcessEventsOptions::default());
+        // running = backend.process_events(&mut context, ProcessEventsOptions::default());
 
         context.update()?;
 
-        backend.begin_frame();
+        app.begin_frame();
 
         context.render()?;
 
-        backend.present_frame();
+        app.present_frame();
     }
 
     Ok(())

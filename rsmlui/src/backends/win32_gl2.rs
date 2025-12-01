@@ -1,24 +1,27 @@
-use std::cell::{RefCell, UnsafeCell};
-use std::sync::LazyLock;
+use std::cell::RefCell;
+use std::marker::PhantomData;
 
 use crate::core::context::Context;
 use crate::errors::RsmlUiError;
+use crate::interfaces::BorrowedInterface;
 use crate::interfaces::backend::{
-    Backend, BackendGuard, BackendOptions, ProcessEventContext, ProcessEventsOptions,
+    Backend, BackendOptions, ProcessEventContext, ProcessEventsOptions,
 };
 use crate::platforms::win32::PlatformWin32;
 use crate::renderers::gl2::RendererGl2;
-use crate::utils::conversions::IntoSys;
+use crate::utils::conversions::{FromSys, IntoSys};
 use crate::utils::input::KeyCode;
 
-pub struct BackendWin32Gl2 {
-    callback: Option<Box<dyn for<'a> FnMut(ProcessEventContext<'a>) -> bool>>,
-}
+// thread_local! {
+//     static CALLBACK: RefCell<
+//         Option<Box<dyn for<'ctx> FnMut(ProcessEventContext<'ctx>) -> bool>>
+//     > = RefCell::new(None);
+// }
 
-thread_local! {
-    static CALLBACK: std::cell::RefCell<
-        Option<Box<dyn for<'a> FnMut(ProcessEventContext<'a>) -> bool>>
-    > = RefCell::new(None);
+pub struct BackendWin32Gl2 {
+    // callback: Option<Box<dyn for<'ctx> FnMut(ProcessEventContext<'ctx>) -> bool>>,
+    system_interface: PlatformWin32,
+    render_interface: RendererGl2,
 }
 
 impl Backend for BackendWin32Gl2 {
@@ -29,7 +32,7 @@ impl Backend for BackendWin32Gl2 {
         window_name: T,
         dimensions: glam::IVec2,
         options: BackendOptions,
-    ) -> Result<BackendGuard<Self>, RsmlUiError> {
+    ) -> Result<Self, RsmlUiError> {
         let success = rsmlui_sys::backend::initialize(
             window_name.into(),
             dimensions.into_sys(),
@@ -40,97 +43,47 @@ impl Backend for BackendWin32Gl2 {
             return Err(RsmlUiError::BackendInitializeFailed);
         }
 
-        return Ok(BackendGuard::new(BackendWin32Gl2 { callback: None }));
-    }
+        let raw_system_interface = rsmlui_sys::backend::get_system_interface();
 
-    fn shutdown(&mut self) {
-        rsmlui_sys::backend::shutdown()
-    }
-
-    fn get_system_interface(&mut self) -> Option<Self::SystemInterface> {
-        let raw = rsmlui_sys::backend::get_system_interface();
-
-        if raw.is_null() {
-            return None;
+        if raw_system_interface.is_null() {
+            return Err(RsmlUiError::SystemInterfaceFailed);
         }
 
-        Some(PlatformWin32 { raw })
-    }
+        let raw_render_interface = rsmlui_sys::backend::get_render_interface();
 
-    fn get_render_interface(&mut self) -> Option<Self::RenderInterface> {
-        let raw = rsmlui_sys::backend::get_render_interface();
-
-        if raw.is_null() {
-            return None;
+        if raw_render_interface.is_null() {
+            return Err(RsmlUiError::RenderInterfaceFailed);
         }
 
-        Some(RendererGl2 { raw })
-    }
-
-    fn set_event_callback(
-        &mut self,
-        callback: impl FnMut(ProcessEventContext<'_>) -> bool + 'static,
-    ) {
-        self.callback = Some(Box::new(callback));
-    }
-
-    // TODO: improve these impls for downstream users - dont require so much boilerplate / interacting with sys crate
-    fn process_events(&mut self, context: &mut Context, options: ProcessEventsOptions) -> bool {
-        CALLBACK.with(|slot| {
-            *slot.borrow_mut() = self.callback.take();
+        return Ok(BackendWin32Gl2 {
+            system_interface: PlatformWin32(BorrowedInterface::new(raw_system_interface)),
+            render_interface: RendererGl2(BorrowedInterface::new(raw_render_interface)),
         });
-
-        fn trampoline(
-            ctx: *mut rsmlui_sys::context::Context,
-            key: KeyCode,
-            key_modifier: i32,
-            native_dp_ratio: f32,
-            priority: bool,
-        ) -> bool {
-            let result = CALLBACK.with(|slot| {
-                let mut slot = slot.borrow_mut();
-
-                let cb = match slot.as_mut() {
-                    Some(cb) => cb,
-                    None => return true,
-                };
-
-                let mut ctx_wrapped = Context { raw: ctx };
-
-                let event = ProcessEventContext {
-                    context: &mut ctx_wrapped,
-                    key,
-                    key_modifier,
-                    native_dp_ratio,
-                    priority,
-                };
-
-                cb(event)
-            });
-
-            result
-        }
-
-        let res = unsafe {
-            rsmlui_sys::backend::process_events(context.raw, trampoline, options.power_save)
-        };
-
-        CALLBACK.with(|slot| {
-            self.callback = slot.borrow_mut().take();
-        });
-
-        res
     }
 
-    fn request_exit(&mut self) {
+    fn get_system_interface(&mut self) -> Option<&mut Self::SystemInterface> {
+        Some(&mut self.system_interface)
+    }
+
+    fn get_render_interface(&mut self) -> Option<&mut Self::RenderInterface> {
+        Some(&mut self.render_interface)
+    }
+
+    fn request_exit(&self) {
         rsmlui_sys::backend::request_exit()
     }
 
-    fn begin_frame(&mut self) {
+    fn begin_frame(&self) {
         rsmlui_sys::backend::begin_frame()
     }
 
-    fn present_frame(&mut self) {
+    fn present_frame(&self) {
         rsmlui_sys::backend::present_frame()
+    }
+}
+
+impl Drop for BackendWin32Gl2 {
+    fn drop(&mut self) {
+        rsmlui_sys::backend::shutdown()
     }
 }
