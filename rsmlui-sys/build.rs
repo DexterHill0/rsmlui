@@ -223,7 +223,7 @@ fn main() {
 
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=CMakeLists.txt");
-    println!("cargo:rerun-if-changed=include/rsmlui");
+    println!("cargo:rerun-if-changed=src/include/rsmlui");
 
     println!("cargo:rustc-link-lib=static={}", RSMLUI_SYS_LIB_NAME);
     println!("cargo:rustc-link-lib=static={}", RMLUI_OUTPUT_NAME);
