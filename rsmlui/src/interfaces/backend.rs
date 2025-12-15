@@ -22,7 +22,7 @@ pub struct ProcessEventsOptions {
 }
 
 pub struct ProcessEventContext<'ctx> {
-    pub context: &'ctx mut Context<'ctx>,
+    pub context: &'ctx mut Context,
     pub key: KeyCode,
     pub key_modifier: i32,
     pub native_dp_ratio: f32,

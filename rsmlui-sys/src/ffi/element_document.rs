@@ -9,6 +9,8 @@ mod ffi {
     unsafe extern "C++" {
         include!("rsmlui/ElementDocument.h");
 
+        unsafe fn element_document_destructor(ctx: *mut ElementDocument);
+
         unsafe fn element_document_show(ctx: *mut ElementDocument);
     }
 }

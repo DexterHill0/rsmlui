@@ -7,19 +7,19 @@
 
 namespace rsmlui::system_interface {
 // custom `SystemInterface` that holds a thin ptr to a `dyn SystemInterfaceExt`
-struct RustSystemInterface, public Rml::SystemInterface {
+struct RustSystemInterface: public Rml::SystemInterface {
     RustSystemInterface(const RustSystemInterface&) = delete;
     RustSystemInterface(RustSystemInterface&&) = delete;
-    auto operator=(const RustSystemInterface&)->RustSystemInterface& = delete;
-    auto operator=(RustSystemInterface&&)->RustSystemInterface& = delete;
+    auto operator=(const RustSystemInterface&) -> RustSystemInterface& = delete;
+    auto operator=(RustSystemInterface&&) -> RustSystemInterface& = delete;
 
-    RustSystemInterface(InterfaceOpaque * obj) : rust_interface(obj) {}
+    RustSystemInterface(InterfaceOpaque* obj) : rust_interface(obj) {}
 
     auto GetElapsedTime() -> double override {
         return rust_get_elapsed_time(rust_interface);
     }
 
-    auto TranslateString(Rml::String & translated, const Rml::String& input)
+    auto TranslateString(Rml::String& translated, const Rml::String& input)
         -> int override {
         auto rust_string =
             rust_translate_string(rust_interface, rust::Str(input));
@@ -30,7 +30,7 @@ struct RustSystemInterface, public Rml::SystemInterface {
     }
 
     void JoinPath(
-        Rml::String & translated_path,
+        Rml::String& translated_path,
         const Rml::String& document_path,
         const Rml::String& path
     ) override {
@@ -56,14 +56,14 @@ struct RustSystemInterface, public Rml::SystemInterface {
         rust_set_clipboard_text(rust_interface, rust::Str(text));
     };
 
-    void GetClipboardText(Rml::String & text) override {
+    void GetClipboardText(Rml::String& text) override {
         auto rust_string = rust_get_clipboard_text(rust_interface);
 
         text = rust_string.c_str();
     };
 
-    void ActivateKeyboard(Rml::Vector2f caret_position, float line_height)
-        override {
+    void
+    ActivateKeyboard(Rml::Vector2f caret_position, float line_height) override {
         rust_activate_keyboard(rust_interface, caret_position, line_height);
     };
 
@@ -83,7 +83,7 @@ inline auto new_rust_system_interface(InterfaceOpaque* obj)
 }
 
 inline void rust_system_interface_destructor(Rml::SystemInterface* obj) {
-    delete obj;
+    obj->~SystemInterface();
 }
 
 // calls the base `SystemInterface` method implementations of a given interface

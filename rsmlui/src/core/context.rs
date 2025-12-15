@@ -1,18 +1,38 @@
-use std::marker::PhantomData;
+use std::rc::Rc;
 
-use crate::core::core::RsmlUi;
+use crate::core::core::AppOwner;
 use crate::core::element_document::ElementDocument;
 use crate::errors::RsmlUiError;
-use crate::interfaces::backend::Backend;
+use crate::utils::raw::{Ptr, Raw};
 
-pub struct Context<'ctx> {
-    pub(crate) raw: *mut rsmlui_sys::context::Context,
-    pub(crate) _phantom: PhantomData<&'ctx ()>,
+#[repr(transparent)]
+pub(crate) struct ContextOwner(Ptr<Context>);
+
+impl Drop for ContextOwner {
+    fn drop(&mut self) {
+        unsafe { rsmlui_sys::context::context_destructor(self.0) };
+    }
 }
 
-impl<'ctx> Context<'ctx> {
+pub struct Context {
+    pub(crate) raw: Rc<ContextOwner>,
+    pub(crate) _parent: Rc<AppOwner>,
+}
+
+impl Raw for Context {
+    type Ptr = *mut rsmlui_sys::context::Context;
+}
+
+impl Context {
+    pub(crate) fn from_raw(ptr: Ptr<Self>, parent: &Rc<AppOwner>) -> Self {
+        Self {
+            raw: Rc::new(ContextOwner(ptr)),
+            _parent: Rc::clone(parent),
+        }
+    }
+
     pub fn update(&self) -> Result<(), RsmlUiError> {
-        if !unsafe { rsmlui_sys::context::context_update(self.raw) } {
+        if !unsafe { rsmlui_sys::context::context_update(self.raw.0) } {
             return Err(RsmlUiError::ContextUpdateFailed);
         }
 
@@ -20,27 +40,24 @@ impl<'ctx> Context<'ctx> {
     }
 
     pub fn render(&self) -> Result<(), RsmlUiError> {
-        if !unsafe { rsmlui_sys::context::context_render(self.raw) } {
+        if !unsafe { rsmlui_sys::context::context_render(self.raw.0) } {
             return Err(RsmlUiError::ContextRenderFailed);
         }
 
         Ok(())
     }
 
-    pub fn load_document<'doc: 'ctx, P: Into<String>>(
+    pub fn load_document<P: Into<String>>(
         &self,
         document_path: P,
-    ) -> Option<ElementDocument<'doc>> {
+    ) -> Result<ElementDocument, RsmlUiError> {
         let raw =
-            unsafe { rsmlui_sys::context::context_load_document(self.raw, document_path.into()) };
+            unsafe { rsmlui_sys::context::context_load_document(self.raw.0, document_path.into()) };
 
         if raw.is_null() {
-            return None;
+            return Err(RsmlUiError::DocumentCreateFailed);
         }
 
-        Some(ElementDocument {
-            raw,
-            _phantom: PhantomData,
-        })
+        Ok(ElementDocument::from_raw(raw, &self.raw))
     }
 }

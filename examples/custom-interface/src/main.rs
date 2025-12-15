@@ -1,13 +1,18 @@
 use std::time::Instant;
 
 use rsmlui::backends::win32_gl2::BackendWin32Gl2;
-use rsmlui::core::core::RsmlUi;
+use rsmlui::core::context::Context;
+use rsmlui::core::core::{RsmlUi, RsmlUiApp};
+use rsmlui::core::element_document::ElementDocument;
+use rsmlui::core::events::WindowEvent;
 use rsmlui::core::log::LogLevel;
 use rsmlui::errors::RsmlUiError;
 use rsmlui::glam::IVec2;
+use rsmlui::interfaces::InterfaceState;
 use rsmlui::interfaces::backend::{Backend, BackendOptions};
 use rsmlui::interfaces::system::SystemInterfaceBehaviour;
-use rsmlui::interfaces::{InterfaceInstancer, InterfaceState};
+
+const DIMENSIONS: IVec2 = IVec2::new(800, 600);
 
 struct CustomSystemInterface {
     start: Instant,
@@ -40,56 +45,66 @@ impl SystemInterfaceBehaviour for InterfaceState<CustomSystemInterface> {
     }
 }
 
-fn main() -> Result<(), RsmlUiError> {
-    let dimensions = IVec2::new(800, 600);
+struct App {
+    context: Option<Context>,
+    document: Option<ElementDocument>,
+}
 
+impl RsmlUiApp<BackendWin32Gl2> for App {
+    fn starting(&mut self, ui: &mut RsmlUi<BackendWin32Gl2>) -> Result<(), RsmlUiError> {
+        ui.load_font_face("../assets/Roboto.ttf")?;
+
+        let context = ui.create_context("main", DIMENSIONS)?;
+        let document = context.load_document("../assets/basic.rml")?;
+
+        document.show();
+
+        self.document = Some(document);
+        self.context = Some(context);
+
+        Ok(())
+    }
+
+    fn event(
+        &mut self,
+        event: WindowEvent,
+        ui: &mut RsmlUi<BackendWin32Gl2>,
+    ) -> Result<(), RsmlUiError> {
+        match event {
+            WindowEvent::ExitRequested => ui.request_exit(),
+            WindowEvent::RenderRequested => {
+                if let Some(context) = self.context.as_ref() {
+                    context.update()?;
+
+                    ui.begin_frame();
+
+                    context.render()?;
+
+                    ui.present_frame();
+                }
+            },
+            _ => {},
+        }
+
+        Ok(())
+    }
+}
+
+fn main() -> Result<(), RsmlUiError> {
     let backend = BackendWin32Gl2::initialize_with_options(
-        "rsmlui basic demo",
-        dimensions,
+        "rsmlui custom interface demo",
+        DIMENSIONS,
         BackendOptions { allow_resize: true },
     )?;
 
-    let mut app = RsmlUi::initialise()?;
+    let mut rsmlui = RsmlUi::new(backend)?;
 
-    app.use_backend(backend);
-
-    let custom_system_interface = CustomSystemInterface {
-        start: Instant::now(),
+    let mut app = App {
+        context: None,
+        document: None,
     };
 
-    todo!();
-
-    // backend.set_event_callback(|event| {
-    //     println!("processing {:?}", event.key);
-
-    //     return true;
-    // });
-
-    app.load_font_face("../assets/Roboto.ttf")?;
-
-    let context = app
-        .create_context("main", dimensions)
-        .expect("failed to create context");
-
-    let document = context
-        .load_document("../assets/basic.rml")
-        .expect("failed to create document");
-
-    document.show();
-
-    let mut running = true;
-
-    while running {
-        // running = backend.process_events(&mut context, ProcessEventsOptions::default());
-
-        context.update()?;
-
-        app.begin_frame();
-
-        context.render()?;
-
-        app.present_frame();
-    }
+    rsmlui.run_app(&mut app)?;
 
     Ok(())
 }

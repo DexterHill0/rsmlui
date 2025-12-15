@@ -1,8 +1,10 @@
-use std::marker::PhantomData;
+use std::rc::Rc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use glam::IVec2;
 
 use crate::core::context::Context;
+use crate::core::events::WindowEvent;
 use crate::errors::RsmlUiError;
 use crate::interfaces::RawInterface;
 use crate::interfaces::backend::Backend;
@@ -10,35 +12,59 @@ use crate::interfaces::renderer::RenderInterfaceMarker;
 use crate::interfaces::system::SystemInterfaceMarker;
 use crate::utils::conversions::IntoSys;
 
-// impl Default for InterfaceStore {
-//     fn default() -> Self {
-//         Self {
-//             system: None,
-//             render: None,
-//         }
-//     }
-// }
+static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
-pub struct RsmlUi<'app, B: Backend + 'app> {
-    backend: Option<B>,
-    system_interface: Option<RawInterface<SystemInterfaceMarker>>,
-    _phantom: PhantomData<&'app ()>,
+pub trait RsmlUiApp<B: Backend>
+where
+    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
+    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
+{
+    fn starting(&mut self, ui: &mut RsmlUi<B>) -> Result<(), RsmlUiError>;
+
+    fn event(&mut self, event: WindowEvent, ui: &mut RsmlUi<B>) -> Result<(), RsmlUiError>;
 }
 
-impl<'app, B: Backend> RsmlUi<'app, B> {
-    /// Initializes RmlUi. Must be called after setting interfaces but before creating contexts.
-    pub fn initialise() -> Result<Self, RsmlUiError> {
-        // currently initialisation only returns a bool, and `false` is only returned when a font engine is missing
-        // in the future, if more failure points are added to RmlUi hopefully this will change from a bool
-        // to something else to help identify which part failed, aside from just the logs
+// marker trait owned by the RsmlUi and cloned onto contexts, etc
+// its purpose is to keep the app alive while those constructs are still alive
+// although the `RsmlUi` value can be dropped, RmlUi itself won't be shutdown until
+// all resources belonging to the app have been destroyed too
+pub(crate) struct AppOwner;
+
+impl Drop for AppOwner {
+    fn drop(&mut self) {
+        rsmlui_sys::core::shutdown();
+    }
+}
+
+pub struct RsmlUi<B: Backend>
+where
+    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
+    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
+{
+    backend: B,
+    _owner: Rc<AppOwner>,
+}
+
+impl<B: Backend> RsmlUi<B>
+where
+    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
+    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
+{
+    /// Initializes RmlUi. Must only be called once.
+    pub fn new(mut backend: B) -> Result<Self, RsmlUiError> {
+        Self::use_backend(&mut backend);
+
+        if IS_INITIALIZED.swap(true, Ordering::Relaxed) {
+            return Err(RsmlUiError::AlreadyInitialized);
+        }
+
         if !rsmlui_sys::core::initialise() {
             return Err(RsmlUiError::InitializationFailed);
         }
 
         Ok(Self {
-            backend: None,
-            system_interface: None,
-            _phantom: PhantomData, // interfaces: Default::default(),
+            backend,
+            _owner: Rc::new(AppOwner),
         })
     }
 
@@ -46,36 +72,15 @@ impl<'app, B: Backend> RsmlUi<'app, B> {
         rsmlui_sys::core::get_version()
     }
 
-    pub fn create_context<T: Into<String>>(
-        &'app self,
-        name: T,
-        dimensions: IVec2,
-    ) -> Option<Context<'app>> {
-        let raw = rsmlui_sys::core::create_context(name.into(), dimensions.into_sys());
+    pub fn run_app<A: RsmlUiApp<B>>(&mut self, app: &mut A) -> Result<(), RsmlUiError> {
+        app.starting(self)?;
 
-        if raw.is_null() {
-            return None;
+        loop {
+            app.event(WindowEvent::RenderRequested, self)?;
         }
-
-        Some(Context {
-            raw,
-            _phantom: PhantomData,
-        })
     }
 
-    pub fn load_font_face<T: Into<String>>(&self, path: T) -> Result<(), RsmlUiError> {
-        if !rsmlui_sys::core::load_font_face(path.into()) {
-            return Err(RsmlUiError::FontFaceLoadFailed);
-        }
-
-        Ok(())
-    }
-
-    pub fn use_backend(&mut self, mut backend: B)
-    where
-        for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
-        for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
-    {
+    pub(crate) fn use_backend(backend: &mut B) {
         if let Some(system_interface) = backend.get_system_interface() {
             let raw: RawInterface<SystemInterfaceMarker> = system_interface.into();
 
@@ -87,31 +92,42 @@ impl<'app, B: Backend> RsmlUi<'app, B> {
 
             unsafe { rsmlui_sys::core::set_render_interface(raw.0) };
         }
-
-        self.backend.replace(backend);
     }
 
+    pub fn create_context<T: Into<String>>(
+        &self,
+        name: T,
+        dimensions: IVec2,
+    ) -> Result<Context, RsmlUiError> {
+        let raw = rsmlui_sys::core::create_context(name.into(), dimensions.into_sys());
+
+        if raw.is_null() {
+            return Err(RsmlUiError::ContextCreateFailed);
+        }
+
+        Ok(Context::from_raw(raw, &self._owner))
+    }
+
+    pub fn load_font_face<T: Into<String>>(&self, path: T) -> Result<(), RsmlUiError> {
+        if !rsmlui_sys::core::load_font_face(path.into()) {
+            return Err(RsmlUiError::FontFaceLoadFailed);
+        }
+
+        Ok(())
+    }
+
+    #[inline]
     pub fn request_exit(&self) {
-        if let Some(backend) = self.backend.as_ref() {
-            backend.request_exit();
-        }
+        self.backend.request_exit();
     }
 
+    #[inline]
     pub fn begin_frame(&self) {
-        if let Some(backend) = self.backend.as_ref() {
-            backend.begin_frame();
-        }
+        self.backend.begin_frame();
     }
 
+    #[inline]
     pub fn present_frame(&self) {
-        if let Some(backend) = self.backend.as_ref() {
-            backend.present_frame();
-        }
-    }
-}
-
-impl<'app, B: Backend> Drop for RsmlUi<'app, B> {
-    fn drop(&mut self) {
-        rsmlui_sys::core::shutdown();
+        self.backend.present_frame();
     }
 }

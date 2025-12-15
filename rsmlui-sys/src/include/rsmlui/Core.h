@@ -3,7 +3,6 @@
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/Math.h>
 
-#include "Utils.h"
 #include "rust/cxx.h"
 
 namespace rsmlui {
@@ -24,7 +23,7 @@ inline auto create_context(rust::String name, Rml::Vector2i dimensions)
 }
 
 inline void set_system_interface(Rml::SystemInterface* system_interface) {
-    auto* old = Rml::GetSystemInterface();
+    // auto* old = Rml::GetSystemInterface();
 
     // // as we have essentially leaked the in rust, neither rust nor rml owns the memory,
     // // so we must make sure to drop it when its being replaced
