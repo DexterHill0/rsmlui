@@ -85,8 +85,6 @@ pub trait Backend {
     fn get_system_interface(&mut self) -> Option<&mut Self::SystemInterface>;
     fn get_render_interface(&mut self) -> Option<&mut Self::RenderInterface>;
 
-    fn request_exit(&self);
-
     fn process_events<T: 'static>(
         &self,
         context: &mut Context,

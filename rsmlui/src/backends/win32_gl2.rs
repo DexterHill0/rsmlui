@@ -97,10 +97,6 @@ impl Backend for BackendWin32Gl2 {
         Ok(())
     }
 
-    fn request_exit(&self) {
-        rsmlui_sys::backend::request_exit()
-    }
-
     fn begin_frame(&self) {
         rsmlui_sys::backend::begin_frame()
     }

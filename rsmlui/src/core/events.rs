@@ -20,6 +20,7 @@ pub enum KeyboardEvent {
 #[non_exhaustive]
 pub enum WindowEvent<T: 'static = ()> {
     ExitRequested,
+    ExitCancelled,
     RenderRequested,
 
     KeyboardEvent(KeyboardEvent),

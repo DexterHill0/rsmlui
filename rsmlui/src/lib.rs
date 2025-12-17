@@ -1,6 +1,7 @@
 #![feature(fundamental)]
 #![feature(associated_type_defaults)]
 #![feature(unsafe_cell_access)]
+#![feature(trait_alias)]
 
 pub mod backends;
 pub mod core;

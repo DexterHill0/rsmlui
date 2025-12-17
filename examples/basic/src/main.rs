@@ -35,7 +35,7 @@ impl RsmlUiApp<BackendWin32Gl2> for App {
         app: &mut ActiveApp<BackendWin32Gl2>,
     ) -> Result<(), RsmlUiError> {
         match event {
-            WindowEvent::ExitRequested => app.request_exit(),
+            WindowEvent::ExitRequested => app.exit(),
             WindowEvent::RenderRequested => {
                 if let Some(context) = self.context.as_ref() {
                     context.update()?;

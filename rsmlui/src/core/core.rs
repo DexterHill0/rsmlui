@@ -27,6 +27,11 @@ thread_local! {
 
 static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
+pub trait BoundedBackend = Backend
+where
+    for<'a> &'a mut <Self as Backend>::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
+    for<'a> &'a mut <Self as Backend>::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>;
+
 #[derive(PartialEq, Eq)]
 enum AppState {
     Stopped,
@@ -34,11 +39,7 @@ enum AppState {
     Running,
 }
 
-pub trait RsmlUiApp<B: Backend, T: 'static = ()>
-where
-    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
-    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
-{
+pub trait RsmlUiApp<B: BoundedBackend, T: 'static = ()> {
     fn starting(&mut self, app: &mut ActiveApp<B>) -> Result<(), RsmlUiError>;
 
     fn event(&mut self, event: WindowEvent<T>, app: &mut ActiveApp<B>) -> Result<(), RsmlUiError>;
@@ -61,36 +62,29 @@ impl Drop for AppOwner {
 // the structs setup like this as technically the backend is the real owner of the app, as the backend must be the last thing that ever gets shutdown
 // building the structs this way means the drop implementation can enforce that backend is always shutdown last, at the cost of having two different structs
 // NOTE: I personally like the winit style, so I *should* like `ActiveApp` (as it's like `ActiveEventLoop`), but if we could get rid of it that would be nicer
-pub struct ActiveApp<B: Backend>
-where
-    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
-    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
-{
+pub struct ActiveApp<B: BoundedBackend> {
     state: AppState,
     backend: Rc<B>,
     _owner: Rc<AppOwner>, // app still has ownership over contexts, etc, so it still has a marker even though itself is "owned" by the backend
     _phantom: PhantomData<B>,
 }
 
-pub struct RsmlUi<B: Backend>
-where
-    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
-    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
-{
+pub struct RsmlUi<B: BoundedBackend> {
     backend: ManuallyDrop<Rc<B>>,
     app: ManuallyDrop<ActiveApp<B>>,
 }
 
-impl<B: Backend> ActiveApp<B>
-where
-    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
-    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
-{
+impl<B: BoundedBackend> ActiveApp<B> {
     fn run_app_inner<A: RsmlUiApp<B, T>, T: 'static>(
         &mut self,
         app: &mut A,
     ) -> Result<(), RsmlUiError> {
         app.starting(self)?;
+
+        match self.state {
+            AppState::Stopped | AppState::Stopping => return Ok(()),
+            _ => {},
+        }
 
         let (tx, rx) = channel::<WindowEvent<T>>();
         let sender = WindowEventEmitter(tx);
@@ -114,32 +108,48 @@ where
             },
         )));
 
-        while self.state == AppState::Running {
+        while matches!(self.state, AppState::Running | AppState::Stopping) {
+            // TODO: should we really still be calling `process_events` while the app is stopping?
             if let Some(context) = app.get_context() {
                 self.backend.process_events(context, &sender)?;
             }
 
             if let Ok(event) = rx.try_recv() {
-                app.event(event, self)?;
+                match event {
+                    WindowEvent::ExitRequested => {
+                        if self.state != AppState::Stopping {
+                            // must come before `app.event` as the user could call `app.exit` which would override
+                            // and set it to `Stopped`
+                            self.state = AppState::Stopping;
+
+                            app.event(event, self)?;
+                        }
+                    },
+                    WindowEvent::ExitCancelled => {
+                        if self.state == AppState::Stopping {
+                            self.state = AppState::Running;
+
+                            app.event(event, self)?;
+                        }
+                    },
+                    _ => {
+                        app.event(event, self)?;
+                    },
+                }
+            }
+
+            match self.state {
+                AppState::Stopped => break,
+                _ => {},
             }
 
             app.event(WindowEvent::RenderRequested, self)?;
         }
 
-        match self.state {
-            AppState::Stopping => {
-                self.backend.request_exit();
-            },
-            _ => {},
-        }
-
         Ok(())
     }
 
-    pub fn run_app<A: RsmlUiApp<B, T>, T: 'static>(
-        &mut self,
-        app: &mut A,
-    ) -> Result<(), RsmlUiError> {
+    fn run_app<A: RsmlUiApp<B, T>, T: 'static>(&mut self, app: &mut A) -> Result<(), RsmlUiError> {
         self.state = AppState::Running;
 
         let run_result = self.run_app_inner(app);
@@ -174,10 +184,20 @@ where
     }
 
     #[inline]
-    pub fn request_exit(&mut self) {
-        self.state = AppState::Stopping;
+    pub fn exit(&mut self) {
+        self.state = AppState::Stopped;
         // we can't just call `self.backend.request_exit()` as that will free the backend object and memory
         // but it's possible for the while loop to still emit a render event, which would cause a UAF
+    }
+
+    #[inline]
+    pub fn request_exit(&mut self) {
+        self.state = AppState::Stopping;
+    }
+
+    #[inline]
+    pub fn cancel_exit(&mut self) {
+        self.state = AppState::Running;
     }
 
     #[inline]
@@ -191,11 +211,7 @@ where
     }
 }
 
-impl<B: Backend> Drop for RsmlUi<B>
-where
-    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
-    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
-{
+impl<B: BoundedBackend> Drop for RsmlUi<B> {
     fn drop(&mut self) {
         unsafe {
             ManuallyDrop::drop(&mut self.app);
@@ -210,11 +226,7 @@ where
     }
 }
 
-impl<B: Backend> RsmlUi<B>
-where
-    for<'a> &'a mut B::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
-    for<'a> &'a mut B::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>,
-{
+impl<B: BoundedBackend> RsmlUi<B> {
     /// Initializes RmlUi. Must only be called once.
     pub fn new(mut backend: B) -> Result<Self, RsmlUiError> {
         if IS_INITIALIZED.swap(true, Ordering::Relaxed) {
@@ -265,9 +277,22 @@ where
         }
     }
 
+    /// Exits the app immediately. If you want a graceful exit, use [`Self::request_exit`] instead.
+    #[inline]
+    pub fn exit(&mut self) {
+        self.app.exit();
+    }
+
+    /// Requests the app to shutdown gracefully. This will *not* emit a `WindowEvent::ExitRequested` event.
     #[inline]
     pub fn request_exit(&mut self) {
         self.app.request_exit();
+    }
+
+    /// Cancels a previously requested exit. This doesn't do anything if an exit was not requested. This will *not* emit a `WindowEvent::ExitCancelled` event.
+    #[inline]
+    pub fn cancel_exit(&mut self) {
+        self.app.cancel_exit();
     }
 
     #[inline]
