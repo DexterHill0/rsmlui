@@ -1,9 +1,9 @@
-use std::cell::RefCell;
-use std::marker::PhantomData;
+use std::cell::{RefCell, UnsafeCell};
 use std::mem::ManuallyDrop;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::channel;
+use std::time::Instant;
 
 use glam::IVec2;
 
@@ -64,17 +64,28 @@ impl Drop for AppOwner {
 // NOTE: I personally like the winit style, so I *should* like `ActiveApp` (as it's like `ActiveEventLoop`), but if we could get rid of it that would be nicer
 pub struct ActiveApp<B: BoundedBackend> {
     state: AppState,
-    backend: Rc<B>,
+    backend: Rc<UnsafeCell<B>>,
+    last_poll: Instant,
+
     _owner: Rc<AppOwner>, // app still has ownership over contexts, etc, so it still has a marker even though itself is "owned" by the backend
-    _phantom: PhantomData<B>,
 }
 
 pub struct RsmlUi<B: BoundedBackend> {
-    backend: ManuallyDrop<Rc<B>>,
+    backend: ManuallyDrop<Rc<UnsafeCell<B>>>,
     app: ManuallyDrop<ActiveApp<B>>,
 }
 
 impl<B: BoundedBackend> ActiveApp<B> {
+    #[inline(always)]
+    fn backend(&self) -> &B {
+        unsafe { self.backend.as_ref_unchecked() }
+    }
+
+    #[inline(always)]
+    fn backend_mut(&mut self) -> &mut B {
+        unsafe { self.backend.as_mut_unchecked() }
+    }
+
     fn run_app_inner<A: RsmlUiApp<B, T>, T: 'static>(
         &mut self,
         app: &mut A,
@@ -109,9 +120,15 @@ impl<B: BoundedBackend> ActiveApp<B> {
         )));
 
         while matches!(self.state, AppState::Running | AppState::Stopping) {
+            let now = Instant::now();
+            let detla = now - self.last_poll;
+            self.last_poll = now;
+
             // TODO: should we really still be calling `process_events` while the app is stopping?
-            if let Some(context) = app.get_context() {
-                self.backend.process_events(context, &sender)?;
+            if self.backend_mut().should_poll(detla)
+                && let Some(context) = app.get_context()
+            {
+                self.backend().process_events(context, &sender)?;
             }
 
             if let Ok(event) = rx.try_recv() {
@@ -202,12 +219,12 @@ impl<B: BoundedBackend> ActiveApp<B> {
 
     #[inline]
     pub fn begin_frame(&self) {
-        self.backend.begin_frame();
+        self.backend().begin_frame();
     }
 
     #[inline]
     pub fn present_frame(&self) {
-        self.backend.present_frame();
+        self.backend().present_frame();
     }
 }
 
@@ -239,14 +256,14 @@ impl<B: BoundedBackend> RsmlUi<B> {
             return Err(RsmlUiError::InitializationFailed);
         }
 
-        let backend = Rc::new(backend);
+        let backend = Rc::new(UnsafeCell::new(backend));
 
         Ok(Self {
             app: ManuallyDrop::new(ActiveApp {
                 state: AppState::Stopped,
                 backend: Rc::clone(&backend),
+                last_poll: Instant::now(),
                 _owner: Rc::new(AppOwner),
-                _phantom: PhantomData,
             }),
             backend: ManuallyDrop::new(backend),
         })

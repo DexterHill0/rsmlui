@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use crate::core::context::Context;
 use crate::core::core::BACKEND_EVENTS_CALLBACK;
 use crate::core::events::{WindowEvent, WindowEventEmitter};
@@ -58,6 +60,10 @@ impl Backend for BackendWin32Gl2 {
 
     fn get_render_interface(&mut self) -> Option<&mut Self::RenderInterface> {
         Some(&mut self.render_interface)
+    }
+
+    fn should_poll(&mut self, _dt: Duration) -> bool {
+        true
     }
 
     fn process_events<T: 'static>(

@@ -1,4 +1,5 @@
 use std::ops::{Deref, DerefMut};
+use std::time::{Duration, Instant};
 
 use glam::IVec2;
 
@@ -84,6 +85,8 @@ pub trait Backend {
 
     fn get_system_interface(&mut self) -> Option<&mut Self::SystemInterface>;
     fn get_render_interface(&mut self) -> Option<&mut Self::RenderInterface>;
+
+    fn should_poll(&mut self, delta: Duration) -> bool;
 
     fn process_events<T: 'static>(
         &self,
