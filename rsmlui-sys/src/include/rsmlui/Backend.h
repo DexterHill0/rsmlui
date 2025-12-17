@@ -2,6 +2,7 @@
 #include <RmlUi/Core/Math.h>
 #include <RmlUi_Backend.h>
 
+#include "RmlUi/Core/Input.h"
 #include "rust/cxx.h"
 
 namespace rsmlui::backend {
@@ -35,7 +36,7 @@ inline auto process_events(
     rust::Fn<bool(
         Rml::Context* ctx,
         Rml::Input::KeyIdentifier key,
-        int32_t key_modifier,
+        Rml::Input::KeyModifier key_modifier,
         float native_dp_ratio,
         bool priority
     )> rust_callback,
@@ -57,7 +58,7 @@ inline auto process_events(
         return stored_rust_callback(
             ctx,
             key,
-            key_modifier,
+            (Rml::Input::KeyModifier)key_modifier,
             native_dp_ratio,
             priority
         );

@@ -8,12 +8,6 @@ use crate::utils::raw::{Ptr, Raw};
 #[repr(transparent)]
 pub(crate) struct ContextOwner(Ptr<Context>);
 
-impl Drop for ContextOwner {
-    fn drop(&mut self) {
-        unsafe { rsmlui_sys::context::context_destructor(self.0) };
-    }
-}
-
 pub struct Context {
     pub(crate) raw: Rc<ContextOwner>,
     pub(crate) _parent: Rc<AppOwner>,
@@ -21,6 +15,10 @@ pub struct Context {
 
 impl Raw for Context {
     type Ptr = *mut rsmlui_sys::context::Context;
+
+    fn raw(&self) -> Self::Ptr {
+        self.raw.0
+    }
 }
 
 impl Context {

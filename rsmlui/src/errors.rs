@@ -8,6 +8,9 @@ pub enum RsmlUiError {
     #[error("already initialized")]
     AlreadyInitialized,
 
+    #[error("failed to send event")]
+    EventSendFailed,
+
     #[error("failed to create context")]
     ContextCreateFailed,
     #[error("failed to render")]

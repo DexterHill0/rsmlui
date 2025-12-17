@@ -5,11 +5,17 @@ unsafe impl ExternType for crate::Rml_Input_KeyIdentifier {
     type Kind = cxx::kind::Trivial;
 }
 
+unsafe impl ExternType for crate::Rml_Input_KeyModifier {
+    type Id = type_id!("Rml::Input::KeyModifier");
+    type Kind = cxx::kind::Trivial;
+}
+
 #[cxx::bridge]
 mod ffi {
     #[namespace = "Rml::Input"]
     extern "C++" {
         type KeyIdentifier = crate::Rml_Input_KeyIdentifier;
+        type KeyModifier = crate::Rml_Input_KeyModifier;
     }
 
     #[namespace = "Rml"]
@@ -39,7 +45,7 @@ mod ffi {
             key_down_callback: unsafe fn(
                 context: *mut Context,
                 key: KeyIdentifier,
-                key_modifier: i32,
+                key_modifier: KeyModifier,
                 native_dp_ratio: f32,
                 priority: bool,
             ) -> bool,

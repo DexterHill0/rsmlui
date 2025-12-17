@@ -6,12 +6,6 @@ use crate::utils::raw::{Ptr, Raw};
 #[repr(transparent)]
 pub(crate) struct ElementDocumentOwner(Ptr<ElementDocument>);
 
-impl Drop for ElementDocumentOwner {
-    fn drop(&mut self) {
-        unsafe { rsmlui_sys::element_document::element_document_destructor(self.0) };
-    }
-}
-
 pub struct ElementDocument {
     pub(crate) raw: Rc<ElementDocumentOwner>,
     pub(crate) _parent: Rc<ContextOwner>,
@@ -19,6 +13,10 @@ pub struct ElementDocument {
 
 impl Raw for ElementDocument {
     type Ptr = *mut rsmlui_sys::element_document::ElementDocument;
+
+    fn raw(&self) -> Self::Ptr {
+        self.raw.0
+    }
 }
 
 impl ElementDocument {

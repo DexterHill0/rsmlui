@@ -11,8 +11,6 @@ mod ffi {
     unsafe extern "C++" {
         include!("rsmlui/Context.h");
 
-        unsafe fn context_destructor(ctx: *mut Context);
-
         unsafe fn context_update(ctx: *mut Context) -> bool;
         unsafe fn context_render(ctx: *mut Context) -> bool;
         unsafe fn context_load_document(

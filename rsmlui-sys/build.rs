@@ -117,6 +117,7 @@ fn main() {
         .clang_arg("-I./RmlUi/Include")
         .clang_arg("-I./RmlUi/Backends")
         .allowlist_type("Rml::Input::KeyIdentifier")
+        .allowlist_type("Rml::Input::KeyModifier")
         .allowlist_type("Rml::ClipMaskOperation")
         .allowlist_type("Rml::BlendMode")
         .allowlist_type("Rml::Vertex")
@@ -125,6 +126,7 @@ fn main() {
         .allowlist_type("Rml::Log_Type")
         .allowlist_var("")
         .allowlist_function("")
+        .bitfield_enum("Rml::Input::KeyModifier")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: true,
         })

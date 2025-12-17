@@ -223,6 +223,46 @@ pub enum Rml_Input_KeyIdentifier {
     KI_FIRST_CUSTOM_KEY = 177,
     KI_LAST_CUSTOM_KEY = 250,
 }
+impl Rml_Input_KeyModifier {
+    pub const KM_ALT: Rml_Input_KeyModifier = Rml_Input_KeyModifier(4);
+    pub const KM_CAPSLOCK: Rml_Input_KeyModifier = Rml_Input_KeyModifier(16);
+    pub const KM_CTRL: Rml_Input_KeyModifier = Rml_Input_KeyModifier(1);
+    pub const KM_META: Rml_Input_KeyModifier = Rml_Input_KeyModifier(8);
+    pub const KM_NUMLOCK: Rml_Input_KeyModifier = Rml_Input_KeyModifier(32);
+    pub const KM_SCROLLLOCK: Rml_Input_KeyModifier = Rml_Input_KeyModifier(64);
+    pub const KM_SHIFT: Rml_Input_KeyModifier = Rml_Input_KeyModifier(2);
+}
+impl ::std::ops::BitOr<Rml_Input_KeyModifier> for Rml_Input_KeyModifier {
+    type Output = Self;
+
+    #[inline]
+    fn bitor(self, other: Self) -> Self {
+        Rml_Input_KeyModifier(self.0 | other.0)
+    }
+}
+impl ::std::ops::BitOrAssign for Rml_Input_KeyModifier {
+    #[inline]
+    fn bitor_assign(&mut self, rhs: Rml_Input_KeyModifier) {
+        self.0 |= rhs.0;
+    }
+}
+impl ::std::ops::BitAnd<Rml_Input_KeyModifier> for Rml_Input_KeyModifier {
+    type Output = Self;
+
+    #[inline]
+    fn bitand(self, other: Self) -> Self {
+        Rml_Input_KeyModifier(self.0 & other.0)
+    }
+}
+impl ::std::ops::BitAndAssign for Rml_Input_KeyModifier {
+    #[inline]
+    fn bitand_assign(&mut self, rhs: Rml_Input_KeyModifier) {
+        self.0 &= rhs.0;
+    }
+}
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct Rml_Input_KeyModifier(pub u8);
 #[doc = "The element that makes up all geometry sent to the renderer.\n\n@author Peter Curry"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]

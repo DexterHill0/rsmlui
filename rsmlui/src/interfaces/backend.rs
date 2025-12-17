@@ -3,6 +3,7 @@ use std::ops::{Deref, DerefMut};
 use glam::IVec2;
 
 use crate::core::context::Context;
+use crate::core::events::WindowEventEmitter;
 use crate::errors::RsmlUiError;
 use crate::interfaces::RawInterface;
 use crate::interfaces::renderer::RenderInterfaceMarker;
@@ -14,19 +15,6 @@ use crate::utils::input::KeyCode;
 #[derive(Clone, Copy, Debug, Default)]
 pub struct BackendOptions {
     pub allow_resize: bool,
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-pub struct ProcessEventsOptions {
-    pub power_save: bool,
-}
-
-pub struct ProcessEventContext<'ctx> {
-    pub context: &'ctx mut Context,
-    pub key: KeyCode,
-    pub key_modifier: i32,
-    pub native_dp_ratio: f32,
-    pub priority: bool,
 }
 
 // pub struct BackendGuard<B: Backend> {
@@ -98,6 +86,12 @@ pub trait Backend {
     fn get_render_interface(&mut self) -> Option<&mut Self::RenderInterface>;
 
     fn request_exit(&self);
+
+    fn process_events<T: 'static>(
+        &self,
+        context: &mut Context,
+        sender: &WindowEventEmitter<T>,
+    ) -> Result<(), RsmlUiError>;
 
     fn begin_frame(&self);
     fn present_frame(&self);

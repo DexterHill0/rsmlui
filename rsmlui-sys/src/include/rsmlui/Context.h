@@ -4,9 +4,6 @@
 #include "rust/cxx.h"
 
 namespace rsmlui {
-inline void context_destructor(Rml::Context* ctx) {
-    ctx->~Context();
-}
 
 inline auto context_update(Rml::Context* ctx) -> bool {
     return ctx->Update();

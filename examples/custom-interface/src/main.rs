@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use rsmlui::backends::win32_gl2::BackendWin32Gl2;
 use rsmlui::core::context::Context;
-use rsmlui::core::core::{RsmlUi, RsmlUiApp};
+use rsmlui::core::core::{ActiveApp, RsmlUi, RsmlUiApp};
 use rsmlui::core::element_document::ElementDocument;
 use rsmlui::core::events::WindowEvent;
 use rsmlui::core::log::LogLevel;
@@ -51,10 +51,10 @@ struct App {
 }
 
 impl RsmlUiApp<BackendWin32Gl2> for App {
-    fn starting(&mut self, ui: &mut RsmlUi<BackendWin32Gl2>) -> Result<(), RsmlUiError> {
-        ui.load_font_face("../assets/Roboto.ttf")?;
+    fn starting(&mut self, app: &mut ActiveApp<BackendWin32Gl2>) -> Result<(), RsmlUiError> {
+        app.load_font_face("../assets/Roboto.ttf")?;
 
-        let context = ui.create_context("main", DIMENSIONS)?;
+        let context = app.create_context("main", DIMENSIONS)?;
         let document = context.load_document("../assets/basic.rml")?;
 
         document.show();
@@ -68,25 +68,29 @@ impl RsmlUiApp<BackendWin32Gl2> for App {
     fn event(
         &mut self,
         event: WindowEvent,
-        ui: &mut RsmlUi<BackendWin32Gl2>,
+        app: &mut ActiveApp<BackendWin32Gl2>,
     ) -> Result<(), RsmlUiError> {
         match event {
-            WindowEvent::ExitRequested => ui.request_exit(),
+            WindowEvent::ExitRequested => app.request_exit(),
             WindowEvent::RenderRequested => {
                 if let Some(context) = self.context.as_ref() {
                     context.update()?;
 
-                    ui.begin_frame();
+                    app.begin_frame();
 
                     context.render()?;
 
-                    ui.present_frame();
+                    app.present_frame();
                 }
             },
             _ => {},
         }
 
         Ok(())
+    }
+
+    fn get_context(&mut self) -> Option<&mut Context> {
+        self.context.as_mut()
     }
 }
 
