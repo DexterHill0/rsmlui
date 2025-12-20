@@ -5,6 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::channel;
 use std::time::Instant;
 
+use drop_tree::{DropCtx, drop_tree};
 use glam::IVec2;
 
 use crate::core::context::Context;
@@ -32,7 +33,7 @@ where
     for<'a> &'a mut <Self as Backend>::SystemInterface: Into<RawInterface<SystemInterfaceMarker>>,
     for<'a> &'a mut <Self as Backend>::RenderInterface: Into<RawInterface<RenderInterfaceMarker>>;
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum AppState {
     Stopped,
     Stopping,
@@ -40,50 +41,60 @@ enum AppState {
 }
 
 pub trait RsmlUiApp<B: BoundedBackend, T: 'static = ()> {
-    fn starting(&mut self, app: &mut ActiveApp<B>) -> Result<(), RsmlUiError>;
+    fn starting(&mut self, app: &mut RsmlUi<B>) -> Result<(), RsmlUiError>;
 
-    fn event(&mut self, event: WindowEvent<T>, app: &mut ActiveApp<B>) -> Result<(), RsmlUiError>;
+    fn event(&mut self, event: WindowEvent<T>, app: &mut RsmlUi<B>) -> Result<(), RsmlUiError>;
 
     fn get_context(&mut self) -> Option<&mut Context>;
 }
 
-// marker trait owned by the RsmlUi and cloned onto contexts, etc
-// its purpose is to keep the app alive while those constructs are still alive
-// although the `RsmlUi` value can be dropped, RmlUi itself won't be shutdown until
-// all resources belonging to the app have been destroyed too
-pub(crate) struct AppOwner;
+fn app_destructor<B: BoundedBackend + 'static>(ctx: DropCtx<RsmlUi<B>>) {
+    // core must shutdown before the backend
+    rsmlui_sys::core::shutdown();
 
-impl Drop for AppOwner {
-    fn drop(&mut self) {
-        rsmlui_sys::core::shutdown();
-    }
+    unsafe { ManuallyDrop::drop(&mut ctx.backend) };
 }
 
-// the structs setup like this as technically the backend is the real owner of the app, as the backend must be the last thing that ever gets shutdown
-// building the structs this way means the drop implementation can enforce that backend is always shutdown last, at the cost of having two different structs
-// NOTE: I personally like the winit style, so I *should* like `ActiveApp` (as it's like `ActiveEventLoop`), but if we could get rid of it that would be nicer
-pub struct ActiveApp<B: BoundedBackend> {
+// this will only call the destructor once all resources borrowing from this ownership node
+// have themselves dropped
+#[drop_tree(destructor(app_destructor))]
+pub struct RsmlUi<B: BoundedBackend + 'static> {
     state: AppState,
-    backend: Rc<UnsafeCell<B>>,
+    backend: ManuallyDrop<B>,
     last_poll: Instant,
-
-    _owner: Rc<AppOwner>, // app still has ownership over contexts, etc, so it still has a marker even though itself is "owned" by the backend
 }
 
-pub struct RsmlUi<B: BoundedBackend> {
-    backend: ManuallyDrop<Rc<UnsafeCell<B>>>,
-    app: ManuallyDrop<ActiveApp<B>>,
-}
-
-impl<B: BoundedBackend> ActiveApp<B> {
+impl<B: BoundedBackend> RsmlUi<B> {
     #[inline(always)]
     fn backend(&self) -> &B {
-        unsafe { self.backend.as_ref_unchecked() }
+        unsafe { &self.backend }
     }
 
     #[inline(always)]
     fn backend_mut(&mut self) -> &mut B {
-        unsafe { self.backend.as_mut_unchecked() }
+        unsafe { &mut self.backend }
+    }
+
+    /// Initializes RmlUi. Must only be called once.
+    pub fn new(mut backend: B) -> Result<Self, RsmlUiError> {
+        if IS_INITIALIZED.swap(true, Ordering::Relaxed) {
+            return Err(RsmlUiError::AlreadyInitialized);
+        }
+
+        Self::use_backend(&mut backend);
+
+        if !rsmlui_sys::core::initialise() {
+            return Err(RsmlUiError::InitializationFailed);
+        }
+
+        // let backend = Rc::new(UnsafeCell::new(backend));
+
+        Ok(Self::new_with_borrow(
+            AppState::Stopped,
+            // Rc::clone(&backend),
+            ManuallyDrop::new(backend),
+            Instant::now(),
+        ))
     }
 
     fn run_app_inner<A: RsmlUiApp<B, T>, T: 'static>(
@@ -166,7 +177,10 @@ impl<B: BoundedBackend> ActiveApp<B> {
         Ok(())
     }
 
-    fn run_app<A: RsmlUiApp<B, T>, T: 'static>(&mut self, app: &mut A) -> Result<(), RsmlUiError> {
+    pub fn run_app<A: RsmlUiApp<B, T>, T: 'static>(
+        &mut self,
+        app: &mut A,
+    ) -> Result<(), RsmlUiError> {
         self.state = AppState::Running;
 
         let run_result = self.run_app_inner(app);
@@ -189,7 +203,7 @@ impl<B: BoundedBackend> ActiveApp<B> {
             return Err(RsmlUiError::ContextCreateFailed);
         }
 
-        Ok(Context::from_raw(raw, &self._owner))
+        Ok(Context::new_with_borrow(raw, self))
     }
 
     pub fn load_font_face<T: Into<String>>(&self, path: T) -> Result<(), RsmlUiError> {
@@ -226,59 +240,6 @@ impl<B: BoundedBackend> ActiveApp<B> {
     pub fn present_frame(&self) {
         self.backend().present_frame();
     }
-}
-
-impl<B: BoundedBackend> Drop for RsmlUi<B> {
-    fn drop(&mut self) {
-        unsafe {
-            ManuallyDrop::drop(&mut self.app);
-
-            // although `app` holds a strong reference to the backend, it is dropped first, so there
-            // should be no more strong references to the backend at this point
-            debug_assert!(Rc::strong_count(&self.backend) == 1);
-
-            // backend MUST be the last thing shutdown
-            ManuallyDrop::drop(&mut self.backend);
-        }
-    }
-}
-
-impl<B: BoundedBackend> RsmlUi<B> {
-    /// Initializes RmlUi. Must only be called once.
-    pub fn new(mut backend: B) -> Result<Self, RsmlUiError> {
-        if IS_INITIALIZED.swap(true, Ordering::Relaxed) {
-            return Err(RsmlUiError::AlreadyInitialized);
-        }
-
-        Self::use_backend(&mut backend);
-
-        if !rsmlui_sys::core::initialise() {
-            return Err(RsmlUiError::InitializationFailed);
-        }
-
-        let backend = Rc::new(UnsafeCell::new(backend));
-
-        Ok(Self {
-            app: ManuallyDrop::new(ActiveApp {
-                state: AppState::Stopped,
-                backend: Rc::clone(&backend),
-                last_poll: Instant::now(),
-                _owner: Rc::new(AppOwner),
-            }),
-            backend: ManuallyDrop::new(backend),
-        })
-    }
-
-    pub fn get_version() -> String {
-        rsmlui_sys::core::get_version()
-    }
-
-    pub fn run_app<A: RsmlUiApp<B, T>, T: 'static>(
-        &mut self,
-        app: &mut A,
-    ) -> Result<(), RsmlUiError> {
-        self.app.run_app(app)
-    }
 
     pub(crate) fn use_backend(backend: &mut B) {
         if let Some(system_interface) = backend.get_system_interface() {
@@ -293,32 +254,98 @@ impl<B: BoundedBackend> RsmlUi<B> {
             unsafe { rsmlui_sys::core::set_render_interface(raw.0) };
         }
     }
-
-    /// Exits the app immediately. If you want a graceful exit, use [`Self::request_exit`] instead.
-    #[inline]
-    pub fn exit(&mut self) {
-        self.app.exit();
-    }
-
-    /// Requests the app to shutdown gracefully. This will *not* emit a `WindowEvent::ExitRequested` event.
-    #[inline]
-    pub fn request_exit(&mut self) {
-        self.app.request_exit();
-    }
-
-    /// Cancels a previously requested exit. This doesn't do anything if an exit was not requested. This will *not* emit a `WindowEvent::ExitCancelled` event.
-    #[inline]
-    pub fn cancel_exit(&mut self) {
-        self.app.cancel_exit();
-    }
-
-    #[inline]
-    pub fn begin_frame(&self) {
-        self.app.begin_frame();
-    }
-
-    #[inline]
-    pub fn present_frame(&self) {
-        self.app.present_frame();
-    }
 }
+
+// impl<B: BoundedBackend> Drop for RsmlUi<B> {
+//     fn drop(&mut self) {
+//         unsafe {
+//             ManuallyDrop::drop(&mut self.app);
+
+//             // dbg!(&Rc::strong_count(&self.backend));
+
+//             // although `app` holds a strong reference to the backend, it is dropped first, so there
+//             // should be no more strong references to the backend at this point
+//             // debug_assert!(Rc::strong_count(&self.backend) == 1);
+
+//             // backend MUST be the last thing shutdown
+//             // ManuallyDrop::drop(&mut self.backend);
+//         }
+//     }
+// }
+
+// impl<B: BoundedBackend + 'static> RsmlUi<B> {
+// /// Initializes RmlUi. Must only be called once.
+// pub fn new(mut backend: B) -> Result<Self, RsmlUiError> {
+//     if IS_INITIALIZED.swap(true, Ordering::Relaxed) {
+//         return Err(RsmlUiError::AlreadyInitialized);
+//     }
+
+//     Self::use_backend(&mut backend);
+
+//     if !rsmlui_sys::core::initialise() {
+//         return Err(RsmlUiError::InitializationFailed);
+//     }
+
+//     // let backend = Rc::new(UnsafeCell::new(backend));
+
+//     Ok(Self::new_with_borrow(
+//         AppState::Stopped,
+//         // Rc::clone(&backend),
+//         ManuallyDrop::new(backend),
+//         Instant::now(),
+//     ))
+// }
+
+//     pub fn get_version() -> String {
+//         rsmlui_sys::core::get_version()
+//     }
+
+//     pub fn run_app<A: RsmlUiApp<B, T>, T: 'static>(
+//         &mut self,
+//         app: &mut A,
+//     ) -> Result<(), RsmlUiError> {
+//         self.app.run_app(app)
+//     }
+
+// pub(crate) fn use_backend(backend: &mut B) {
+//     if let Some(system_interface) = backend.get_system_interface() {
+//         let raw: RawInterface<SystemInterfaceMarker> = system_interface.into();
+
+//         unsafe { rsmlui_sys::core::set_system_interface(raw.0) };
+//     }
+
+//     if let Some(render_interface) = backend.get_render_interface() {
+//         let raw: RawInterface<RenderInterfaceMarker> = render_interface.into();
+
+//         unsafe { rsmlui_sys::core::set_render_interface(raw.0) };
+//     }
+// }
+
+//     /// Exits the app immediately. If you want a graceful exit, use [`Self::request_exit`] instead.
+//     #[inline]
+//     pub fn exit(&mut self) {
+//         self.app.exit();
+//     }
+
+//     /// Requests the app to shutdown gracefully. This will *not* emit a `WindowEvent::ExitRequested` event.
+//     #[inline]
+//     pub fn request_exit(&mut self) {
+//         self.app.request_exit();
+//     }
+
+//     /// Cancels a previously requested exit. This doesn't do anything if an exit was not requested. This will *not* emit a `WindowEvent::ExitCancelled` event.
+//     #[inline]
+//     pub fn cancel_exit(&mut self) {
+//         self.app.cancel_exit();
+//     }
+
+//     #[inline]
+//     pub fn begin_frame(&self) {
+//         self.app.begin_frame();
+//     }
+
+//     #[inline]
+//     pub fn present_frame(&self) {
+//         self.app.present_frame();
+//     }
+// }

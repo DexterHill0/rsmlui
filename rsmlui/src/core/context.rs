@@ -1,36 +1,25 @@
-use std::rc::Rc;
+use drop_tree::drop_tree;
 
-use crate::core::core::AppOwner;
 use crate::core::element_document::ElementDocument;
 use crate::errors::RsmlUiError;
 use crate::utils::raw::{Ptr, Raw};
 
-#[repr(transparent)]
-pub(crate) struct ContextOwner(Ptr<Context>);
-
+#[drop_tree(borrows(crate::core::core::RsmlUi))]
 pub struct Context {
-    pub(crate) raw: Rc<ContextOwner>,
-    pub(crate) _parent: Rc<AppOwner>,
+    pub(crate) raw: Ptr<Context>,
 }
 
 impl Raw for Context {
     type Ptr = *mut rsmlui_sys::context::Context;
 
     fn raw(&self) -> Self::Ptr {
-        self.raw.0
+        self.raw
     }
 }
 
 impl Context {
-    pub(crate) fn from_raw(ptr: Ptr<Self>, parent: &Rc<AppOwner>) -> Self {
-        Self {
-            raw: Rc::new(ContextOwner(ptr)),
-            _parent: Rc::clone(parent),
-        }
-    }
-
     pub fn update(&self) -> Result<(), RsmlUiError> {
-        if !unsafe { rsmlui_sys::context::context_update(self.raw.0) } {
+        if !unsafe { rsmlui_sys::context::context_update(self.raw) } {
             return Err(RsmlUiError::ContextUpdateFailed);
         }
 
@@ -38,7 +27,7 @@ impl Context {
     }
 
     pub fn render(&self) -> Result<(), RsmlUiError> {
-        if !unsafe { rsmlui_sys::context::context_render(self.raw.0) } {
+        if !unsafe { rsmlui_sys::context::context_render(self.raw) } {
             return Err(RsmlUiError::ContextRenderFailed);
         }
 
@@ -50,12 +39,12 @@ impl Context {
         document_path: P,
     ) -> Result<ElementDocument, RsmlUiError> {
         let raw =
-            unsafe { rsmlui_sys::context::context_load_document(self.raw.0, document_path.into()) };
+            unsafe { rsmlui_sys::context::context_load_document(self.raw, document_path.into()) };
 
         if raw.is_null() {
             return Err(RsmlUiError::DocumentCreateFailed);
         }
 
-        Ok(ElementDocument::from_raw(raw, &self.raw))
+        Ok(ElementDocument::new_with_borrow(raw, self))
     }
 }

@@ -5,5 +5,7 @@ members = [
     "examples/custom-interface",
     "rsmlui",
     "rsmlui-sys",
+    "drop-tree",
+    "drop-tree-derive",
 ]
 resolver = "3"

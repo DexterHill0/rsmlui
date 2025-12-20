@@ -1,6 +1,6 @@
 use rsmlui::backends::win32_gl2::BackendWin32Gl2;
 use rsmlui::core::context::Context;
-use rsmlui::core::core::{ActiveApp, RsmlUi, RsmlUiApp};
+use rsmlui::core::core::{RsmlUi, RsmlUiApp};
 use rsmlui::core::element_document::ElementDocument;
 use rsmlui::core::events::{KeyboardEvent, WindowEvent};
 use rsmlui::errors::RsmlUiError;
@@ -15,7 +15,7 @@ struct App {
 }
 
 impl RsmlUiApp<BackendWin32Gl2> for App {
-    fn starting(&mut self, app: &mut ActiveApp<BackendWin32Gl2>) -> Result<(), RsmlUiError> {
+    fn starting(&mut self, app: &mut RsmlUi<BackendWin32Gl2>) -> Result<(), RsmlUiError> {
         app.load_font_face("../assets/Roboto.ttf")?;
 
         let context = app.create_context("main", DIMENSIONS)?;
@@ -32,7 +32,7 @@ impl RsmlUiApp<BackendWin32Gl2> for App {
     fn event(
         &mut self,
         event: WindowEvent,
-        app: &mut ActiveApp<BackendWin32Gl2>,
+        app: &mut RsmlUi<BackendWin32Gl2>,
     ) -> Result<(), RsmlUiError> {
         match event {
             WindowEvent::ExitRequested => app.exit(),
