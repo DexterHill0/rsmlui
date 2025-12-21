@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use std::fmt::Debug;
 
 pub use drop_tree_derive::drop_tree;

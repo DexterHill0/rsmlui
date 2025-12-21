@@ -124,7 +124,7 @@ This is where most of the unsafe code is, as it requires casting from the conret
 ## TODO
 
 - [ ] Validate unsafe code for soundness
-- [ ] Add an thread-safe version of the tree
+- [ ] Add a thread-safe version of the tree
 - [ ] Clean up the proc-macro implementation
 - [ ] Reduce the visibility of certain generated types in intellisense (while keeping public for macro expansion)
 
