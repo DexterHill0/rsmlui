@@ -70,10 +70,12 @@ pub trait SystemInterfaceBehaviour: interfaces::sealed::Sealed {
     }
 
     fn set_mouse_cursor(&mut self, cursor_name: Cursor) {
+        let cursor_name: String = cursor_name.into();
+
         unsafe {
             rsmlui_sys::system_interface::system_interface_set_mouse_cursor(
                 self.class_ptr() as _,
-                cursor_name.into(),
+                &cursor_name,
             );
         }
     }
