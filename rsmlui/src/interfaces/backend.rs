@@ -9,8 +9,8 @@ use crate::errors::RsmlUiError;
 use crate::interfaces::RawInterface;
 use crate::interfaces::renderer::RenderInterfaceMarker;
 use crate::interfaces::system::SystemInterfaceMarker;
-use crate::platforms::DefaultPlatformInterface;
 use crate::renderers::DefaultRenderInterface;
+use crate::systems::DefaultPlatformInterface;
 use crate::utils::input::KeyCode;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -97,3 +97,17 @@ pub trait Backend {
     fn begin_frame(&self);
     fn present_frame(&self);
 }
+
+#[macro_export]
+macro_rules! extend_backend {
+    ($super:ident : $base:ident { $($rest:tt)* }) => {
+        struct $super {}
+    };
+
+    (@internal $(,)?system_interface: $system_interface:ident $($rest:tt)*) => {};
+    (@internal $(,)?render_interface: $render_interface:ident $($rest:tt)*) => {};
+
+    (@internal,) => {};
+}
+
+pub use extend_backend;

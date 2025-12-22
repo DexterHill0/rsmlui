@@ -12,8 +12,8 @@ pub mod backends;
 pub mod core;
 pub mod errors;
 pub mod interfaces;
-pub mod platforms;
 pub mod renderers;
+pub mod systems;
 pub mod utils;
 
 pub use glam;

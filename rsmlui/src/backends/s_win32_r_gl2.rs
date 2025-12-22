@@ -6,20 +6,20 @@ use crate::core::events::{WindowEvent, WindowEventEmitter};
 use crate::errors::RsmlUiError;
 use crate::interfaces::BorrowedInterface;
 use crate::interfaces::backend::{Backend, BackendOptions};
-use crate::platforms::win32::PlatformWin32;
 use crate::renderers::gl2::RendererGl2;
+use crate::systems::win32::SystemWin32;
 use crate::utils::conversions::{FromSys, IntoSys};
 use crate::utils::input::{KeyCode, KeyModifier};
 use crate::utils::raw::Raw;
 
 pub struct BackendWin32Gl2 {
-    system_interface: PlatformWin32,
+    system_interface: SystemWin32,
     render_interface: RendererGl2,
 }
 
 impl Backend for BackendWin32Gl2 {
     type RenderInterface = RendererGl2;
-    type SystemInterface = PlatformWin32;
+    type SystemInterface = SystemWin32;
 
     fn initialize_with_options<T: Into<String>>(
         window_name: T,
@@ -49,7 +49,7 @@ impl Backend for BackendWin32Gl2 {
         }
 
         return Ok(BackendWin32Gl2 {
-            system_interface: PlatformWin32(BorrowedInterface::new(raw_system_interface)),
+            system_interface: SystemWin32(BorrowedInterface::new(raw_system_interface)),
             render_interface: RendererGl2(BorrowedInterface::new(raw_render_interface)),
         });
     }
