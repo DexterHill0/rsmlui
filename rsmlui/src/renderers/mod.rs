@@ -1,4 +1,6 @@
-#[cfg(feature = "backend-win32-gl2")]
-pub mod gl2;
-#[cfg(feature = "backend-win32-gl2")]
-pub type DefaultRenderInterface = gl2::RendererGl2;
+crate::export_interfaces! {
+    default: DefaultRenderInterface;
+
+    #[cfg(feature = "renderer-gl2")]
+    gl2::RendererGl2
+}

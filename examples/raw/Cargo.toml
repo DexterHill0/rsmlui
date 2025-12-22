@@ -6,5 +6,6 @@ edition = "2024"
 [dependencies]
 rsmlui-sys = { path = "../../rsmlui-sys", features = [
     "freetype",
-    "backend-win32-gl2",
+    "system-win32",
+    "renderer-gl2",
 ] }

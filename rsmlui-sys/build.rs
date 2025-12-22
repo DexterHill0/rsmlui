@@ -19,7 +19,7 @@ const DEFINTIONS: &[(&str, &str)] = &[
     #[cfg(not(feature = "freetype"))]
     ("RMLUI_FONT_ENGINE", "none"),
 
-    #[cfg(not(feature = "backend-win32-gl2"))]
+    #[cfg(not(feature = "system-win32"))]
     ("RMLUI_DISABLE_INCLUDE_WINDOWS", "ON"),
 
     ("BUILD_SHARED_LIBS", "OFF"),
@@ -32,11 +32,18 @@ const DEFINTIONS: &[(&str, &str)] = &[
 ];
 
 fn build_rmlui_renderer(bridge: &mut cc::Build) {
-    #[cfg(feature = "backend-win32-gl2")]
+    #[cfg(feature = "system-win32")]
     {
-        bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_GL2.cpp");
-        bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
         bridge.file("RmlUi/Backends/RmlUi_Platform_Win32.cpp");
+    };
+    #[cfg(feature = "renderer-gl2")]
+    {
+        bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
+    };
+
+    #[cfg(all(feature = "system-win32", feature = "renderer-gl2"))]
+    {
+        bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_Gl2.cpp");
     };
 
     // required for vfuncs

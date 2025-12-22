@@ -91,10 +91,8 @@ impl Backend for BackendWin32Gl2 {
             result
         }
 
-        let running = unsafe {
-            // power saving (reducing polling rate) is handled ourselves
-            rsmlui_sys::backend::process_events(context.raw(), trampoline, false)
-        };
+        let running =
+            unsafe { rsmlui_sys::backend::process_events(context.raw(), trampoline, false) };
 
         if !running {
             sender.emit(WindowEvent::ExitRequested)?;

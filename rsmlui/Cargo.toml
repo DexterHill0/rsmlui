@@ -16,4 +16,7 @@ default = ["freetype"]
 cosmic-text = ["rsmlui-sys/cosmic-text"]
 freetype = ["rsmlui-sys/freetype"]
 
-backend-win32-gl2 = ["rsmlui-sys/backend-win32-gl2"]
+system-win32 = ["rsmlui-sys/system-win32"]
+renderer-gl2 = ["rsmlui-sys/renderer-gl2"]
+
+backend-win32-gl2 = ["system-win32", "renderer-gl2"]
