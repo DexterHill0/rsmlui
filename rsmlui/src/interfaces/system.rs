@@ -14,10 +14,13 @@ use crate::interfaces::sealed::Sealed;
 use crate::interfaces::{
     self, InterfaceHandle, InterfaceInstancer, InterfaceMarker, InterfaceState, RawInterface,
 };
+use crate::not_send_sync;
 use crate::utils::conversions::{FromSys, IntoSys};
 use crate::utils::cursor::Cursor;
 
 pub struct SystemInterfaceMarker;
+
+not_send_sync!(SystemInterfaceMarker);
 
 impl InterfaceMarker for SystemInterfaceMarker {
     type Ptr = *mut RmlSystemInterface;

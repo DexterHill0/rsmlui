@@ -15,6 +15,7 @@ use crate::interfaces::RawInterface;
 use crate::interfaces::backend::Backend;
 use crate::interfaces::renderer::RenderInterfaceMarker;
 use crate::interfaces::system::SystemInterfaceMarker;
+use crate::not_send_sync;
 use crate::utils::conversions::IntoSys;
 use crate::utils::input::{KeyCode, KeyModifier};
 
@@ -48,7 +49,7 @@ pub trait RsmlUiApp<B: BoundedBackend, T: 'static = ()> {
     fn get_context(&mut self) -> Option<&mut Context>;
 }
 
-fn app_destructor<B: BoundedBackend + 'static>(ctx: DropCtx<RsmlUi<B>>) {
+fn app_destructor<B: BoundedBackend>(ctx: DropCtx<RsmlUi<B>>) {
     // core must shutdown before the backend
     rsmlui_sys::core::shutdown();
 
@@ -58,11 +59,13 @@ fn app_destructor<B: BoundedBackend + 'static>(ctx: DropCtx<RsmlUi<B>>) {
 // this will only call the destructor once all resources borrowing from this ownership node
 // have themselves dropped
 #[drop_tree(destructor(app_destructor))]
-pub struct RsmlUi<B: BoundedBackend + 'static> {
+pub struct RsmlUi<B: BoundedBackend> {
     state: AppState,
     backend: ManuallyDrop<B>,
     last_poll: Instant,
 }
+
+not_send_sync!([B: BoundedBackend] RsmlUi[B]);
 
 impl<B: BoundedBackend> RsmlUi<B> {
     #[inline(always)]

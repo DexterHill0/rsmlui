@@ -2,12 +2,15 @@ use drop_tree::drop_tree;
 
 use crate::core::element_document::ElementDocument;
 use crate::errors::RsmlUiError;
+use crate::not_send_sync;
 use crate::utils::raw::{Ptr, Raw};
 
 #[drop_tree(borrows(crate::core::core::RsmlUi))]
 pub struct Context {
     pub(crate) raw: Ptr<Context>,
 }
+
+not_send_sync!(Context);
 
 impl Raw for Context {
     type Ptr = *mut rsmlui_sys::context::Context;

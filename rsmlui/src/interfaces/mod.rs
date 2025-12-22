@@ -10,6 +10,7 @@ use std::pin::Pin;
 use rsmlui_sys::interfaces::{InterfaceOpaquePtr, ThinInterface};
 
 use crate::interfaces::sealed::Sealed;
+use crate::not_send_sync;
 
 pub(crate) mod sealed {
     #[diagnostic::on_unimplemented(
@@ -27,6 +28,8 @@ pub(crate) trait InterfaceMarker {
 }
 
 pub struct RawInterface<M: InterfaceMarker>(pub(crate) M::Ptr, PhantomData<M>);
+
+not_send_sync!([M: InterfaceMarker] RawInterface[M]);
 
 impl<M: InterfaceMarker> RawInterface<M> {
     pub(crate) fn new(ptr: M::Ptr) -> Self {
@@ -50,6 +53,8 @@ pub struct InterfaceHandle<I> {
     pub(crate) raw: InterfaceOpaquePtr, // this is storing `*mut ThinInterface<InterfaceState<I>>`
     pub(crate) drop: for<'a> unsafe fn(&'a mut Self),
 }
+
+not_send_sync!([I] InterfaceHandle[I]);
 
 impl<I> InterfaceHandle<I> {
     pub(crate) unsafe fn value_mut(&mut self) -> &mut InterfaceState<I> {
@@ -97,6 +102,8 @@ pub struct InterfaceState<I> {
     pub(crate) class_ptr: InterfaceOpaquePtr,
 }
 
+not_send_sync!([I] InterfaceState[I]);
+
 impl<I> Deref for InterfaceState<I> {
     type Target = I;
 
@@ -121,6 +128,8 @@ impl<T> sealed::Sealed for InterfaceState<T> {
 pub struct BorrowedInterface<M: InterfaceMarker> {
     pub(crate) raw: M::Ptr,
 }
+
+not_send_sync!([M: InterfaceMarker] BorrowedInterface[M]);
 
 impl<M: InterfaceMarker> BorrowedInterface<M> {
     pub(crate) fn new(ptr: M::Ptr) -> Self {
