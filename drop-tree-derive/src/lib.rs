@@ -31,7 +31,6 @@ fn replace_last_ident(mut path: Path, new_ident: Ident) -> Path {
 struct DestructorExpansion {
     data_struct_drop_impl: TokenStream,
     data_struct_body: TokenStream,
-    data_struct_impl_generics: TokenStream,
     user_struct_body: TokenStream,
     data_struct_deref_impls: TokenStream,
 }
@@ -71,11 +70,6 @@ impl DestructorExpansion {
                 {
                     #(#user_fields),*
                 }
-            },
-
-            // data struct always carries generics
-            data_struct_impl_generics: quote! {
-                #user_impl_generics
             },
 
             // always provide Deref / DerefMut
@@ -337,7 +331,6 @@ pub fn drop_tree(
     let DestructorExpansion {
         data_struct_drop_impl,
         data_struct_body,
-        data_struct_impl_generics,
         user_struct_body,
         data_struct_deref_impls,
     } = DestructorExpansion::new(
@@ -467,7 +460,7 @@ pub fn drop_tree(
             pub struct #marker_struct_ident(());
 
             #[doc(hidden)]
-            pub struct #data_struct_ident #data_struct_impl_generics #data_struct_body
+            pub struct #data_struct_ident #user_struct_generics #data_struct_body
 
             #data_struct_drop_impl
             
@@ -475,7 +468,7 @@ pub fn drop_tree(
             pub type #ownership_link_type_alias = #ownership_link_type_alias_value;
             
             #(#user_struct_attrs)*
-            pub #user_struct_token #user_struct_ident #user_impl_generics_static_bound #user_struct_body_braced
+            pub #user_struct_token #user_struct_ident #user_struct_generics #user_struct_body_braced
 
             // prevents user from implementing `Drop` themselves
             #[automatically_derived]
