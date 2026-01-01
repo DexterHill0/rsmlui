@@ -11,7 +11,7 @@ use rsmlui_sys::system_interface::{
 
 use crate::core::log::LogLevel;
 use crate::interfaces::{
-    self, HasClassPtr, InterfaceHandle, InterfaceInstancer, InterfaceMarker, InterfaceState,
+    HasClassPtr, InterfaceHandle, InterfaceInstancer, InterfaceMarker, InterfaceState,
     IntoRawInterface, RawInterface,
 };
 use crate::not_send_sync;

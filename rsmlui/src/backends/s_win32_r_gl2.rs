@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use glam::IVec2;
 
@@ -6,9 +6,9 @@ use crate::core::context::Context;
 use crate::core::core::BACKEND_EVENTS_CALLBACK;
 use crate::core::events::{WindowEvent, WindowEventEmitter};
 use crate::errors::RsmlUiError;
-use crate::interfaces::backend::{Backend, BackendOptions, BackendRuntime, MonolithicBackend};
-use crate::interfaces::{self, BorrowedInterface};
-use crate::utils::conversions::{FromSys, IntoSys};
+use crate::interfaces::backend::{BackendOptions, BackendRuntime, MonolithicBackend};
+use crate::interfaces::{self};
+use crate::utils::conversions::IntoSys;
 use crate::utils::input::{KeyCode, KeyModifier};
 use crate::utils::raw::Raw;
 

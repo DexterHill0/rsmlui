@@ -1,14 +1,9 @@
-use std::ops::{Deref, DerefMut};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use glam::IVec2;
 
 use crate::core::context::Context;
 use crate::core::events::WindowEventEmitter;
 use crate::errors::RsmlUiError;
-use crate::interfaces::RawInterface;
-use crate::interfaces::renderer::RenderInterfaceMarker;
-use crate::interfaces::system::{SystemInterface, SystemInterfaceMarker};
 use crate::interfaces::window::WindowInterface;
 
 pub(crate) mod sealed {
