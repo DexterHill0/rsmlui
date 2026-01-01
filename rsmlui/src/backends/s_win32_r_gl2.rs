@@ -1,35 +1,47 @@
 use std::time::{Duration, Instant};
 
+use glam::IVec2;
+
 use crate::core::context::Context;
 use crate::core::core::BACKEND_EVENTS_CALLBACK;
 use crate::core::events::{WindowEvent, WindowEventEmitter};
 use crate::errors::RsmlUiError;
-use crate::interfaces::BorrowedInterface;
-use crate::interfaces::backend::{Backend, BackendOptions};
-use crate::renderers::gl2::RendererGl2;
-use crate::systems::win32::SystemWin32;
+use crate::interfaces::backend::{Backend, BackendOptions, BackendRuntime, MonolithicBackend};
+use crate::interfaces::{self, BorrowedInterface};
 use crate::utils::conversions::{FromSys, IntoSys};
 use crate::utils::input::{KeyCode, KeyModifier};
 use crate::utils::raw::Raw;
 
 pub struct BackendWin32Gl2 {
-    system_interface: SystemWin32,
-    render_interface: RendererGl2,
+    window_name: String,
+    dimensions: IVec2,
+    options: BackendOptions,
 }
 
-impl Backend for BackendWin32Gl2 {
-    type RenderInterface = RendererGl2;
-    type SystemInterface = SystemWin32;
+impl interfaces::backend::sealed::Sealed for BackendWin32Gl2 {}
 
-    fn initialize_with_options<T: Into<String>>(
-        window_name: T,
+impl BackendWin32Gl2 {
+    /// # Panics
+    /// Will panic if called more than once.
+    pub fn new<N: Into<String>>(
+        window_name: N,
         dimensions: glam::IVec2,
         options: BackendOptions,
-    ) -> Result<Self, RsmlUiError> {
+    ) -> Self {
+        Self {
+            window_name: window_name.into(),
+            dimensions,
+            options,
+        }
+    }
+}
+
+impl<T: 'static> BackendRuntime<T> for BackendWin32Gl2 {
+    fn initialize(&mut self) -> Result<(), RsmlUiError> {
         let success = rsmlui_sys::backend::initialize(
-            window_name.into(),
-            dimensions.into_sys(),
-            options.allow_resize,
+            self.window_name.clone().into(),
+            self.dimensions.into_sys(),
+            self.options.allow_resize,
         );
 
         if !success {
@@ -42,34 +54,36 @@ impl Backend for BackendWin32Gl2 {
             return Err(RsmlUiError::SystemInterfaceFailed);
         }
 
+        unsafe {
+            rsmlui_sys::core::set_system_interface(raw_system_interface);
+        }
+
         let raw_render_interface = rsmlui_sys::backend::get_render_interface();
 
         if raw_render_interface.is_null() {
             return Err(RsmlUiError::RenderInterfaceFailed);
         }
 
-        return Ok(BackendWin32Gl2 {
-            system_interface: SystemWin32(BorrowedInterface::new(raw_system_interface)),
-            render_interface: RendererGl2(BorrowedInterface::new(raw_render_interface)),
-        });
+        unsafe {
+            rsmlui_sys::core::set_render_interface(raw_render_interface);
+        }
+
+        Ok(())
     }
 
-    fn get_system_interface(&mut self) -> Option<&mut Self::SystemInterface> {
-        Some(&mut self.system_interface)
+    fn begin_frame(&mut self) {
+        rsmlui_sys::backend::begin_frame();
     }
 
-    fn get_render_interface(&mut self) -> Option<&mut Self::RenderInterface> {
-        Some(&mut self.render_interface)
+    fn present_frame(&mut self) {
+        rsmlui_sys::backend::present_frame();
     }
 
-    fn should_poll(&mut self, _dt: Duration) -> bool {
-        true
-    }
-
-    fn process_events<T: 'static>(
-        &self,
-        context: &mut Context,
+    fn poll_events(
+        &mut self,
         sender: &WindowEventEmitter<T>,
+        context: &mut Context,
+        _: Duration,
     ) -> Result<(), RsmlUiError> {
         fn trampoline(
             _: *mut rsmlui_sys::context::Context,
@@ -91,8 +105,9 @@ impl Backend for BackendWin32Gl2 {
             result
         }
 
-        let running =
-            unsafe { rsmlui_sys::backend::process_events(context.raw(), trampoline, false) };
+        let running = unsafe {
+            rsmlui_sys::backend::process_events(context.raw(), trampoline, self.options.power_save)
+        };
 
         if !running {
             sender.emit(WindowEvent::ExitRequested)?;
@@ -100,15 +115,9 @@ impl Backend for BackendWin32Gl2 {
 
         Ok(())
     }
-
-    fn begin_frame(&self) {
-        rsmlui_sys::backend::begin_frame()
-    }
-
-    fn present_frame(&self) {
-        rsmlui_sys::backend::present_frame()
-    }
 }
+
+impl<T: 'static> MonolithicBackend<T> for BackendWin32Gl2 {}
 
 impl Drop for BackendWin32Gl2 {
     fn drop(&mut self) {

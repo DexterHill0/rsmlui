@@ -6,102 +6,113 @@ use glam::IVec2;
 use crate::core::context::Context;
 use crate::core::events::WindowEventEmitter;
 use crate::errors::RsmlUiError;
+use crate::interfaces::RawInterface;
+use crate::interfaces::renderer::RenderInterfaceMarker;
+use crate::interfaces::system::{SystemInterface, SystemInterfaceMarker};
+use crate::interfaces::window::WindowInterface;
+
+pub(crate) mod sealed {
+    pub trait Sealed {}
+}
+
+pub trait BackendRuntime<T: 'static = ()>: sealed::Sealed {
+    fn initialize(&mut self) -> Result<(), RsmlUiError>;
+
+    fn begin_frame(&mut self);
+
+    fn present_frame(&mut self);
+
+    fn poll_events(
+        &mut self,
+        sender: &WindowEventEmitter<T>,
+        context: &mut Context,
+        delta: Duration,
+    ) -> Result<(), RsmlUiError>;
+}
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct BackendOptions {
     pub allow_resize: bool,
+    pub power_save: bool,
 }
 
-// pub struct BackendGuard<B: Backend> {
-//     pub(crate) backend: B,
-// }
+pub struct Backend<W, S, R> {
+    pub window: W,
+    pub system: Option<S>,
+    pub render: Option<R>,
+}
 
-// impl<B: Backend> BackendGuard<B> {
-//     pub(crate) fn new(backend: B) -> Self {
-//         Self { backend }
-//     }
-// }
+struct DropBomb;
 
-// impl<B: Backend> Deref for BackendGuard<B> {
-//     type Target = B;
-
-//     fn deref(&self) -> &Self::Target {
-//         &self.backend
-//     }
-// }
-
-// impl<B: Backend> DerefMut for BackendGuard<B> {
-//     fn deref_mut(&mut self) -> &mut Self::Target {
-//         &mut self.backend
-//     }
-// }
-
-// impl<B: Backend> Drop for BackendGuard<B> {
-//     fn drop(&mut self) {
-//         self.backend.shutdown();
-//     }
-// }
-
-// /// Wraps the user backend in a `BackendGuard` which implements drop to shutdown the backend when it's dropped
-// pub(crate) trait BackendInternal: Backend {
-//     fn to_guard(backend: Self) -> BackendGuard<Self>
-//     where
-//         Self: Sized,
-//     {
-//         BackendGuard::new(backend)
-//     }
-
-//     //     fn get_system_interface(&self) -> Option<Self::SystemInterface> {}
-//     // fn get_render_interface(&self) -> Option<Self::RenderInterface> {}
-// }
-
-// impl<B: Backend> BackendInternal for B {}
-
-// TODO: allow default interfaces somehow
-pub trait Backend {
-    type SystemInterface;
-    type RenderInterface;
-
-    fn initialize_with_options<T: Into<String>>(
-        window_name: T,
-        dimensions: IVec2,
-        options: BackendOptions,
-    ) -> Result<Self, RsmlUiError>
-    where
-        Self: Sized;
-
-    fn initialize<T: Into<String>>(window_name: T, dimensions: IVec2) -> Result<Self, RsmlUiError>
-    where
-        Self: Sized,
-    {
-        Self::initialize_with_options(window_name, dimensions, BackendOptions::default())
+impl Drop for DropBomb {
+    fn drop(&mut self) {
+        panic!("a `BackendBuilder` must not be dropped; `build` must be called instead.")
     }
-
-    fn get_system_interface(&mut self) -> Option<&mut Self::SystemInterface>;
-    fn get_render_interface(&mut self) -> Option<&mut Self::RenderInterface>;
-
-    fn should_poll(&mut self, delta: Duration) -> bool;
-
-    fn process_events<T: 'static>(
-        &self,
-        context: &mut Context,
-        sender: &WindowEventEmitter<T>,
-    ) -> Result<(), RsmlUiError>;
-
-    fn begin_frame(&self);
-    fn present_frame(&self);
 }
 
-#[macro_export]
-macro_rules! extend_backend {
-    ($super:ident : $base:ident { $($rest:tt)* }) => {
-        struct $super {}
-    };
-
-    (@internal $(,)?system_interface: $system_interface:ident $($rest:tt)*) => {};
-    (@internal $(,)?render_interface: $render_interface:ident $($rest:tt)*) => {};
-
-    (@internal,) => {};
+pub struct BackendBuilder<W, S = (), R = ()> {
+    _drop: DropBomb,
+    window: W,
+    system: Option<S>,
+    render: Option<R>,
 }
 
-pub use extend_backend;
+impl<W: WindowInterface> BackendBuilder<W, (), ()> {
+    pub fn new_with_window(window: W) -> Self {
+        Self {
+            _drop: DropBomb,
+            window,
+            system: None,
+            render: None,
+        }
+    }
+}
+
+impl<W, S, R> BackendBuilder<W, S, R> {
+    pub fn with_system() {}
+
+    pub fn with_system_uninstanced() {}
+
+    pub fn build(self) -> Backend<W, S, R> {
+        std::mem::forget(self._drop);
+
+        Backend {
+            window: self.window,
+            system: self.system,
+            render: self.render,
+        }
+    }
+}
+// pub trait Backend: BackendRuntime {
+//     type Window: WindowInterface;
+//     type System: Into<RawInterface<SystemInterfaceMarker>>;
+//     type Render: Into<RawInterface<RenderInterfaceMarker>>;
+
+//     fn window(&mut self) -> &mut Self::Window;
+//     fn system(&mut self) -> Option<&mut Self::System>;
+//     fn render(&mut self) -> Option<&mut Self::Render>;
+// }
+
+// impl<B: Backend, T: 'static> BackendRuntime<T> for B {
+//     fn initialize(&mut self) -> Result<(), RsmlUiError> {
+//         todo!()
+//     }
+
+//     fn begin_frame(&mut self) {
+//         todo!()
+//     }
+
+//     fn present_frame(&mut self) {
+//         todo!()
+//     }
+
+//     fn poll_events(
+//         &mut self,
+//         sender: &WindowEventEmitter<T>,
+//         delta: Duration,
+//     ) -> Result<(), RsmlUiError> {
+//         todo!()
+//     }
+// }
+
+pub trait MonolithicBackend<T: 'static>: BackendRuntime<T> {}

@@ -1,6 +1,10 @@
+use std::marker::PhantomData;
+
 use rsmlui_sys::render_interface::RmlRenderInterface;
 
-use crate::interfaces::{InterfaceHandle, InterfaceMarker, RawInterface};
+use crate::interfaces::{
+    HasClassPtr, InterfaceHandle, InterfaceMarker, InterfaceState, IntoRawInterface, RawInterface,
+};
 
 pub struct RenderInterfaceMarker;
 
@@ -8,8 +12,13 @@ impl InterfaceMarker for RenderInterfaceMarker {
     type Ptr = *mut RmlRenderInterface;
 }
 
-impl<I> Into<RawInterface<RenderInterfaceMarker>> for &mut InterfaceHandle<I> {
+pub trait RenderInterface {}
+
+impl<I> IntoRawInterface<RenderInterfaceMarker> for &mut InterfaceHandle<I>
+where
+    InterfaceState<I>: RenderInterface,
+{
     fn into(self) -> RawInterface<RenderInterfaceMarker> {
-        todo!();
+        RawInterface(self.class_ptr() as _, PhantomData)
     }
 }

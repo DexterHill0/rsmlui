@@ -1,11 +1,11 @@
 use rsmlui::backends::s_win32_r_gl2::BackendWin32Gl2;
 use rsmlui::core::context::Context;
-use rsmlui::core::core::{RsmlUi, RsmlUiApp};
+use rsmlui::core::core::{RsmlUi, RsmlUiApp, RsmlUiBuilder};
 use rsmlui::core::element_document::ElementDocument;
 use rsmlui::core::events::{KeyboardEvent, WindowEvent};
 use rsmlui::errors::RsmlUiError;
 use rsmlui::glam::IVec2;
-use rsmlui::interfaces::backend::{Backend, BackendOptions};
+use rsmlui::interfaces::backend::BackendOptions;
 
 const DIMENSIONS: IVec2 = IVec2::new(800, 600);
 
@@ -14,8 +14,8 @@ struct App {
     document: Option<ElementDocument>,
 }
 
-impl RsmlUiApp<BackendWin32Gl2> for App {
-    fn starting(&mut self, app: &mut RsmlUi<BackendWin32Gl2>) -> Result<(), RsmlUiError> {
+impl RsmlUiApp for App {
+    fn starting(&mut self, app: &mut RsmlUi) -> Result<(), RsmlUiError> {
         app.load_font_face("../assets/Roboto.ttf")?;
 
         let context = app.create_context("main", DIMENSIONS)?;
@@ -29,22 +29,18 @@ impl RsmlUiApp<BackendWin32Gl2> for App {
         Ok(())
     }
 
-    fn event(
-        &mut self,
-        event: WindowEvent,
-        app: &mut RsmlUi<BackendWin32Gl2>,
-    ) -> Result<(), RsmlUiError> {
+    fn event(&mut self, event: WindowEvent, app: &mut RsmlUi) -> Result<(), RsmlUiError> {
         match event {
             WindowEvent::ExitRequested => app.exit(),
             WindowEvent::RenderRequested => {
                 if let Some(context) = self.context.as_ref() {
                     context.update()?;
 
-                    app.begin_frame();
+                    // app.begin_frame();
 
                     context.render()?;
 
-                    app.present_frame();
+                    // app.present_frame();
                 }
             },
             WindowEvent::KeyboardEvent(event) => match event {
@@ -70,13 +66,16 @@ impl RsmlUiApp<BackendWin32Gl2> for App {
 }
 
 fn main() -> Result<(), RsmlUiError> {
-    let backend = BackendWin32Gl2::initialize_with_options(
+    let backend = BackendWin32Gl2::new(
         "rsmlui basic demo",
         DIMENSIONS,
-        BackendOptions { allow_resize: true },
-    )?;
+        BackendOptions {
+            allow_resize: true,
+            power_save: false,
+        },
+    );
 
-    let mut rsmlui = RsmlUi::new(backend)?;
+    let mut rsmlui = RsmlUiBuilder::new_with_monolithic_backend(backend).build()?;
 
     let mut app = App {
         context: None,

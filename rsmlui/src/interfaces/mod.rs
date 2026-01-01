@@ -1,6 +1,7 @@
 pub mod backend;
 pub mod renderer;
 pub mod system;
+pub mod window;
 
 use std::cell::UnsafeCell;
 use std::marker::PhantomData;
@@ -9,7 +10,6 @@ use std::pin::Pin;
 
 use rsmlui_sys::interfaces::{InterfaceOpaquePtr, ThinInterface};
 
-use crate::interfaces::sealed::Sealed;
 use crate::not_send_sync;
 
 pub(crate) mod sealed {
@@ -18,9 +18,11 @@ pub(crate) mod sealed {
         label = "This should be `InterfaceState<{Self}>`"
     )]
     #[allow(unused)]
-    pub trait Sealed {
-        fn class_ptr(&self) -> super::InterfaceOpaquePtr;
-    }
+    pub trait Sealed {}
+}
+
+pub trait HasClassPtr: sealed::Sealed {
+    fn class_ptr(&self) -> InterfaceOpaquePtr;
 }
 
 pub(crate) trait InterfaceMarker {
@@ -81,7 +83,9 @@ impl<I> DerefMut for InterfaceHandle<I> {
     }
 }
 
-impl<T> sealed::Sealed for InterfaceHandle<T> {
+impl<T> sealed::Sealed for InterfaceHandle<T> {}
+
+impl<T> HasClassPtr for InterfaceHandle<T> {
     fn class_ptr(&self) -> InterfaceOpaquePtr {
         unsafe { &*self.value.get() }.class_ptr()
     }
@@ -118,7 +122,9 @@ impl<I> DerefMut for InterfaceState<I> {
     }
 }
 
-impl<T> sealed::Sealed for InterfaceState<T> {
+impl<T> sealed::Sealed for InterfaceState<T> {}
+
+impl<T> HasClassPtr for InterfaceState<T> {
     fn class_ptr(&self) -> InterfaceOpaquePtr {
         self.class_ptr
     }
@@ -135,4 +141,8 @@ impl<M: InterfaceMarker> BorrowedInterface<M> {
     pub(crate) fn new(ptr: M::Ptr) -> Self {
         Self { raw: ptr }
     }
+}
+
+pub trait IntoRawInterface<M: InterfaceMarker> {
+    fn into(self) -> RawInterface<M>;
 }

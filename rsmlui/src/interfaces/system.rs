@@ -10,9 +10,9 @@ use rsmlui_sys::system_interface::{
 };
 
 use crate::core::log::LogLevel;
-use crate::interfaces::sealed::Sealed;
 use crate::interfaces::{
-    self, InterfaceHandle, InterfaceInstancer, InterfaceMarker, InterfaceState, RawInterface,
+    self, HasClassPtr, InterfaceHandle, InterfaceInstancer, InterfaceMarker, InterfaceState,
+    IntoRawInterface, RawInterface,
 };
 use crate::not_send_sync;
 use crate::utils::conversions::{FromSys, IntoSys};
@@ -26,13 +26,7 @@ impl InterfaceMarker for SystemInterfaceMarker {
     type Ptr = *mut RmlSystemInterface;
 }
 
-impl<I> Into<RawInterface<SystemInterfaceMarker>> for &mut InterfaceHandle<I> {
-    fn into(self) -> RawInterface<SystemInterfaceMarker> {
-        RawInterface(self.class_ptr() as _, PhantomData)
-    }
-}
-
-pub trait SystemInterfaceBehaviour: interfaces::sealed::Sealed {
+pub trait SystemInterface: HasClassPtr {
     fn get_elapsed_time(&mut self) -> f64 {
         unsafe {
             rsmlui_sys::system_interface::system_interface_get_elapsed_time(self.class_ptr() as _)
@@ -114,11 +108,20 @@ pub trait SystemInterfaceBehaviour: interfaces::sealed::Sealed {
     }
 }
 
+impl<I> IntoRawInterface<SystemInterfaceMarker> for &mut InterfaceHandle<I>
+where
+    InterfaceState<I>: SystemInterface,
+{
+    fn into(self) -> RawInterface<SystemInterfaceMarker> {
+        RawInterface(self.class_ptr() as _, PhantomData)
+    }
+}
+
 type ThinSystermInterface = ThinInterface<*mut dyn RawSystemInterface>;
 
 impl<I: 'static> InterfaceInstancer for I
 where
-    InterfaceState<I>: SystemInterfaceBehaviour,
+    InterfaceState<I>: SystemInterface,
 {
     type Output = InterfaceHandle<Self>;
 
@@ -169,39 +172,39 @@ where
 
 impl<I> RawSystemInterface for InterfaceState<I>
 where
-    InterfaceState<I>: SystemInterfaceBehaviour,
+    InterfaceState<I>: SystemInterface,
 {
     unsafe fn get_elapsed_time(&mut self) -> f64 {
-        SystemInterfaceBehaviour::get_elapsed_time(self)
+        SystemInterface::get_elapsed_time(self)
     }
 
     unsafe fn translate_string(&mut self, input: &str) -> String {
-        SystemInterfaceBehaviour::translate_string(self, input)
+        SystemInterface::translate_string(self, input)
     }
 
     unsafe fn join_path(&mut self, document_path: &str, path: &str) -> String {
         dbg!(&document_path, &path);
 
-        SystemInterfaceBehaviour::join_path(self, document_path.into(), path.into())
+        SystemInterface::join_path(self, document_path.into(), path.into())
             .to_str()
             .unwrap()
             .to_string()
     }
 
     unsafe fn log_message(&mut self, level: rsmlui_sys::Rml_Log_Type, message: &str) -> bool {
-        SystemInterfaceBehaviour::log_message(self, level, message)
+        SystemInterface::log_message(self, level, message)
     }
 
     unsafe fn set_mouse_cursor(&mut self, cursor_name: &str) {
-        SystemInterfaceBehaviour::set_mouse_cursor(self, cursor_name.into());
+        SystemInterface::set_mouse_cursor(self, cursor_name.into());
     }
 
     unsafe fn set_clipboard_text(&mut self, text: &str) {
-        SystemInterfaceBehaviour::set_clipboard_text(self, text);
+        SystemInterface::set_clipboard_text(self, text);
     }
 
     unsafe fn get_clipboard_text(&mut self) -> String {
-        SystemInterfaceBehaviour::get_clipboard_text(self)
+        SystemInterface::get_clipboard_text(self)
     }
 
     unsafe fn activate_keyboard(
@@ -209,14 +212,10 @@ where
         caret_position: rsmlui_sys::Rml_Vector2f,
         line_height: f32,
     ) {
-        SystemInterfaceBehaviour::activate_keyboard(
-            self,
-            Vec2::from_sys(caret_position),
-            line_height,
-        );
+        SystemInterface::activate_keyboard(self, Vec2::from_sys(caret_position), line_height);
     }
 
     unsafe fn deactivate_keyboard(&mut self) {
-        SystemInterfaceBehaviour::deactivate_keyboard(self);
+        SystemInterface::deactivate_keyboard(self);
     }
 }

@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
 drop-tree = { path = "../drop-tree" }
-
 glam = "0.30.9"
 thiserror = "2.0.17"
 
@@ -19,4 +18,4 @@ freetype = ["rsmlui-sys/freetype"]
 system-win32 = ["rsmlui-sys/system-win32"]
 renderer-gl2 = ["rsmlui-sys/renderer-gl2"]
 
-backend-win32-gl2 = ["system-win32", "renderer-gl2"]
+backend-win32-gl2 = ["rsmlui-sys/system-win32", "rsmlui-sys/renderer-gl2"]

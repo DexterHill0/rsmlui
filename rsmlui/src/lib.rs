@@ -4,7 +4,7 @@
 // not required, the methods can easily be replicated using `.get()`
 #![feature(unsafe_cell_access)]
 // not required, used in core module to reduce duplication of `Backend` bounds
-#![feature(trait_alias)]
+// #![feature(trait_alias)]
 // not required, can easily be replaced using `negative_impls` crate
 #![feature(negative_impls)]
 
