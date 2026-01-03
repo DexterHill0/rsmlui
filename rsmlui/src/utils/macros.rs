@@ -1,22 +1,3 @@
-#[macro_export]
-macro_rules! export_interfaces {
-    (
-        default: $default:ident;
-
-        $(
-            #[$($attrs:meta)*]
-            $module:ident::$interface:ident
-        )*
-    ) => {
-        $(
-            #[$($attrs)*]
-            pub mod $module;
-            #[$($attrs)*]
-            pub type $default = $module::$interface;
-        )*
-    };
-}
-
 // makes a type !Send and !Sync
 #[macro_export]
 macro_rules! not_send_sync {

@@ -15,8 +15,8 @@ use crate::interfaces::{
     IntoRawInterface, RawInterface,
 };
 use crate::not_send_sync;
+use crate::types::cursor::Cursor;
 use crate::utils::conversions::{FromSys, IntoSys};
-use crate::utils::cursor::Cursor;
 
 pub struct SystemInterfaceMarker;
 

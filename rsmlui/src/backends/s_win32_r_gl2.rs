@@ -2,14 +2,15 @@ use std::time::Duration;
 
 use glam::IVec2;
 
+use crate::backends::MonolithicBackendDriver;
+use crate::core::app::AppDriver;
+use crate::core::backend::{BackendOptions, BackendRuntime, MonolithicBackend};
 use crate::core::context::Context;
-use crate::core::core::BACKEND_EVENTS_CALLBACK;
-use crate::core::events::{WindowEvent, WindowEventEmitter};
+use crate::core::events::WindowEvent;
 use crate::errors::RsmlUiError;
-use crate::interfaces::backend::{BackendOptions, BackendRuntime, MonolithicBackend};
 use crate::interfaces::{self};
+use crate::types::input::{KeyCode, KeyModifier};
 use crate::utils::conversions::IntoSys;
-use crate::utils::input::{KeyCode, KeyModifier};
 use crate::utils::raw::Raw;
 
 pub struct BackendWin32Gl2 {
@@ -18,7 +19,7 @@ pub struct BackendWin32Gl2 {
     options: BackendOptions,
 }
 
-impl interfaces::backend::sealed::Sealed for BackendWin32Gl2 {}
+impl crate::core::backend::sealed::Sealed for BackendWin32Gl2 {}
 
 impl BackendWin32Gl2 {
     /// # Panics
@@ -37,6 +38,12 @@ impl BackendWin32Gl2 {
 }
 
 impl<T: 'static> BackendRuntime<T> for BackendWin32Gl2 {
+    fn app_driver(&mut self) -> Box<dyn AppDriver<T>> {
+        Box::new(MonolithicBackendDriver {
+            power_save: self.options.power_save,
+        })
+    }
+
     fn initialize(&mut self) -> Result<(), RsmlUiError> {
         let success = rsmlui_sys::backend::initialize(
             self.window_name.clone().into(),
@@ -71,50 +78,50 @@ impl<T: 'static> BackendRuntime<T> for BackendWin32Gl2 {
         Ok(())
     }
 
-    fn begin_frame(&mut self) {
+    unsafe fn begin_frame(&mut self) {
         rsmlui_sys::backend::begin_frame();
     }
 
-    fn present_frame(&mut self) {
+    unsafe fn present_frame(&mut self) {
         rsmlui_sys::backend::present_frame();
     }
 
-    fn poll_events(
-        &mut self,
-        sender: &WindowEventEmitter<T>,
-        context: &mut Context,
-        _: Duration,
-    ) -> Result<(), RsmlUiError> {
-        fn trampoline(
-            _: *mut rsmlui_sys::context::Context,
-            key: KeyCode,
-            key_modifier: KeyModifier,
-            native_dp_ratio: f32,
-            priority: bool,
-        ) -> bool {
-            let result = BACKEND_EVENTS_CALLBACK.with(|callback| {
-                let mut cb = callback.borrow_mut();
+    // fn poll_events(
+    //     &mut self,
+    //     sender: &WindowEventEmitter<T>,
+    //     context: &mut Context,
+    //     _: Duration,
+    // ) -> Result<(), RsmlUiError> {
+    // fn trampoline(
+    //     _: *mut rsmlui_sys::context::Context,
+    //     key: KeyCode,
+    //     key_modifier: KeyModifier,
+    //     native_dp_ratio: f32,
+    //     priority: bool,
+    // ) -> bool {
+    //     let result = BACKEND_EVENTS_CALLBACK.with(|callback| {
+    //         let mut cb = callback.borrow_mut();
 
-                if let Some(cb) = cb.as_mut() {
-                    return cb(key, key_modifier, native_dp_ratio, priority);
-                }
+    //         if let Some(cb) = cb.as_mut() {
+    //             return cb(key, key_modifier, native_dp_ratio, priority);
+    //         }
 
-                true
-            });
+    //         true
+    //     });
 
-            result
-        }
+    //     result
+    // }
 
-        let running = unsafe {
-            rsmlui_sys::backend::process_events(context.raw(), trampoline, self.options.power_save)
-        };
+    // let running = unsafe {
+    //     rsmlui_sys::backend::process_events(context.raw(), trampoline, self.options.power_save)
+    // };
 
-        if !running {
-            sender.emit(WindowEvent::ExitRequested)?;
-        }
+    // if !running {
+    //     sender.emit(WindowEvent::ExitRequested)?;
+    // }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 }
 
 impl<T: 'static> MonolithicBackend<T> for BackendWin32Gl2 {}

@@ -1,4 +1,3 @@
-pub mod backend;
 pub mod renderer;
 pub mod system;
 pub mod window;
@@ -13,6 +12,7 @@ use rsmlui_sys::interfaces::{InterfaceOpaquePtr, ThinInterface};
 use crate::not_send_sync;
 
 pub(crate) mod sealed {
+    #[doc(hidden)]
     #[diagnostic::on_unimplemented(
         message = "Interface trait must be implemented on `InterfaceState<{Self}>`",
         label = "This should be `InterfaceState<{Self}>`"

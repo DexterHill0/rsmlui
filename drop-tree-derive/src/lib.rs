@@ -3,9 +3,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::spanned::Spanned;
 use syn::{
-    Field, Fields, FieldsNamed, GenericParam, Ident, ImplGenerics, ItemStruct, Lifetime,
-    LifetimeParam, Path, TypeGenerics, TypeParamBound, WhereClause, parse_quote,
-    parse_quote_spanned,
+    Field, Fields, FieldsNamed, GenericParam, Ident, ImplGenerics, ItemStruct, Lifetime, LifetimeParam, Path, Turbofish, TypeGenerics, TypeParamBound, WhereClause, parse_quote, parse_quote_spanned
 };
 
 #[derive(ParseMetaItem, Debug)]
@@ -127,6 +125,7 @@ impl BorrowExpansion {
         impl_generics: &ImplGenerics,
         ty_generics: &TypeGenerics,
         where_clause: &Option<&WhereClause>,
+        user_struct_generics_turbofish: &Turbofish<'_>
     ) -> Self {
         Self {
             // the type definition of self marker with empty parent
@@ -141,7 +140,7 @@ impl BorrowExpansion {
                             #(#user_struct_fields_no_vis),*
                         ) -> Self {
                             Self {
-                                _links: ::drop_tree::OwnershipLink::new_root(#data_struct_ident {
+                                _links: ::drop_tree::OwnershipLink::new_root(#data_struct_ident #user_struct_generics_turbofish {
                                     #(#user_struct_field_idents),*
                                 }),
                                 _phantom: ::std::marker::PhantomData,
@@ -165,6 +164,7 @@ impl BorrowExpansion {
         impl_generics: &ImplGenerics,
         ty_generics: &TypeGenerics,
         where_clause: &Option<&WhereClause>,
+        user_struct_generics_turbofish: &Turbofish<'_>
     ) -> Self {
         let last_segment_ident = &parent_struct_path.segments.last().unwrap().ident;
 
@@ -193,7 +193,7 @@ impl BorrowExpansion {
                             parent: &impl #dt_ownership_borrow_trair<#parent_marker_path>
                         ) -> Self {
                             Self {
-                                _links: parent.ownership_borrow::<Self, #data_struct_ident>(#data_struct_ident {
+                                _links: parent.ownership_borrow::<Self, #data_struct_ident>(#data_struct_ident #user_struct_generics_turbofish {
                                     #(#user_struct_field_idents),*
                                 }),
                                 _phantom: ::std::marker::PhantomData,
@@ -326,7 +326,8 @@ pub fn drop_tree(
             _ => {},
         });
 
-    let (user_impl_generics_static_bound, ..) = user_generics_static_bound.split_for_impl();
+    let (user_impl_generics_static_bound, user_ty_generics_static_bound, ..) = user_generics_static_bound.split_for_impl();
+    let user_generics_turbofish_static_bound = user_ty_generics_static_bound.as_turbofish();
 
     let DestructorExpansion {
         data_struct_drop_impl,
@@ -376,6 +377,7 @@ pub fn drop_tree(
             &user_impl_generics_static_bound,
             &user_ty_generics,
             &user_where_clause,
+            &user_generics_turbofish_static_bound,
         ),
         None => BorrowExpansion::root(
             &dt_erased_ownership_handle_ty,
@@ -387,6 +389,7 @@ pub fn drop_tree(
             &user_impl_generics_static_bound,
             &user_ty_generics,
             &user_where_clause,
+            &user_generics_turbofish_static_bound,
         ),
     };
 

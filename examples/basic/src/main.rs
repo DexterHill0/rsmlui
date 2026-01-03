@@ -1,11 +1,12 @@
 use rsmlui::backends::s_win32_r_gl2::BackendWin32Gl2;
+use rsmlui::core::app::ApplicationHandler;
+use rsmlui::core::backend::BackendOptions;
 use rsmlui::core::context::Context;
-use rsmlui::core::core::{RsmlUi, RsmlUiApp, RsmlUiBuilder};
+use rsmlui::core::core::{ActiveApp, RsmlUi, RsmlUiUninitialized};
 use rsmlui::core::element_document::ElementDocument;
 use rsmlui::core::events::{KeyboardEvent, WindowEvent};
 use rsmlui::errors::RsmlUiError;
 use rsmlui::glam::IVec2;
-use rsmlui::interfaces::backend::BackendOptions;
 
 const DIMENSIONS: IVec2 = IVec2::new(800, 600);
 
@@ -14,8 +15,8 @@ struct App {
     document: Option<ElementDocument>,
 }
 
-impl RsmlUiApp for App {
-    fn starting(&mut self, app: &mut RsmlUi) -> Result<(), RsmlUiError> {
+impl ApplicationHandler for App {
+    fn starting(&mut self, app: &mut ActiveApp) -> Result<(), RsmlUiError> {
         app.load_font_face("../assets/Roboto.ttf")?;
 
         let context = app.create_context("main", DIMENSIONS)?;
@@ -29,18 +30,17 @@ impl RsmlUiApp for App {
         Ok(())
     }
 
-    fn event(&mut self, event: WindowEvent, app: &mut RsmlUi) -> Result<(), RsmlUiError> {
+    fn event(&mut self, event: WindowEvent, app: &mut ActiveApp) -> Result<(), RsmlUiError> {
         match event {
             WindowEvent::ExitRequested => app.exit(),
-            WindowEvent::RenderRequested => {
+            WindowEvent::UpdateRequested => {
                 if let Some(context) = self.context.as_ref() {
                     context.update()?;
-
-                    // app.begin_frame();
-
+                }
+            },
+            WindowEvent::RenderRequested(..) => {
+                if let Some(context) = self.context.as_ref() {
                     context.render()?;
-
-                    // app.present_frame();
                 }
             },
             WindowEvent::KeyboardEvent(event) => match event {
@@ -75,14 +75,14 @@ fn main() -> Result<(), RsmlUiError> {
         },
     );
 
-    let mut rsmlui = RsmlUiBuilder::new_with_monolithic_backend(backend).build()?;
+    let mut rsmlui = RsmlUiUninitialized::new_with_monolithic_backend(backend).initialize()?;
 
-    let mut app = App {
+    let app = App {
         context: None,
         document: None,
     };
 
-    rsmlui.run_app(&mut app)?;
+    rsmlui.run_app(app)?;
 
     Ok(())
 }

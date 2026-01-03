@@ -14,6 +14,8 @@ pub mod errors;
 pub mod interfaces;
 pub mod renderers;
 pub mod systems;
-pub mod utils;
+pub mod types;
+mod utils;
+pub mod window;
 
 pub use glam;

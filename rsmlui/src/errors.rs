@@ -8,6 +8,10 @@ pub enum RsmlUiError {
     #[error("already initialized")]
     AlreadyInitialized,
 
+    #[error("rsmlui not initialized")]
+    NotInitialized,
+
+    #[cfg(any(feature = "backend-win32-gl2"))]
     #[error("failed to send event")]
     EventSendFailed,
 
@@ -31,4 +35,8 @@ pub enum RsmlUiError {
 
     #[error("failed to load font face")]
     FontFaceLoadFailed,
+
+    #[cfg(feature = "window-winit")]
+    #[error("failed to create event loop: {0}")]
+    EventLoopCreationFailed(#[from] winit::error::EventLoopError),
 }

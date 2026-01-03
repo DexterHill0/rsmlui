@@ -1,7 +1,8 @@
 use std::sync::mpsc::Sender;
+use std::time::Duration;
 
 use crate::errors::RsmlUiError;
-use crate::utils::input::{KeyCode, KeyModifier};
+use crate::types::input::{KeyCode, KeyModifier};
 
 #[non_exhaustive]
 #[derive(Clone, Debug, PartialEq)]
@@ -21,23 +22,10 @@ pub enum KeyboardEvent {
 pub enum WindowEvent<T: 'static = ()> {
     ExitRequested,
     ExitCancelled,
-    RenderRequested,
+    UpdateRequested,
+    RenderRequested(Duration),
 
     KeyboardEvent(KeyboardEvent),
 
     UserEvent(T),
-}
-
-pub struct WindowEventEmitter<T: 'static = ()>(pub(crate) Sender<WindowEvent<T>>);
-
-impl<T: 'static> Clone for WindowEventEmitter<T> {
-    fn clone(&self) -> Self {
-        WindowEventEmitter(self.0.clone())
-    }
-}
-
-impl<T: 'static> WindowEventEmitter<T> {
-    pub fn emit(&self, event: WindowEvent<T>) -> Result<(), RsmlUiError> {
-        self.0.send(event).map_err(|_| RsmlUiError::EventSendFailed)
-    }
 }

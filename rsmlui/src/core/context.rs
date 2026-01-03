@@ -5,7 +5,7 @@ use crate::errors::RsmlUiError;
 use crate::not_send_sync;
 use crate::utils::raw::{Ptr, Raw};
 
-#[drop_tree(borrows(crate::core::core::RsmlUi))]
+#[drop_tree(borrows(crate::core::core::ActiveApp))]
 pub struct Context {
     pub(crate) raw: Ptr<Context>,
 }

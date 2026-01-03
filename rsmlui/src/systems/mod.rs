@@ -1,6 +1,2 @@
-crate::export_interfaces! {
-    default: DefaultSystemInterface;
-
-    #[cfg(feature = "system-win32")]
-    win32::SystemWin32
-}
+#[cfg(feature = "system-win32")]
+pub mod win32;
