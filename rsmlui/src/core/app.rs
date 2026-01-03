@@ -39,5 +39,5 @@ pub trait ApplicationHandler<T: 'static = ()> {
 // }
 
 pub trait AppDriver<T: 'static> {
-    fn run(&mut self, app: &mut AppDispatcher<T>) -> Result<(), RsmlUiError>;
+    fn run(self: Box<Self>, app: &mut AppDispatcher<T>) -> Result<(), RsmlUiError>;
 }

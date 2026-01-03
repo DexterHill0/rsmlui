@@ -8,10 +8,10 @@ use glam::IVec2;
 use crate::core::app::{AppDriver, ApplicationHandler};
 use crate::core::context::Context;
 use crate::errors::RsmlUiError;
-use crate::interfaces::RawInterface;
-use crate::interfaces::renderer::RenderInterfaceMarker;
+use crate::interfaces::renderer::{RenderInterface, RenderInterfaceMarker};
 use crate::interfaces::system::{SystemInterface, SystemInterfaceMarker};
 use crate::interfaces::window::WindowInterface;
+use crate::interfaces::{InterfaceHandle, InterfaceInstancer, InterfaceState, RawInterface};
 
 pub(crate) mod sealed {
     #[doc(hidden)]
@@ -32,77 +32,135 @@ pub(crate) trait BackendRuntime<T: 'static = ()>: sealed::Sealed {
     unsafe fn present_frame(&mut self);
 }
 
+pub trait MonolithicBackend<T: 'static>: BackendRuntime<T> {}
+
 #[derive(Clone, Copy, Debug, Default)]
 pub struct BackendOptions {
     pub allow_resize: bool,
     pub power_save: bool,
 }
 
-pub struct Backend<W, S, R> {
-    pub window: W,
-    pub system: Option<S>,
-    pub render: Option<R>,
-}
-
-pub struct BackendBuilder<W, S = (), R = ()> {
+pub struct Backend<W, S, R, T: 'static = ()> {
     window: W,
-    system: Option<S>,
-    render: Option<R>,
+    system: Option<InterfaceHandle<S>>,
+    render: Option<InterfaceHandle<R>>,
+    _phantom: PhantomData<T>,
 }
 
-// impl<W: WindowInterface> BackendBuilder<W, (), ()> {
-//     pub fn new_with_window(window: W) -> Self {
-//         Self {
-//             window,
-//             system: None,
-//             render: None,
-//         }
-//     }
-// }
-
-impl<W, S, R> BackendBuilder<W, S, R> {
-    pub fn with_system() {}
-
-    pub fn with_system_uninstanced() {}
-
-    pub fn build(self) -> Backend<W, S, R> {
-        Backend {
-            window: self.window,
-            system: self.system,
-            render: self.render,
+impl<T: 'static, W: WindowInterface<T>> Backend<W, (), (), T> {
+    pub fn new_with_window(window: W) -> Self {
+        Self {
+            window,
+            system: None,
+            render: None,
+            _phantom: PhantomData,
         }
     }
 }
-// pub trait Backend: BackendRuntime {
-//     type Window: WindowInterface;
-//     type System: Into<RawInterface<SystemInterfaceMarker>>;
-//     type Render: Into<RawInterface<RenderInterfaceMarker>>;
 
-//     fn window(&mut self) -> &mut Self::Window;
-//     fn system(&mut self) -> Option<&mut Self::System>;
-//     fn render(&mut self) -> Option<&mut Self::Render>;
-// }
+impl<T: 'static, W, R> Backend<W, (), R, T> {
+    pub fn with_system_uninstanced<S2: 'static>(self, system_interface: S2) -> Backend<W, S2, R, T>
+    where
+        InterfaceState<S2>: SystemInterface,
+    {
+        Backend {
+            window: self.window,
+            system: Some(system_interface.instance()),
+            render: self.render,
+            _phantom: PhantomData,
+        }
+    }
 
-// impl<B: Backend, T: 'static> BackendRuntime<T> for B {
-//     fn initialize(&mut self) -> Result<(), RsmlUiError> {
-//         todo!()
-//     }
+    pub fn with_system<S2: 'static>(
+        self,
+        system_interface: InterfaceHandle<S2>,
+    ) -> Backend<W, S2, R, T>
+    where
+        InterfaceHandle<S2>: SystemInterface,
+    {
+        Backend {
+            window: self.window,
+            system: Some(system_interface),
+            render: self.render,
+            _phantom: PhantomData,
+        }
+    }
+}
 
-//     fn begin_frame(&mut self) {
-//         todo!()
-//     }
+impl<T: 'static, W, S> Backend<W, S, (), T> {
+    // pub fn with_render_uninstanced<R2: 'static>(self, render_interface: R2) -> Backend<W, S, R2, T>
+    // where
+    //     InterfaceState<R2>: RenderInterface,
+    // {
+    //     Backend {
+    //         window: self.window,
+    //         system: self.system,
+    //         render: Some(render_interface.instance()),
+    //         _phantom: PhantomData,
+    //     }
+    // }
 
-//     fn present_frame(&mut self) {
-//         todo!()
-//     }
+    pub fn with_render<R2: 'static>(
+        self,
+        render_interface: InterfaceHandle<R2>,
+    ) -> Backend<W, S, R2, T>
+    where
+        InterfaceHandle<R2>: RenderInterface,
+    {
+        Backend {
+            window: self.window,
+            system: self.system,
+            render: Some(render_interface),
+            _phantom: PhantomData,
+        }
+    }
+}
 
-//     fn poll_events(
-//         &mut self,
-//         sender: &WindowEventEmitter<T>,
-//         delta: Duration,
-//     ) -> Result<(), RsmlUiError> {
-//         todo!()
-//     }
-// }
+impl<T: 'static, W, S, R> sealed::Sealed for Backend<W, S, R, T>
+where
+    W: WindowInterface<T>,
+    InterfaceState<S>: SystemInterface,
+    InterfaceState<R>: RenderInterface,
+{
+}
 
-pub trait MonolithicBackend<T: 'static>: BackendRuntime<T> {}
+impl<T: 'static, W, S, R> BackendRuntime<T> for Backend<W, S, R, T>
+where
+    W: WindowInterface<T>,
+    InterfaceState<S>: SystemInterface,
+    InterfaceState<R>: RenderInterface,
+{
+    fn initialize(&mut self) -> Result<(), RsmlUiError> {
+        // self.window.initialize()?;
+
+        // if let Some(system) = &self.system {
+        //     unsafe {
+        //         rsmlui_sys::core::set_system_interface(system.class_ptr());
+        //     }
+        // }
+
+        // if let Some(render) = &self.render {
+        //     unsafe {
+        //         rsmlui_sys::core::set_render_interface(render.class_ptr());
+        //     }
+        // }
+
+        todo!();
+
+        // Ok(())
+    }
+
+    fn app_driver(&mut self) -> Box<dyn AppDriver<T>> {
+        self.window.driver()
+    }
+
+    unsafe fn begin_frame(&mut self) {
+        todo!()
+        // self.window.begin_frame();
+    }
+
+    unsafe fn present_frame(&mut self) {
+        todo!()
+        // self.window.present_frame();
+    }
+}

@@ -2,7 +2,7 @@
 members = [
     "examples/basic",
     "examples/raw",
-    "examples/custom-interface",
+    "examples/custom-backend-advanced",
     "rsmlui",
     "rsmlui-sys",
     "drop-tree",

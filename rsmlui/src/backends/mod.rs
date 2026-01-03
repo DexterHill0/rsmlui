@@ -26,7 +26,7 @@ mod driver {
     }
 
     impl<T: 'static> AppDriver<T> for MonolithicBackendDriver {
-        fn run(&mut self, app: &mut AppDispatcher<T>) -> Result<(), RsmlUiError> {
+        fn run(self: Box<Self>, app: &mut AppDispatcher<T>) -> Result<(), RsmlUiError> {
             app.starting()?;
 
             let (tx, rx) = channel::<WindowEvent<T>>();

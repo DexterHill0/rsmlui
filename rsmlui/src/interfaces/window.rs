@@ -10,7 +10,7 @@ use crate::types::cursor::Cursor;
 pub trait WindowInterface<T: 'static> {
     fn initialize(&mut self) -> Result<(), RsmlUiError>;
 
-    fn driver(&mut self) -> &mut dyn AppDriver<T>;
+    fn driver(&mut self) -> Box<dyn AppDriver<T>>;
 
     // fn poll_events(
     //     &mut self,

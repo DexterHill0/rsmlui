@@ -1,0 +1,12 @@
+[package]
+name = "custom-backend-advanced"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rsmlui = { path = "../../rsmlui", features = [
+    "freetype",
+    "renderer-gl2",
+    "window-winit",
+] }
+windows = "0.62.2"

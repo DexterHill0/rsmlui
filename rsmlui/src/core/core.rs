@@ -9,10 +9,14 @@ use drop_tree::{DropCtx, drop_tree};
 use glam::IVec2;
 
 use crate::core::app::{AppState, ApplicationHandler};
-use crate::core::backend::{BackendRuntime, MonolithicBackend};
+use crate::core::backend::{Backend, BackendRuntime, MonolithicBackend};
 use crate::core::context::Context;
 use crate::core::events::{KeyboardEvent, WindowEvent};
 use crate::errors::RsmlUiError;
+use crate::interfaces::renderer::RenderInterface;
+use crate::interfaces::system::SystemInterface;
+use crate::interfaces::window::WindowInterface;
+use crate::interfaces::{InterfaceHandle, InterfaceState};
 use crate::not_send_sync;
 use crate::types::input::{KeyCode, KeyModifier};
 use crate::utils::conversions::IntoSys;
@@ -40,6 +44,20 @@ impl<T: 'static> RsmlUiUninitialized<T> {
     pub fn new_with_monolithic_backend<B: MonolithicBackend<T> + 'static>(
         backend: B,
     ) -> RsmlUiUninitialized<T> {
+        Self {
+            _drop: DropBomb,
+            backend: ManuallyDrop::new(Box::new(backend)),
+        }
+    }
+
+    pub fn new_with_custom_backend<W: 'static, S: 'static, R: 'static>(
+        backend: Backend<W, S, R, T>,
+    ) -> RsmlUiUninitialized<T>
+    where
+        W: WindowInterface<T>,
+        InterfaceState<S>: SystemInterface,
+        InterfaceState<R>: RenderInterface,
+    {
         Self {
             _drop: DropBomb,
             backend: ManuallyDrop::new(Box::new(backend)),
@@ -116,7 +134,7 @@ impl<T: 'static> RsmlUi<T> {
     ) -> Result<(), RsmlUiError> {
         self.dispatcher.app.replace(Box::new(app));
 
-        let mut driver = self.dispatcher.active.backend.app_driver();
+        let driver = self.dispatcher.active.backend.app_driver();
         driver.run(&mut self.dispatcher)?;
 
         Ok(())

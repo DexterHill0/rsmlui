@@ -1,111 +1,125 @@
-use std::time::Duration;
+use std::marker::PhantomData;
+use std::sync::mpsc::Sender;
+use std::time::{Duration, Instant};
 
-use glam::IVec2;
 use winit::application::ApplicationHandler;
-use winit::event::WindowEvent;
-use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
-use winit::platform::run_on_demand::EventLoopExtRunOnDemand;
-use winit::window::{Window, WindowAttributes, WindowId};
+use winit::event::WindowEvent as WinitEvent;
+pub use winit::event_loop::ControlFlow;
+use winit::event_loop::{ActiveEventLoop, EventLoop};
+use winit::window::{Window, WindowId};
 
+use crate::core::app::AppDriver;
+use crate::core::core::AppDispatcher;
 use crate::errors::RsmlUiError;
 use crate::interfaces::window::WindowInterface;
-use crate::types::cursor::Cursor;
 
-pub type WinitWindowOptions = WindowAttributes;
+pub type WinitWindowOptions = winit::window::WindowAttributes;
 
-struct WinitWindowInner {
+struct WinitWindowInner<T: 'static = ()> {
     window_options: WinitWindowOptions,
     window: Option<Window>,
+
+    // sender: Sender<WindowEvent<T>>,
+    last_frame: Instant,
+    _phantom: PhantomData<T>,
 }
 
-impl<T: 'static> ApplicationHandler<T> for WinitWindowInner {
+impl<T: 'static> ApplicationHandler<T> for WinitWindowInner<T> {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        // self.window = Some(event_loop.create_window(self.window_options).unwrap());
+        self.window = Some(
+            event_loop
+                .create_window(self.window_options.clone())
+                .expect("failed to create window"),
+        );
     }
 
     fn window_event(
         &mut self,
-        event_loop: &ActiveEventLoop,
-        window_id: WindowId,
-        event: WindowEvent,
+        _event_loop: &ActiveEventLoop,
+        _window_id: WindowId,
+        event: WinitEvent,
     ) {
-        todo!()
+        match event {
+            WinitEvent::CloseRequested => {
+                // let _ = self.sender.send(WindowEvent::ExitRequested);
+            },
+
+            _ => {},
+        }
+    }
+
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        let now = Instant::now();
+        let delta = now - self.last_frame;
+        self.last_frame = now;
+
+        // let _ = self.sender.send(WindowEvent::RenderRequested(delta));
     }
 }
 
-pub struct WinitWindow<T: 'static> {
-    window_options: WinitWindowOptions,
+pub struct WinitWindow<T: 'static = ()> {
     event_loop: EventLoop<T>,
-    should_close: bool,
-
-    window_inner: WinitWindowInner,
+    window_options: WinitWindowOptions,
+    // sender: Option<Sender<WindowEvent<T>>>,
 }
 
-impl<T: 'static> WinitWindow<T> {
+impl WinitWindow<()> {
     pub fn new_with_options(
         control_flow: ControlFlow,
         options: WinitWindowOptions,
     ) -> Result<Self, RsmlUiError> {
-        // let event_loop = EventLoop::<T>::with_user_event()
-        //     .build()
-        //     .map_err(RsmlUiError::from)?;
+        WinitWindow::new_custom_with_options(control_flow, options)
+    }
+}
 
-        // event_loop.set_control_flow(control_flow);
+impl<T: 'static> WinitWindow<T> {
+    pub fn new_custom_with_options(
+        control_flow: ControlFlow,
+        options: WinitWindowOptions,
+    ) -> Result<WinitWindow<T>, RsmlUiError> {
+        let event_loop = EventLoop::<T>::with_user_event()
+            .build()
+            .map_err(RsmlUiError::from)?;
 
-        // Ok(Self {
-        //     window_options: options,
-        //     event_loop,
-        //     should_close: false,
-        //     window_inner: WinitWindowInner {
-        //         window_options: self.window_options.clone(),
-        //         window: None,
-        //     },
-        // })
-        todo!()
+        event_loop.set_control_flow(control_flow);
+
+        Ok(WinitWindow::<T> {
+            event_loop,
+            window_options: options,
+            // sender: None,
+        })
+    }
+}
+
+impl<T: 'static> AppDriver<T> for WinitWindow<T> {
+    fn run(self: Box<Self>, dispatcher: &mut AppDispatcher<T>) -> Result<(), RsmlUiError> {
+        // let (tx, _rx) = std::sync::mpsc::channel();
+
+        // self.sender = Some(sender.clone());
+
+        let mut inner = WinitWindowInner::<T> {
+            window_options: self.window_options.clone(),
+            window: None,
+            // sender,
+            last_frame: Instant::now(),
+            _phantom: PhantomData,
+        };
+
+        dispatcher.starting()?;
+
+        self.event_loop.run_app(&mut inner)?;
+
+        Ok(())
     }
 }
 
 impl<T: 'static> WindowInterface<T> for WinitWindow<T> {
     fn initialize(&mut self) -> Result<(), RsmlUiError> {
-        // self.window = Some(WinitWindowInner {
-        //     window_options: self.window_options.clone(),
-        //     window: None,
-        // });
-
-        // self.event_loop.run_app_on_demand(app);
-        // Ok(())
-        todo!()
+        Ok(())
     }
 
-    fn driver(&mut self) -> &mut dyn crate::core::app::AppDriver<T> {
+    fn driver(&mut self) -> Box<dyn AppDriver<T>> {
+        // self
         todo!()
     }
-
-    // fn poll_events(
-    //     &mut self,
-    //     sender: &WindowEventEmitter<T>,
-    //     delta: Duration,
-    // ) -> Result<(), RsmlUiError> {
-    //     todo!()
-    // }
-
-    // fn should_close(&self) -> bool {
-    //     todo!()
-    // }
-
-    // fn begin_frame(&mut self) {
-    //     todo!()
-    // }
-
-    // fn present_frame(&mut self) {
-    //     todo!()
-    // }
-
-    // fn dimensions(&self) -> glam::IVec2 {
-    //     todo!()
-    // }
-
-    // fn set_cursor(&mut self, cursor: Cursor) {
-    //     todo!()
-    // }
 }
