@@ -35,6 +35,10 @@ inline void set_system_interface(Rml::SystemInterface* system_interface) {
     Rml::SetSystemInterface(system_interface);
 }
 
+inline auto get_system_interface() -> Rml::SystemInterface* {
+    return Rml::GetSystemInterface();
+}
+
 inline void set_render_interface(Rml::RenderInterface* render_interface) {
     // auto* old = Rml::GetRenderInterface();
 
@@ -43,6 +47,10 @@ inline void set_render_interface(Rml::RenderInterface* render_interface) {
     // }
 
     Rml::SetRenderInterface(render_interface);
+}
+
+inline auto get_render_interface() -> Rml::RenderInterface* {
+    return Rml::GetRenderInterface();
 }
 
 inline auto load_font_face(rust::String path) -> bool {

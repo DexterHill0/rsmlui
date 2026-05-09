@@ -27,6 +27,9 @@ mod ffi {
 
         unsafe fn set_system_interface(system_interface: *mut RmlSystemInterface);
         unsafe fn set_render_interface(render_interface: *mut RmlRenderInterface);
+
+        fn get_system_interface() -> *mut RmlSystemInterface;
+        fn get_render_interface() -> *mut RmlRenderInterface;
     }
 }
 
@@ -54,6 +57,6 @@ mod ffi {
 // }
 
 pub use ffi::{
-    create_context, get_version, initialise, load_font_face, set_render_interface,
-    set_system_interface, shutdown,
+    create_context, get_render_interface, get_system_interface, get_version, initialise,
+    load_font_face, set_render_interface, set_system_interface, shutdown,
 };

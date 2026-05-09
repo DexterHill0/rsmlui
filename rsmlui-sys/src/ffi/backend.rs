@@ -59,19 +59,6 @@ mod ffi {
     }
 }
 
-// pub fn get_system_interface() -> BorrowedInterface<SystemInterfaceMarker> {
-//     BorrowedInterface {
-//         raw: ffi::get_system_interface() as *mut InterfaceOpaque,
-//         _marker: std::marker::PhantomData,
-//     }
-// }
-
-// pub fn get_render_interface() -> RenderInterface {
-//     RenderInterface {
-//         raw: ffi::get_render_interface(),
-//     }
-// }
-
 pub use ffi::{
     Context, begin_frame, get_render_interface, get_system_interface, initialize, present_frame,
     process_events, request_exit, shutdown,

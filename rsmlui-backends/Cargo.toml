@@ -1,0 +1,15 @@
+[package]
+name = "rsmlui-backends"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
+rsmlui-core = { path = "../rsmlui-core", default-features = false }
+glam = "0.30.9"
+thiserror = "2.0.17"
+
+[features]
+default = []
+
+backend-win32-gl2 = ["rsmlui-sys/backend-win32-gl2"]

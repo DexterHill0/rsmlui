@@ -12,14 +12,15 @@ impl<T: Copy + Default, const N: usize> Default for __BindgenOpaqueArray<T, N> {
         Self([<T as Default>::default(); N])
     }
 }
-pub type Rml_byte = ::std::os::raw::c_uchar;
-#[doc = "Templated class for a four-component RGBA colour.\n\n@author Peter Curry"]
+#[doc = "Templated class for a four-component RGBA colour."]
+pub type Rml_Colourb = __BindgenOpaqueArray<u8, 4usize>;
+#[doc = "Templated class for a four-component RGBA colour."]
 pub type Rml_ColourbPremultiplied = __BindgenOpaqueArray<u8, 4usize>;
-#[doc = "Templated class for a generic two-component vector.\n@author Peter Curry"]
+#[doc = "Templated class for a generic two-component vector."]
 pub type Rml_Vector2f = Rml_Vector2<f32>;
-#[doc = "Templated class for a generic two-component vector.\n@author Peter Curry"]
+#[doc = "Templated class for a generic two-component vector."]
 pub type Rml_Vector2i = Rml_Vector2<::std::os::raw::c_int>;
-#[doc = "Templated class for a generic two-component vector.\n@author Peter Curry"]
+#[doc = "Templated class for a generic two-component vector."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Rml_Vector2<Type> {
@@ -263,7 +264,7 @@ impl ::std::ops::BitAndAssign for Rml_Input_KeyModifier {
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct Rml_Input_KeyModifier(pub u8);
-#[doc = "The element that makes up all geometry sent to the renderer.\n\n@author Peter Curry"]
+#[doc = "The element that makes up all geometry sent to the renderer."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct Rml_Vertex {
@@ -299,6 +300,49 @@ pub enum Rml_BlendMode {
     Blend = 0,
     Replace = 1,
 }
+#[doc = "RmlUi's system interface provides an interface for time, translation, logging, and other system utilities.\n\nThe default logging implementation outputs to the Windows Debug Console on Windows, and Standard Error on other\nplatforms."]
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Copy, Clone)]
+pub struct Rml_SystemInterface {
+    pub _bindgen_opaque_blob: u64,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of Rml_SystemInterface"][::std::mem::size_of::<Rml_SystemInterface>() - 8usize];
+    ["Alignment of Rml_SystemInterface"][::std::mem::align_of::<Rml_SystemInterface>() - 8usize];
+};
+unsafe extern "C" {
+    #[link_name = "\u{1}??0SystemInterface@Rml@@QEAA@XZ"]
+    pub fn Rml_SystemInterface_SystemInterface(this: *mut Rml_SystemInterface);
+}
+impl Rml_SystemInterface {
+    #[inline]
+    pub unsafe fn new() -> Self {
+        let mut __bindgen_tmp = ::std::mem::MaybeUninit::uninit();
+        Rml_SystemInterface_SystemInterface(__bindgen_tmp.as_mut_ptr());
+        __bindgen_tmp.assume_init()
+    }
+}
+#[repr(C)]
+#[derive(Debug)]
+pub struct rsmlui_system_interface_RustSystemInterface {
+    pub _base: Rml_SystemInterface,
+    pub rust_meta: *mut ::std::os::raw::c_void,
+    pub rust_data: *mut ::std::os::raw::c_void,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of rsmlui_system_interface_RustSystemInterface"]
+        [::std::mem::size_of::<rsmlui_system_interface_RustSystemInterface>() - 24usize];
+    ["Alignment of rsmlui_system_interface_RustSystemInterface"]
+        [::std::mem::align_of::<rsmlui_system_interface_RustSystemInterface>() - 8usize];
+    ["Offset of field: rsmlui_system_interface_RustSystemInterface::rust_meta"]
+        [::std::mem::offset_of!(rsmlui_system_interface_RustSystemInterface, rust_meta) - 8usize];
+    ["Offset of field: rsmlui_system_interface_RustSystemInterface::rust_data"]
+        [::std::mem::offset_of!(rsmlui_system_interface_RustSystemInterface, rust_data) - 16usize];
+};
+pub type Layouts_SystemInterfaceLayoutGuard = rsmlui_system_interface_RustSystemInterface;
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
     ["Size of template specialization: Rml_Vector2_open0_float_close0"]
@@ -312,4 +356,60 @@ const _: () = {
         [::std::mem::size_of::<Rml_Vector2<::std::os::raw::c_int>>() - 8usize];
     ["Align of template specialization: Rml_Vector2_open0_int_close0"]
         [::std::mem::align_of::<Rml_Vector2<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector2<::std::os::raw::c_int>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector2<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector2<::std::os::raw::c_int>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector2<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector2<f32>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector2<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector2<f32>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector2<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector2<::std::os::raw::c_int>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector2<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector2<f32>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector2<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector2<::std::os::raw::c_int>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector2<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector2<f32>>() - 8usize];
+    ["Align of template specialization: Rml_Vector2_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector2<f32>>() - 4usize];
 };

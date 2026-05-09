@@ -21,3 +21,4 @@ freetype = []
 
 system-win32 = []
 renderer-gl2 = []
+backend-win32-gl2 = ["system-win32", "renderer-gl2"]

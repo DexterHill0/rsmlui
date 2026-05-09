@@ -4,23 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
-drop-tree = { path = "../drop-tree" }
-glam = "0.30.9"
-thiserror = "2.0.17"
-
-winit = { version = "0.30.12", optional = true }
+rsmlui-backends = { path = "../rsmlui-backends", default-features = false }
+rsmlui-core = { path = "../rsmlui-core", default-features = false }
 
 [features]
 default = ["freetype"]
 
-cosmic-text = ["rsmlui-sys/cosmic-text"]
-freetype = ["rsmlui-sys/freetype"]
+freetype = ["rsmlui-core/freetype"]
 
-system-win32 = ["rsmlui-sys/system-win32"]
-
-renderer-gl2 = ["rsmlui-sys/renderer-gl2"]
-
-window-winit = ["dep:winit"]
-
-backend-win32-gl2 = ["rsmlui-sys/system-win32", "rsmlui-sys/renderer-gl2"]
+backend-win32-gl2 = ["rsmlui-backends/backend-win32-gl2"]

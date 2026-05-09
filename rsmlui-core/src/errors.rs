@@ -1,12 +1,17 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum RsmlUiError {
+pub enum Error {
     #[error("failed to initialize rmlui")]
     InitializationFailed,
 
     #[error("already initialized")]
     AlreadyInitialized,
+
+    #[error("no render interface installed")]
+    NoRenderInterface,
+    #[error("no system interface installed")]
+    NoSystemInterface,
 
     #[error("rsmlui not initialized")]
     NotInitialized,

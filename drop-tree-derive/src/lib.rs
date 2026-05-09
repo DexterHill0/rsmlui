@@ -3,7 +3,9 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::spanned::Spanned;
 use syn::{
-    Field, Fields, FieldsNamed, GenericParam, Ident, ImplGenerics, ItemStruct, Lifetime, LifetimeParam, Path, Turbofish, TypeGenerics, TypeParamBound, WhereClause, parse_quote, parse_quote_spanned
+    Field, Fields, FieldsNamed, GenericParam, Ident, ImplGenerics, ItemStruct, Lifetime,
+    LifetimeParam, Path, Turbofish, TypeGenerics, TypeParamBound, WhereClause, parse_quote,
+    parse_quote_spanned,
 };
 
 #[derive(ParseMetaItem, Debug)]
@@ -125,7 +127,7 @@ impl BorrowExpansion {
         impl_generics: &ImplGenerics,
         ty_generics: &TypeGenerics,
         where_clause: &Option<&WhereClause>,
-        user_struct_generics_turbofish: &Turbofish<'_>
+        user_struct_generics_turbofish: &Turbofish<'_>,
     ) -> Self {
         Self {
             // the type definition of self marker with empty parent
@@ -164,7 +166,7 @@ impl BorrowExpansion {
         impl_generics: &ImplGenerics,
         ty_generics: &TypeGenerics,
         where_clause: &Option<&WhereClause>,
-        user_struct_generics_turbofish: &Turbofish<'_>
+        user_struct_generics_turbofish: &Turbofish<'_>,
     ) -> Self {
         let last_segment_ident = &parent_struct_path.segments.last().unwrap().ident;
 
@@ -326,7 +328,8 @@ pub fn drop_tree(
             _ => {},
         });
 
-    let (user_impl_generics_static_bound, user_ty_generics_static_bound, ..) = user_generics_static_bound.split_for_impl();
+    let (user_impl_generics_static_bound, user_ty_generics_static_bound, ..) =
+        user_generics_static_bound.split_for_impl();
     let user_generics_turbofish_static_bound = user_ty_generics_static_bound.as_turbofish();
 
     let DestructorExpansion {
@@ -335,15 +338,15 @@ pub fn drop_tree(
         user_struct_body,
         data_struct_deref_impls,
     } = DestructorExpansion::new(
-            &user_struct_ident,
-            &data_struct_ident,
-            &ownership_link_type_alias,
-            &pub_super_user_fields,
-            drop_tree_attrs.destructor.as_ref(),
-            &user_impl_generics_static_bound,
-            &user_ty_generics,
-            &user_where_clause,
-        );
+        &user_struct_ident,
+        &data_struct_ident,
+        &ownership_link_type_alias,
+        &pub_super_user_fields,
+        drop_tree_attrs.destructor.as_ref(),
+        &user_impl_generics_static_bound,
+        &user_ty_generics,
+        &user_where_clause,
+    );
 
     // recreates the struct fields but removing the vis token for use as arguments
     let user_fields_no_vis: Vec<Field> = user_fields
@@ -466,10 +469,10 @@ pub fn drop_tree(
             pub struct #data_struct_ident #user_struct_generics #data_struct_body
 
             #data_struct_drop_impl
-            
+
             #[doc(hidden)]
             pub type #ownership_link_type_alias = #ownership_link_type_alias_value;
-            
+
             #(#user_struct_attrs)*
             pub #user_struct_token #user_struct_ident #user_struct_generics #user_struct_body_braced
 
@@ -478,7 +481,7 @@ pub fn drop_tree(
             impl #user_impl_generics Drop for #user_struct_ident #user_ty_generics #user_where_clause {
                 fn drop(&mut self) {}
             }
-            
+
             #data_struct_deref_impls
             #constructor_impl
             #dt_ownership_borrow_impl

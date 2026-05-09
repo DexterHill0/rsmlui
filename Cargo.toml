@@ -3,8 +3,10 @@ members = [
     "examples/basic",
     "examples/raw",
     "examples/custom-backend-advanced",
-    "rsmlui",
+    "rsmlui-core",
     "rsmlui-sys",
+    "rsmlui-backends",
+    "rsmlui",
     "drop-tree",
     "drop-tree-derive",
 ]

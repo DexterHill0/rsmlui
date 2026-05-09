@@ -41,13 +41,14 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
         bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
     };
 
-    #[cfg(all(feature = "system-win32", feature = "renderer-gl2"))]
+    #[cfg(feature = "backend-win32-gl2")]
     {
         bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_Gl2.cpp");
     };
 
     // required for vfuncs
     bridge.file("RmlUi/Source/Core/RenderInterface.cpp");
+    bridge.file("RmlUi/Source/Core/SystemInterface.cpp");
 
     // TODO: custom backend
     // #[cfg(not(feature = "backend_glfw_gl3"))]
@@ -115,6 +116,7 @@ fn main() {
     let cxx_include_dir = rust_out_dir.join("cxxbridge/include");
 
     let bindings = bindgen::Builder::default()
+        .allowlist_recursively(false)
         .header("src/include/rsmlui/Bindings.h")
         .clang_arg("-x")
         .clang_arg("c++")
@@ -123,14 +125,24 @@ fn main() {
         .clang_arg("-I./src/include")
         .clang_arg("-I./RmlUi/Include")
         .clang_arg("-I./RmlUi/Backends")
+        .allowlist_type("Rml::Colour")
+        .allowlist_type("Rml::Colourb")
+        .allowlist_type("Rml::ColourbPremultiplied")
         .allowlist_type("Rml::Input::KeyIdentifier")
         .allowlist_type("Rml::Input::KeyModifier")
         .allowlist_type("Rml::ClipMaskOperation")
         .allowlist_type("Rml::BlendMode")
         .allowlist_type("Rml::Vertex")
+        .allowlist_type("Rml::Vector2")
         .allowlist_type("Rml::Vector2f")
         .allowlist_type("Rml::Vector2i")
         .allowlist_type("Rml::Log_Type")
+        // FIXME: this still generates constructors for types. I don't think bindgen has a way of stopping that but it would be nice
+        // if they weren't generated
+        .allowlist_type("Rml::SystemInterface")
+        .opaque_type("Rml::SystemInterface")
+        .allowlist_type("Layouts::SystemInterfaceLayoutGuard")
+        .allowlist_type("rsmlui::system_interface::RustSystemInterface")
         .allowlist_var("")
         .allowlist_function("")
         .bitfield_enum("Rml::Input::KeyModifier")
@@ -140,6 +152,8 @@ fn main() {
         .translate_enum_integer_types(true)
         .respect_cxx_access_specs(true)
         .flexarray_dst(true)
+        .vtable_generation(false)
+        .generate_pure_virtual_functions(false)
         .raw_line("#![allow(unused_variables, non_camel_case_types)]")
         .clang_args(
             DEFINTIONS

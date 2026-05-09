@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rsmlui = { path = "../../rsmlui", features = ["freetype", "backend-win32-gl2"] }
+rsmlui = { path = "../../rsmlui", features = ["backend-win32-gl2"] }

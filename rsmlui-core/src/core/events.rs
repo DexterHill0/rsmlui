@@ -1,7 +1,3 @@
-use std::sync::mpsc::Sender;
-use std::time::Duration;
-
-use crate::errors::RsmlUiError;
 use crate::types::input::{KeyCode, KeyModifier};
 
 #[non_exhaustive]
@@ -15,17 +11,4 @@ pub enum KeyboardEvent {
         /// but if nothing consumes the event it is set to `true` to match against fallback/lower-priority shortcuts.
         fallback: bool,
     },
-}
-
-#[derive(Clone, Debug, PartialEq)]
-#[non_exhaustive]
-pub enum WindowEvent<T: 'static = ()> {
-    ExitRequested,
-    ExitCancelled,
-    UpdateRequested,
-    RenderRequested(Duration),
-
-    KeyboardEvent(KeyboardEvent),
-
-    UserEvent(T),
 }
