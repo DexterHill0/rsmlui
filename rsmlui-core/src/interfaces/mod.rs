@@ -25,16 +25,23 @@ impl<T> RawInterface<T> {
 /// Constructible from a raw pointer via [`BorrowedInterface::new`]. The pointer
 /// is not freed on drop as this is just a small, transparent wrapper around the
 /// pointer C++ gives us.
+///
+/// The lifetime is used to prevent the pointer outliving the value it was
+/// borrowed from (I.E, the interface can't outlive the backend).
 #[derive(Copy, Clone)]
-pub struct BorrowedInterface<T> {
+pub struct BorrowedInterface<'a, T> {
     pub(crate) raw: *mut T,
+    _phantom: PhantomData<&'a ()>,
 }
 
-not_send_sync!([T] BorrowedInterface[T]);
+not_send_sync!(['a, T] BorrowedInterface['a, T]);
 
-impl<T> BorrowedInterface<T> {
+impl<'a, T> BorrowedInterface<'a, T> {
     pub fn new(ptr: *mut T) -> Self {
-        Self { raw: ptr }
+        Self {
+            raw: ptr,
+            _phantom: PhantomData,
+        }
     }
 }
 
@@ -42,7 +49,7 @@ pub trait IntoRawInterface<T> {
     fn into_raw(self) -> RawInterface<T>;
 }
 
-impl<T> IntoRawInterface<T> for BorrowedInterface<T> {
+impl<'a, T> IntoRawInterface<T> for BorrowedInterface<'a, T> {
     fn into_raw(self) -> RawInterface<T> {
         RawInterface::new(self.raw)
     }

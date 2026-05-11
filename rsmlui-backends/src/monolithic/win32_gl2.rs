@@ -90,10 +90,13 @@ impl Win32Gl2Backend {
     }
 
     /// Pass this to [`Rml::set_system_interface`](rsmlui_core::core::core::Rml::set_system_interface).
-    /// The pointer remains valid until [`shutdown`](Win32Gl2Backend::drop) is called.
     ///
-    /// TODO: is it safe to hold the borrowed interface after drop/shutdown?
-    pub fn get_system_interface(&self) -> Option<BorrowedInterface<RmlSystemInterface>> {
+    /// The returned `BorrowedInterface` borrows from `&self`, so the borrow checker prevents
+    /// holding it past this backend's lifetime. Once passed to `set_system_interface` the
+    /// `BorrowedInterface` is consumed, and the [`BackendHandle`] mechanism ensures the C++
+    /// memory backing that pointer is not freed before [`Rml`](rsmlui_core::core::core::Rml)
+    /// shuts down.
+    pub fn get_system_interface(&self) -> Option<BorrowedInterface<'_, RmlSystemInterface>> {
         let itf = backend::get_system_interface();
 
         if itf.is_null() {
@@ -104,10 +107,9 @@ impl Win32Gl2Backend {
     }
 
     /// Pass this to [`Rml::set_render_interface`](rsmlui_core::core::core::Rml::set_render_interface).
-    /// The pointer remains valid until [`shutdown`](Win32Gl2Backend::drop) is called.
     ///
-    /// TODO: is it safe to hold the borrowed interface after drop/shutdown?
-    pub fn get_render_interface(&self) -> Option<BorrowedInterface<RmlRenderInterface>> {
+    /// See [`get_system_interface`](Win32Gl2Backend::get_system_interface) for lifetime semantics.
+    pub fn get_render_interface(&self) -> Option<BorrowedInterface<'_, RmlRenderInterface>> {
         let itf = backend::get_render_interface();
 
         if itf.is_null() {
@@ -126,10 +128,8 @@ impl Win32Gl2Backend {
         self.key_down_callback = callback;
     }
 
-    /// Returns a handle to register with [`Rml::attach_backend`] so that
-    /// `backend::shutdown` is deferred until after `Rml` drops.
-    ///
-    /// [`Rml::attach_backend`]: rsmlui_core::core::core::Rml::attach_backend
+    /// Returns a handle to pass to [`Rml::new`](rsmlui_core::core::core::Rml::new) so that
+    /// correct clean-up order for all resources is preserved.
     pub fn backend_handle(&self) -> BackendHandle {
         self.handle.clone()
     }

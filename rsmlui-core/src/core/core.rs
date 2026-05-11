@@ -87,12 +87,13 @@ impl Rml {
         unsafe { core::set_system_interface(raw) }
     }
 
-    /// TODO: comment - essentially type-erases the interface. once an interface is set, custom or not,
-    /// getting the interface will simply return a `BorrowedInterface` which is just a wrapper around
-    /// a point to the object in C++. We dont know what the object is anymore, so it can't be cast to
-    /// any particular interface.
-    /// TODO: is it safe to hold the borrowed interface after drop/shutdown?
-    pub fn get_system_interface(&self) -> Option<BorrowedInterface<RmlSystemInterface>> {
+    /// Returns the currently registered system interface, if any.
+    ///
+    /// The returned `BorrowedInterface` borrows from `&self`, so it cannot outlive this `Rml`
+    /// instance. Once the interface is set, the concrete type is erased and it becomes just a
+    /// pointer to whatever C++ object was registered, and cannot be safely cast back to a
+    /// Rust type.
+    pub fn get_system_interface(&self) -> Option<BorrowedInterface<'_, RmlSystemInterface>> {
         let ptr = core::get_system_interface();
 
         if ptr.is_null() {
@@ -111,8 +112,10 @@ impl Rml {
         unsafe { core::set_render_interface(raw) }
     }
 
-    /// TODO: is it safe to hold the borrowed interface after drop/shutdown?
-    pub fn get_render_interface(&self) -> Option<BorrowedInterface<RmlRenderInterface>> {
+    /// Returns the currently registered render interface, if any.
+    ///
+    /// See [`get_system_interface`](Rml::get_system_interface) for lifetime semantics.
+    pub fn get_render_interface(&self) -> Option<BorrowedInterface<'_, RmlRenderInterface>> {
         let ptr = core::get_render_interface();
 
         if ptr.is_null() {
