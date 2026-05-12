@@ -9,5 +9,6 @@ members = [
     "rsmlui",
     "drop-tree",
     "drop-tree-derive",
+    "rsmlui-macros",
 ]
 resolver = "3"

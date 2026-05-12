@@ -6,9 +6,12 @@ edition = "2024"
 [dependencies]
 rsmlui-backends = { path = "../rsmlui-backends", default-features = false }
 rsmlui-core = { path = "../rsmlui-core", default-features = false }
+rsmlui-macros = { path = "../rsmlui-macros", default-features = false }
 
 [features]
-default = ["freetype"]
+default = ["freetype", "generate-documentation"]
+
+generate-documentation = ["rsmlui-core/generate-documentation"]
 
 freetype = ["rsmlui-core/freetype"]
 

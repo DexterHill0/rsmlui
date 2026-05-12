@@ -1,0 +1,19 @@
+[package]
+name = "rsmlui-macros"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+proc-macro2 = "1"
+syn = { version = "2", features = ["full"] }
+
+regex = { version = "1.12.3", optional = true }
+
+[features]
+default = ["generate-documentation"]
+
+generate-documentation = ["regex"]

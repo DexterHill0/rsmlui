@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
+rsmlui-macros = { path = "../rsmlui-macros", default-features = false }
+
 drop-tree = { path = "../drop-tree" }
 glam = "0.30.9"
 thiserror = "2.0.17"
@@ -13,7 +15,9 @@ sealed = "0.6.0"
 winit = { version = "0.30.12", optional = true }
 
 [features]
-# default = ["freetype"]
+default = ["generate-documentation"]
+
+generate-documentation = ["rsmlui-macros/generate-documentation"]
 
 # cosmic-text = ["rsmlui-sys/cosmic-text"]
 freetype = ["rsmlui-sys/freetype"]

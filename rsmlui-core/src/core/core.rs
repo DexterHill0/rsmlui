@@ -4,6 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use drop_tree::{DropCtx, drop_tree};
 use glam::IVec2;
+use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
 use rsmlui_sys::render_interface::RmlRenderInterface;
 use rsmlui_sys::system_interface::RmlSystemInterface;
@@ -64,6 +65,7 @@ pub struct Rml {
     _backend: BackendHandle,
 }
 
+#[rmldoc(file = "api_Rml.md")]
 impl Rml {
     /// Create an `Rml` instance tied to a given `backend`.
     ///
@@ -78,6 +80,7 @@ impl Rml {
         Self::new_with_borrow(backend)
     }
 
+    #[rmldoc(name = "Rml::SetSystemInterface")]
     pub fn set_system_interface(
         &self,
         interface: Option<impl IntoRawInterface<RmlSystemInterface>>,
@@ -87,12 +90,11 @@ impl Rml {
         unsafe { core::set_system_interface(raw) }
     }
 
-    /// Returns the currently registered system interface, if any.
-    ///
     /// The returned `BorrowedInterface` borrows from `&self`, so it cannot outlive this `Rml`
     /// instance. Once the interface is set, the concrete type is erased and it becomes just a
     /// pointer to whatever C++ object was registered, and cannot be safely cast back to a
     /// Rust type.
+    #[rmldoc(name = "Rml::GetSystemInterface")]
     pub fn get_system_interface(&self) -> Option<BorrowedInterface<'_, RmlSystemInterface>> {
         let ptr = core::get_system_interface();
 
@@ -103,6 +105,7 @@ impl Rml {
         }
     }
 
+    #[rmldoc(name = "Rml::SetRenderInterface")]
     pub fn set_render_interface(
         &self,
         interface: Option<impl IntoRawInterface<RmlRenderInterface>>,
@@ -112,9 +115,8 @@ impl Rml {
         unsafe { core::set_render_interface(raw) }
     }
 
-    /// Returns the currently registered render interface, if any.
-    ///
     /// See [`get_system_interface`](Rml::get_system_interface) for lifetime semantics.
+    #[rmldoc(name = "Rml::GetRenderInterface")]
     pub fn get_render_interface(&self) -> Option<BorrowedInterface<'_, RmlRenderInterface>> {
         let ptr = core::get_render_interface();
 
@@ -125,6 +127,7 @@ impl Rml {
         }
     }
 
+    #[rmldoc(name = "Rml::Initialise")]
     pub fn initialise(&self) -> Result<(), Error> {
         if is_core_initialized() {
             return Err(Error::AlreadyInitialized);
@@ -149,12 +152,16 @@ impl Rml {
         Ok(())
     }
 
+    /// This is also called on `Drop`.
+    #[rmldoc(name = "Rml::Shutdown")]
     pub fn shutdown(self) -> Result<(), Error> {
         drop(self);
 
         Ok(())
     }
 
+    // TODO: overloaded methods
+    #[rmldoc(name = "Rml::LoadFontFace")]
     pub fn load_font_face<P: Into<String>>(&self, path: P) -> Result<(), Error> {
         if !is_core_initialized() {
             return Err(Error::NotInitialized);
@@ -169,6 +176,7 @@ impl Rml {
         Ok(())
     }
 
+    #[rmldoc(name = "Rml::CreateContext")]
     pub fn create_context<N: Into<String>, D: Into<IVec2>>(
         &self,
         name: N,

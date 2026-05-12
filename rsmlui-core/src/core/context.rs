@@ -1,10 +1,12 @@
 use drop_tree::drop_tree;
+use rsmlui_macros::rmldoc;
 
 use crate::core::element_document::ElementDocument;
 use crate::errors::Error;
 use crate::not_send_sync;
 use crate::utils::raw::{Ptr, Raw};
 
+#[rmldoc(file = "api_Rml-Context.md", name = "Rml::Context")]
 #[drop_tree(borrows(crate::core::core::Rml))]
 pub struct Context {
     pub(crate) raw: Ptr<Context>,
@@ -21,7 +23,9 @@ impl Raw for Context {
     }
 }
 
+#[rmldoc(file = "api_Rml-Context.md")]
 impl Context {
+    #[rmldoc(name = "Rml::Context::Update")]
     pub fn update(&self) -> Result<(), Error> {
         if !unsafe { rsmlui_sys::context::context_update(self.raw) } {
             return Err(Error::ContextUpdateFailed);
@@ -30,6 +34,7 @@ impl Context {
         Ok(())
     }
 
+    #[rmldoc(name = "Rml::Context::Render")]
     pub fn render(&self) -> Result<(), Error> {
         if !unsafe { rsmlui_sys::context::context_render(self.raw) } {
             return Err(Error::ContextRenderFailed);
@@ -49,6 +54,9 @@ impl Context {
         self.raw()
     }
 
+    /// The document returned from this context belongs to the context, and it will keep the context alive for as long
+    /// as the document lives to prevent unsoundness.
+    #[rmldoc(name = "Rml::Context::LoadDocument")]
     pub fn load_document<P: Into<String>>(
         &self,
         document_path: P,
