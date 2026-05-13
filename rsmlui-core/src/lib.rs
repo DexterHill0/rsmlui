@@ -4,6 +4,8 @@
 #![feature(ptr_metadata)]
 // optional: can be done with `negative_impl` crate
 #![feature(negative_impls)]
+// optional: used for macro on `mod x;` syntax - can be worked around
+#![feature(proc_macro_hygiene)]
 
 pub mod core;
 pub mod errors;

@@ -11,9 +11,9 @@ use syn::parse::{Parse, ParseStream, Parser};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
-    Attribute, Expr, ExprLit, Field, Fields, ImplItem, ItemEnum, ItemImpl, ItemMod, ItemStruct,
-    ItemTrait, ItemType, Lit, LitStr, Meta, MetaNameValue, Token, TraitItem, Visibility,
-    parse_macro_input, parse_quote,
+    Attribute, Expr, ExprLit, Fields, ImplItem, ItemEnum, ItemImpl, ItemMod, ItemStruct, ItemTrait,
+    ItemType, Lit, Meta, MetaNameValue, Token, TraitItem, Visibility, parse_macro_input,
+    parse_quote,
 };
 
 static DOC_CACHE: LazyLock<RwLock<HashMap<PathBuf, ParsedDocFile>>> =
@@ -89,6 +89,7 @@ enum Documentable {
     Type(ItemType),
     Impl(ItemImpl),
     Trait(ItemTrait),
+    Mod(ItemMod),
 }
 
 impl Parse for Documentable {
@@ -120,6 +121,10 @@ impl Parse for Documentable {
             let item = input.parse::<ItemImpl>()?;
 
             Ok(Self::Impl(item))
+        } else if item_type.peek(Token![mod]) {
+            let item = input.parse::<ItemMod>()?;
+
+            Ok(Self::Mod(item))
         } else {
             Err(input.error("expected struct, enum, type, module, or impl"))
         }
@@ -134,6 +139,7 @@ impl ToTokens for Documentable {
             Documentable::Type(item_type) => quote! { #item_type},
             Documentable::Trait(item_trait) => quote! { #item_trait},
             Documentable::Impl(item_impl) => quote! { #item_impl},
+            Documentable::Mod(item_mod) => quote! { #item_mod},
         });
     }
 }
@@ -223,6 +229,7 @@ fn make_doc_attributes<'a, A: Iterator<Item = &'a Attribute> + Clone>(
     doc_file: &ParsedDocFile,
     name: &str,
     span: Span,
+    module: bool,
 ) -> syn::Result<Vec<Attribute>> {
     let doc_ident = syn::parse_str::<syn::Path>("doc")?;
 
@@ -233,21 +240,46 @@ fn make_doc_attributes<'a, A: Iterator<Item = &'a Attribute> + Clone>(
     let section = get_item_doc_from_file(doc_file, name, span)?;
 
     if has_other_doc_comments {
-        new_attrs.push(parse_quote! {
-            #[doc = "# Notes"]
-        });
+        if module {
+            new_attrs.push(parse_quote! {
+                #![doc = "# Notes"]
+            });
+        } else {
+            new_attrs.push(parse_quote! {
+                #[doc = "# Notes"]
+            });
+        }
     }
 
     new_attrs.extend(attrs.cloned());
 
-    new_attrs.push(parse_quote! {
-        #[doc = "# RmlUi Documentation"]
-    });
-    new_attrs.push(parse_quote! {
-        #[doc = #section]
-    });
+    if module {
+        new_attrs.push(parse_quote! {
+            #![doc = "# RmlUi Documentation"]
+        });
+        new_attrs.push(parse_quote! {
+            #![doc = #section]
+        });
+    } else {
+        new_attrs.push(parse_quote! {
+            #[doc = "# RmlUi Documentation"]
+        });
+        new_attrs.push(parse_quote! {
+            #[doc = #section]
+        });
+    }
 
     Ok(new_attrs)
+}
+
+fn remove_rmldoc_attrs(
+    attrs: &[Attribute],
+) -> syn::Result<impl Iterator<Item = &'_ Attribute> + Clone> {
+    let rmldoc_ident = syn::parse_str::<syn::Path>("rmldoc")?;
+
+    Ok(attrs
+        .iter()
+        .filter(move |&attr| attr.path() != &rmldoc_ident))
 }
 
 fn parse_replace_rmldoc_attr(
@@ -304,12 +336,12 @@ fn parse_replace_rmldoc_attr(
         }
     }
 
-    let filtered_attrs = attrs.iter().filter(|&attr| attr.path() != &rmldoc_ident);
+    let filtered_attrs = remove_rmldoc_attrs(attrs)?;
 
     let new_attrs;
 
     if let (Some(name), Some(name_span)) = (name, name_span) {
-        new_attrs = make_doc_attributes(filtered_attrs, doc_file, &name, name_span)?;
+        new_attrs = make_doc_attributes(filtered_attrs, doc_file, &name, name_span, false)?;
     } else {
         new_attrs = filtered_attrs.cloned().collect::<Vec<_>>();
     }
@@ -317,18 +349,22 @@ fn parse_replace_rmldoc_attr(
     Ok(new_attrs)
 }
 
+fn parse_doc_file(file_name: &str, file_span: Span) -> syn::Result<ParsedDocFile> {
+    let workspace_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+
+    let doc_file = workspace_dir.join("rml-doc/generated/md").join(file_name);
+
+    load_doc_file(&doc_file, file_span)
+}
+
 fn make_doc_comments(
     input: &mut Documentable,
     arguments: &ContainerDocArguments,
     arguments_span: Span,
 ) -> syn::Result<TokenStream2> {
-    let workspace_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
-
     let (ref file_name, file_span) = arguments.file;
 
-    let doc_file = workspace_dir.join("rml-doc/generated/md").join(file_name);
-
-    let parsed_doc_file = load_doc_file(&doc_file, file_span)?;
+    let parsed_doc_file = parse_doc_file(file_name, file_span)?;
 
     match input {
         Documentable::Struct(item_struct) => {
@@ -343,7 +379,7 @@ fn make_doc_comments(
             } = item_struct;
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span)?
+                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?
             } else {
                 vec![]
             };
@@ -382,7 +418,7 @@ fn make_doc_comments(
             } = item_enum;
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span)?
+                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?
             } else {
                 vec![]
             };
@@ -421,7 +457,7 @@ fn make_doc_comments(
             } = item_trait;
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span)?
+                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?
             } else {
                 vec![]
             };
@@ -524,7 +560,7 @@ fn make_doc_comments(
                 } = item_type;
 
                 let container_attrs =
-                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span)?;
+                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?;
 
                 Ok(quote! {
                     #(#container_attrs)*
@@ -537,7 +573,179 @@ fn make_doc_comments(
                 ))
             }
         },
+        Documentable::Mod(item_mod) => {
+            if let Some((ref name, name_span)) = arguments.name {
+                let ItemMod {
+                    attrs,
+                    vis,
+                    unsafety,
+                    mod_token,
+                    ident,
+                    content,
+                    semi,
+                } = item_mod;
+
+                if content.is_some() {
+                    return Err(syn::Error::new(
+                        arguments_span,
+                        "module with block syntax is not supported yet",
+                    ));
+                }
+
+                let container_attrs =
+                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?;
+
+                Ok(quote! {
+                    #(#container_attrs)*
+                    #vis #mod_token #unsafety #ident #semi
+                })
+            } else {
+                Err(syn::Error::new(
+                    arguments_span,
+                    "`name` argument is required for documentation on `type` item",
+                ))
+            }
+        },
     }
+}
+
+#[cfg(not(feature = "generate-documentation"))]
+fn strip_rmldoc_attributes(mut input: Documentable) -> syn::Result<TokenStream2> {
+    Ok(match input {
+        Documentable::Struct(ref mut item_struct) => {
+            let ItemStruct { attrs, fields, .. } = item_struct;
+
+            let filtered = remove_rmldoc_attrs(attrs)?;
+            item_struct.attrs = filtered.cloned().collect::<Vec<_>>();
+
+            match fields {
+                Fields::Named(fields_named) => {
+                    for named in &mut fields_named.named {
+                        let new = remove_rmldoc_attrs(&named.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        named.attrs = new;
+                    }
+                },
+                Fields::Unnamed(fields_unnamed) => {
+                    for unnamed in &mut fields_unnamed.unnamed {
+                        let new = remove_rmldoc_attrs(&unnamed.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        unnamed.attrs = new;
+                    }
+                },
+                _ => {},
+            }
+
+            quote! {
+                #item_struct
+            }
+        },
+        Documentable::Enum(ref mut item_enum) => {
+            let ItemEnum {
+                attrs, variants, ..
+            } = item_enum;
+
+            let filtered = remove_rmldoc_attrs(attrs)?;
+            item_enum.attrs = filtered.cloned().collect::<Vec<_>>();
+
+            for variant in variants.iter_mut() {
+                let new = remove_rmldoc_attrs(&variant.attrs)?
+                    .cloned()
+                    .collect::<Vec<_>>();
+                variant.attrs = new;
+            }
+
+            quote! {
+                #item_enum
+            }
+        },
+        Documentable::Type(ref mut item_type) => {
+            let ItemType { attrs, .. } = item_type;
+
+            let filtered = remove_rmldoc_attrs(attrs)?;
+            item_type.attrs = filtered.cloned().collect::<Vec<_>>();
+
+            quote! { #item_type }
+        },
+        Documentable::Impl(ref mut item_impl) => {
+            let ItemImpl { attrs, items, .. } = item_impl;
+
+            let filtered = remove_rmldoc_attrs(attrs)?;
+            item_impl.attrs = filtered.cloned().collect::<Vec<_>>();
+
+            for item in items.iter_mut() {
+                match item {
+                    ImplItem::Const(impl_item_const) => {
+                        let new = remove_rmldoc_attrs(&impl_item_const.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        impl_item_const.attrs = new;
+                    },
+                    ImplItem::Fn(impl_item_fn) => {
+                        let new = remove_rmldoc_attrs(&impl_item_fn.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        impl_item_fn.attrs = new;
+                    },
+                    ImplItem::Type(impl_item_type) => {
+                        let new = remove_rmldoc_attrs(&impl_item_type.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        impl_item_type.attrs = new;
+                    },
+                    _ => {},
+                }
+            }
+
+            quote! {
+                #item_impl
+            }
+        },
+        Documentable::Trait(ref mut item_trait) => {
+            let ItemTrait { attrs, items, .. } = item_trait;
+
+            let filtered = remove_rmldoc_attrs(attrs)?;
+            item_trait.attrs = filtered.cloned().collect::<Vec<_>>();
+
+            for item in items.iter_mut() {
+                match item {
+                    TraitItem::Const(trait_item_const) => {
+                        let new = remove_rmldoc_attrs(&trait_item_const.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        trait_item_const.attrs = new;
+                    },
+                    TraitItem::Fn(trait_item_fn) => {
+                        let new = remove_rmldoc_attrs(&trait_item_fn.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        trait_item_fn.attrs = new;
+                    },
+                    TraitItem::Type(trait_item_type) => {
+                        let new = remove_rmldoc_attrs(&trait_item_type.attrs)?
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        trait_item_type.attrs = new;
+                    },
+                    _ => {},
+                }
+            }
+
+            quote! {
+                #item_trait
+            }
+        },
+        Documentable::Mod(ref mut item_mod) => {
+            let ItemMod { attrs, .. } = item_mod;
+
+            let filtered = remove_rmldoc_attrs(attrs)?;
+            item_mod.attrs = filtered.cloned().collect::<Vec<_>>();
+
+            quote! { #item_mod }
+        },
+    })
 }
 
 #[allow(unused)]
@@ -547,13 +755,16 @@ pub fn doc_gen(attrs: TokenStream1, item: TokenStream1) -> TokenStream1 {
 
     let arguments = parse_macro_input!(attrs as ContainerDocArguments);
 
-    // #[cfg(doc)]
+    #[cfg(feature = "generate-documentation")]
     let out = match make_doc_comments(&mut input, &arguments, input_span) {
         Ok(ts) => ts,
         Err(err) => return err.into_compile_error().into(),
     };
-    // #[cfg(not(doc))]
-    // let out = input.to_token_stream();
+    #[cfg(not(feature = "generate-documentation"))]
+    let out = match strip_rmldoc_attributes(input) {
+        Ok(ts) => ts,
+        Err(err) => return err.into_compile_error().into(),
+    };
 
     out.into()
 }

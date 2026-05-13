@@ -6,8 +6,3 @@ use proc_macro::TokenStream;
 pub fn rmldoc(attrs: TokenStream, item: TokenStream) -> TokenStream {
     doc_gen::doc_gen(attrs, item)
 }
-
-#[proc_macro]
-pub fn rmldoc_module(item: TokenStream) -> TokenStream {
-    todo!()
-}
