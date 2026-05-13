@@ -27,12 +27,14 @@ static DOC_PARSE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 
 #[derive(Debug, Clone)]
 struct ParsedDocFile {
-    blocks: HashMap<String, String>,
+    by_name: HashMap<String, Vec<(String, String)>>,
+    by_refid: HashMap<String, String>,
 }
 
 fn parse_rsmlui_markdown(contents: &str, error_span: Span) -> syn::Result<ParsedDocFile> {
     let mut parsed_doc_file = ParsedDocFile {
-        blocks: HashMap::new(),
+        by_name: HashMap::new(),
+        by_refid: HashMap::new(),
     };
 
     for capture in DOC_PARSE_REGEX.captures_iter(contents) {
@@ -40,14 +42,26 @@ fn parse_rsmlui_markdown(contents: &str, error_span: Span) -> syn::Result<Parsed
             .name("item")
             .ok_or_else(|| syn::Error::new(error_span, "could not find capture group `item`"))?
             .as_str();
-        let item_description = capture
+        let refid = capture
+            .name("refid")
+            .ok_or_else(|| syn::Error::new(error_span, "could not find capture group `refid`"))?
+            .as_str();
+        let content = capture
             .name("content")
             .ok_or_else(|| syn::Error::new(error_span, "could not find capture group `contents`"))?
             .as_str();
 
         parsed_doc_file
-            .blocks
-            .insert(item_name.to_owned(), item_description.to_owned());
+            .by_name
+            .entry(item_name.to_owned())
+            .or_default()
+            .push((refid.to_owned(), content.to_owned()));
+
+        if !refid.is_empty() {
+            parsed_doc_file
+                .by_refid
+                .insert(refid.to_owned(), content.to_owned());
+        }
     }
 
     Ok(parsed_doc_file)
@@ -75,10 +89,26 @@ fn load_doc_file(path: &Path, error_span: Span) -> syn::Result<ParsedDocFile> {
 fn get_item_doc_from_file(
     doc_file: &ParsedDocFile,
     item: &str,
+    refid: Option<&str>,
     error_span: Span,
 ) -> syn::Result<String> {
-    match doc_file.blocks.get(item) {
-        Some(desc) => Ok(desc.clone()),
+    if let Some(refid) = refid {
+        return doc_file
+            .by_refid
+            .get(refid)
+            .cloned()
+            .ok_or_else(|| syn::Error::new(error_span, "item with refid could not be found"));
+    }
+
+    match doc_file.by_name.get(item) {
+        Some(blocks) => match blocks.as_slice() {
+            [(_, content)] => Ok(content.clone()),
+            [] => Err(syn::Error::new(error_span, "item could not be found")),
+            _ => Err(syn::Error::new(
+                error_span,
+                "multiple overloads exist for this item; use `refid` to disambiguate",
+            )),
+        },
         None => Err(syn::Error::new(error_span, "item could not be found")),
     }
 }
@@ -148,6 +178,7 @@ impl ToTokens for Documentable {
 struct ContainerDocArguments {
     file: (String, Span),
     name: Option<(String, Span)>,
+    refid: Option<(String, Span)>,
 }
 
 impl Parse for ContainerDocArguments {
@@ -156,12 +187,10 @@ impl Parse for ContainerDocArguments {
 
         let mut file = None;
         let mut name = None;
-
-        let file_ident = syn::parse_str::<syn::Path>("file")?;
-        let name_ident = syn::parse_str::<syn::Path>("name")?;
+        let mut refid = None;
 
         for argument in arguments.iter() {
-            if argument.path == file_ident {
+            if argument.path.is_ident("file") {
                 if file.is_none() {
                     match &argument.value {
                         Expr::Lit(ExprLit {
@@ -183,7 +212,7 @@ impl Parse for ContainerDocArguments {
                         "`file` argument must only exist once",
                     ));
                 }
-            } else if argument.path == name_ident {
+            } else if argument.path.is_ident("name") {
                 if name.is_none() {
                     match &argument.value {
                         Expr::Lit(ExprLit {
@@ -195,7 +224,7 @@ impl Parse for ContainerDocArguments {
                         _ => {
                             return Err(syn::Error::new(
                                 argument.span(),
-                                "`file` argument must be a string",
+                                "`name` argument must be a string",
                             ));
                         },
                     }
@@ -205,21 +234,44 @@ impl Parse for ContainerDocArguments {
                         "`name` argument must only exist once",
                     ));
                 }
+            } else if argument.path.is_ident("refid") {
+                if refid.is_none() {
+                    match &argument.value {
+                        Expr::Lit(ExprLit {
+                            lit: Lit::Str(string),
+                            ..
+                        }) => {
+                            refid = Some((string.value(), argument.span()));
+                        },
+                        _ => {
+                            return Err(syn::Error::new(
+                                argument.span(),
+                                "`refid` argument must be a string",
+                            ));
+                        },
+                    }
+                } else {
+                    return Err(syn::Error::new(
+                        argument.span(),
+                        "`refid` argument must only exist once",
+                    ));
+                }
             } else {
                 return Err(syn::Error::new(
                     argument.span(),
-                    "unexpected field (expected only `name` and/or `file`)",
+                    "unexpected field (expected only `name`, `refid`, and/or `file`)",
                 ));
             }
         }
 
         if file.is_none() {
-            return Err(syn::Error::new(input.span(), "`file`argument is required"));
+            return Err(syn::Error::new(input.span(), "`file` argument is required"));
         }
 
         Ok(Self {
             file: file.unwrap(),
             name,
+            refid,
         })
     }
 }
@@ -228,16 +280,15 @@ fn make_doc_attributes<'a, A: Iterator<Item = &'a Attribute> + Clone>(
     attrs: A,
     doc_file: &ParsedDocFile,
     name: &str,
+    refid: Option<&str>,
     span: Span,
     module: bool,
 ) -> syn::Result<Vec<Attribute>> {
-    let doc_ident = syn::parse_str::<syn::Path>("doc")?;
-
-    let has_other_doc_comments = attrs.clone().any(|attr| attr.path() == &doc_ident);
+    let has_other_doc_comments = attrs.clone().any(|attr| attr.path().is_ident("doc"));
 
     let mut new_attrs = vec![];
 
-    let section = get_item_doc_from_file(doc_file, name, span)?;
+    let section = get_item_doc_from_file(doc_file, name, refid, span)?;
 
     if has_other_doc_comments {
         if module {
@@ -275,32 +326,28 @@ fn make_doc_attributes<'a, A: Iterator<Item = &'a Attribute> + Clone>(
 fn remove_rmldoc_attrs(
     attrs: &[Attribute],
 ) -> syn::Result<impl Iterator<Item = &'_ Attribute> + Clone> {
-    let rmldoc_ident = syn::parse_str::<syn::Path>("rmldoc")?;
-
     Ok(attrs
         .iter()
-        .filter(move |&attr| attr.path() != &rmldoc_ident))
+        .filter(|attr| !attr.path().is_ident("rmldoc")))
 }
 
 fn parse_replace_rmldoc_attr(
     doc_file: &ParsedDocFile,
     attrs: &[Attribute],
 ) -> syn::Result<Vec<Attribute>> {
-    let rmldoc_ident = syn::parse_str::<syn::Path>("rmldoc")?;
-    let name_ident = syn::parse_str::<syn::Path>("name")?;
-
     let mut name = None;
     let mut name_span = None;
+    let mut refid = None;
 
     for attr in attrs {
         match &attr.meta {
             Meta::List(list) => {
-                if list.path == rmldoc_ident {
+                if list.path.is_ident("rmldoc") {
                     let arguments: Punctuated<MetaNameValue, Token![,]> =
                         Punctuated::parse_terminated.parse2(list.tokens.clone())?;
 
                     for argument in arguments.iter() {
-                        if argument.path == name_ident {
+                        if argument.path.is_ident("name") {
                             if name.is_none() {
                                 match &argument.value {
                                     Expr::Lit(ExprLit {
@@ -323,10 +370,32 @@ fn parse_replace_rmldoc_attr(
                                     "field must only have one `name` argument",
                                 ));
                             }
+                        } else if argument.path.is_ident("refid") {
+                            if refid.is_none() {
+                                match &argument.value {
+                                    Expr::Lit(ExprLit {
+                                        lit: Lit::Str(string),
+                                        ..
+                                    }) => {
+                                        refid = Some(string.value());
+                                    },
+                                    _ => {
+                                        return Err(syn::Error::new(
+                                            argument.span(),
+                                            "`refid` argument must be a string",
+                                        ));
+                                    },
+                                }
+                            } else {
+                                return Err(syn::Error::new(
+                                    attr.span(),
+                                    "field must only have one `refid` argument",
+                                ));
+                            }
                         } else {
                             return Err(syn::Error::new(
                                 argument.span(),
-                                "unexpected field (expected only `name`)",
+                                "unexpected field (expected only `name` and/or `refid`)",
                             ));
                         }
                     }
@@ -341,7 +410,8 @@ fn parse_replace_rmldoc_attr(
     let new_attrs;
 
     if let (Some(name), Some(name_span)) = (name, name_span) {
-        new_attrs = make_doc_attributes(filtered_attrs, doc_file, &name, name_span, false)?;
+        let refid = refid.as_deref();
+        new_attrs = make_doc_attributes(filtered_attrs, doc_file, &name, refid, name_span, false)?;
     } else {
         new_attrs = filtered_attrs.cloned().collect::<Vec<_>>();
     }
@@ -379,7 +449,8 @@ fn make_doc_comments(
             } = item_struct;
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?
+                let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
+                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?
             } else {
                 vec![]
             };
@@ -418,7 +489,8 @@ fn make_doc_comments(
             } = item_enum;
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?
+                let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
+                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?
             } else {
                 vec![]
             };
@@ -457,7 +529,8 @@ fn make_doc_comments(
             } = item_trait;
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?
+                let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
+                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?
             } else {
                 vec![]
             };
@@ -559,8 +632,9 @@ fn make_doc_comments(
                     semi_token,
                 } = item_type;
 
+                let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
                 let container_attrs =
-                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?;
+                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?;
 
                 Ok(quote! {
                     #(#container_attrs)*
@@ -592,8 +666,9 @@ fn make_doc_comments(
                     ));
                 }
 
+                let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
                 let container_attrs =
-                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, name_span, false)?;
+                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?;
 
                 Ok(quote! {
                     #(#container_attrs)*

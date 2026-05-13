@@ -160,8 +160,11 @@ impl Rml {
         Ok(())
     }
 
-    // TODO: overloaded methods
-    #[rmldoc(name = "Rml::LoadFontFace")]
+    // TODO: add arguments to method
+    #[rmldoc(
+        name = "Rml::LoadFontFace",
+        refid = "_core_2_core_8h_1a2dddbcab95a33c0d265b1aa09051c814"
+    )]
     pub fn load_font_face<P: Into<String>>(&self, path: P) -> Result<(), Error> {
         if !is_core_initialized() {
             return Err(Error::NotInitialized);

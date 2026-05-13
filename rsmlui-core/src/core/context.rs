@@ -56,7 +56,10 @@ impl Context {
 
     /// The document returned from this context belongs to the context, and it will keep the context alive for as long
     /// as the document lives to prevent unsoundness.
-    #[rmldoc(name = "Rml::Context::LoadDocument")]
+    #[rmldoc(
+        name = "Rml::Context::LoadDocument",
+        refid = "class_rml_1_1_context_1a2ba6bc9ce08f1ba834de53a207af79a3"
+    )]
     pub fn load_document<P: Into<String>>(
         &self,
         document_path: P,
