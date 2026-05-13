@@ -1,3 +1,15 @@
+use cxx::{ExternType, type_id};
+
+unsafe impl ExternType for crate::Rml_Style_FontWeight {
+    type Id = type_id!("Rml::Style::FontWeight");
+    type Kind = cxx::kind::Trivial;
+}
+
+unsafe impl ExternType for crate::Rml_Style_FontStyle {
+    type Id = type_id!("Rml::Style::FontStyle");
+    type Kind = cxx::kind::Trivial;
+}
+
 #[cxx::bridge]
 mod ffi {
     #[namespace = "Rml"]
@@ -12,6 +24,12 @@ mod ffi {
         type Vector2i = crate::Rml_Vector2i;
     }
 
+    #[namespace = "Rml::Style"]
+    unsafe extern "C++" {
+        type FontWeight = crate::Rml_Style_FontWeight;
+        type FontStyle = crate::Rml_Style_FontStyle;
+    }
+
     #[namespace = "rsmlui"]
     unsafe extern "C++" {
         include!("rsmlui/Core.h");
@@ -21,7 +39,22 @@ mod ffi {
         fn initialise() -> bool;
         fn shutdown();
 
-        fn load_font_face(path: String) -> bool;
+        fn load_font_face_from_file(
+            path: String,
+            family: String,
+            style: FontStyle,
+            fallback_face: bool,
+            weight: FontWeight,
+            face_index: i32,
+        ) -> bool;
+        fn load_font_face_from_memory(
+            data: &[u8],
+            family: String,
+            style: FontStyle,
+            fallback_face: bool,
+            weight: FontWeight,
+            face_index: i32,
+        ) -> bool;
 
         fn create_context(name: String, dimensions: Vector2i) -> *mut Context;
 
@@ -57,6 +90,7 @@ mod ffi {
 // }
 
 pub use ffi::{
-    create_context, get_render_interface, get_system_interface, get_version, initialise,
-    load_font_face, set_render_interface, set_system_interface, shutdown,
+    FontStyle, FontWeight, create_context, get_render_interface, get_system_interface, get_version,
+    initialise, load_font_face_from_file, load_font_face_from_memory, set_render_interface,
+    set_system_interface, shutdown,
 };

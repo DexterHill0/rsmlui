@@ -1,4 +1,6 @@
-use rsmlui_sys::{Rml_Vector2i, backend, context, core, element_document};
+use rsmlui_sys::core::{FontStyle, FontWeight};
+use rsmlui_sys::element_document::{self, FocusFlag, ModalFlag, ScrollFlag};
+use rsmlui_sys::{Rml_Vector2i, backend, context, core};
 
 fn main() {
     let success = backend::initialize(
@@ -22,7 +24,14 @@ fn main() {
         panic!("failed to initialize rmlui!");
     }
 
-    let success = core::load_font_face("../assets/Roboto.ttf".into());
+    let success = core::load_font_face_from_file(
+        "../assets/Roboto.ttf".into(),
+        "Roboto".into(),
+        FontStyle::Normal,
+        false,
+        FontWeight::Auto,
+        0,
+    );
 
     if !success {
         core::shutdown();
@@ -49,7 +58,14 @@ fn main() {
         panic!("failed to create document!");
     }
 
-    unsafe { element_document::element_document_show(document) };
+    unsafe {
+        element_document::element_document_show(
+            document,
+            ModalFlag::None,
+            FocusFlag::Auto,
+            ScrollFlag::Auto,
+        )
+    };
 
     let mut running = true;
 
@@ -59,7 +75,7 @@ fn main() {
                 context,
                 |_, _, _, _, _| {
                     println!("processing");
-                    return true;
+                    true
                 },
                 false,
             )

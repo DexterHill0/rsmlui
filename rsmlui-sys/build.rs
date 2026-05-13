@@ -137,6 +137,11 @@ fn main() {
         .allowlist_type("Rml::Vector2f")
         .allowlist_type("Rml::Vector2i")
         .allowlist_type("Rml::Log_Type")
+        .allowlist_type("Rml::ModalFlag")
+        .allowlist_type("Rml::FocusFlag")
+        .allowlist_type("Rml::ScrollFlag")
+        .allowlist_type("Rml::Style::FontWeight")
+        .allowlist_type("Rml::Style::FontStyle")
         // FIXME: this still generates constructors for types. I don't think bindgen has a way of stopping that but it would be nice
         // if they weren't generated
         .allowlist_type("Rml::SystemInterface")
@@ -154,7 +159,7 @@ fn main() {
         .flexarray_dst(true)
         .vtable_generation(false)
         .generate_pure_virtual_functions(false)
-        .raw_line("#![allow(unused_variables, non_camel_case_types)]")
+        .raw_line("#![allow(unused_variables, non_camel_case_types, unsafe_op_in_unsafe_fn)]")
         .clang_args(
             DEFINTIONS
                 .iter()

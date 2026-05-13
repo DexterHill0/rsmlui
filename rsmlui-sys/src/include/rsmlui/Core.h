@@ -16,22 +16,12 @@ inline auto initialise() -> bool {
     return Rml::Initialise();
 }
 
-// TODO: vectors
 inline auto create_context(rust::String name, Rml::Vector2i dimensions)
     -> Rml::Context* {
     return Rml::CreateContext(name.c_str(), dimensions);
 }
 
 inline void set_system_interface(Rml::SystemInterface* system_interface) {
-    // auto* old = Rml::GetSystemInterface();
-
-    // // as we have essentially leaked the in rust, neither rust nor rml owns the memory,
-    // // so we must make sure to drop it when its being replaced
-    // // if it's not a rust interface, then it's up to the user that set the pointer
-    // if (auto* rust = as_rust_interface(old)) {
-    //     delete rust;
-    // }
-
     Rml::SetSystemInterface(system_interface);
 }
 
@@ -40,12 +30,6 @@ inline auto get_system_interface() -> Rml::SystemInterface* {
 }
 
 inline void set_render_interface(Rml::RenderInterface* render_interface) {
-    // auto* old = Rml::GetRenderInterface();
-
-    // if (auto* rust = as_rust_interface(old)) {
-    //     delete rust;
-    // }
-
     Rml::SetRenderInterface(render_interface);
 }
 
@@ -53,15 +37,43 @@ inline auto get_render_interface() -> Rml::RenderInterface* {
     return Rml::GetRenderInterface();
 }
 
-inline auto load_font_face(rust::String path) -> bool {
-    return Rml::LoadFontFace(path.c_str());
+inline auto load_font_face_from_file(
+    rust::String path,
+    rust::String family,
+    Rml::Style::FontStyle style,
+    bool fallback_face,
+    Rml::Style::FontWeight weight,
+    int face_index
+) -> bool {
+    return Rml::LoadFontFace(
+        path.c_str(),
+        family.c_str(),
+        style,
+        weight,
+        fallback_face,
+        face_index
+    );
+}
+
+inline auto load_font_face_from_memory(
+    rust::Slice<const uint8_t> data,
+    rust::String family,
+    Rml::Style::FontStyle style,
+    bool fallback_face,
+    Rml::Style::FontWeight weight,
+    int face_index
+) -> bool {
+    return Rml::LoadFontFace(
+        Rml::Span(data.data(), data.size()),
+        family.c_str(),
+        style,
+        weight,
+        fallback_face,
+        face_index
+    );
 }
 
 inline void shutdown() {
-    // set them to null ourselves so we run the destructor if they contain any rust interfaces
-    set_system_interface(nullptr);
-    set_render_interface(nullptr);
-
     Rml::Shutdown();
 }
 } // namespace rsmlui

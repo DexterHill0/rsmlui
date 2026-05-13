@@ -6,4 +6,7 @@
     "rust-analyzer.rustfmt.extraArgs": [
         "+nightly"
     ],
+    "files.associations": {
+        "Doxyfile": "ini"
+    }
 }

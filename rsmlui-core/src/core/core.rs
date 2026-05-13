@@ -2,6 +2,7 @@ use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use bon::Builder;
 use drop_tree::{DropCtx, drop_tree};
 use glam::IVec2;
 use rsmlui_macros::rmldoc;
@@ -13,6 +14,7 @@ use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
 use crate::errors::Error;
 use crate::interfaces::{BorrowedInterface, IntoRawInterface};
+use crate::types::style::{FontStyle, FontWeight};
 use crate::utils::conversions::IntoSys;
 
 static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -58,6 +60,32 @@ fn rml_destructor(_ctx: DropCtx<Rml>) {
     // drops.
     // `drop-tree` can't really be used here because it goes across crates,
     // although functionally it's the same idea.
+}
+
+#[non_exhaustive]
+#[derive(Copy, Clone, Debug, Hash, PartialEq)]
+pub enum FontFaceSource<'a> {
+    Path(&'a str),
+    Memory(&'a [u8]),
+}
+
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Builder)]
+#[builder(const)]
+pub struct FontFaceOptions {
+    #[builder(default = false)]
+    fallback_face: bool,
+    #[builder(default = FontStyle::Normal)]
+    style: FontStyle,
+    #[builder(default = FontWeight::Auto)]
+    weight: FontWeight,
+    #[builder(default = 0)]
+    face_index: i32,
+}
+
+impl Default for FontFaceOptions {
+    fn default() -> Self {
+        Self::builder().build()
+    }
 }
 
 #[drop_tree(destructor(rml_destructor))]
@@ -154,23 +182,59 @@ impl Rml {
 
     /// This is also called on `Drop`.
     #[rmldoc(name = "Rml::Shutdown")]
+    #[inline]
     pub fn shutdown(self) -> Result<(), Error> {
         drop(self);
 
         Ok(())
     }
 
-    // TODO: add arguments to method
+    /// See [`Rml::load_font_face_with_options`] for options.
     #[rmldoc(
         name = "Rml::LoadFontFace",
-        refid = "_core_2_core_8h_1a2dddbcab95a33c0d265b1aa09051c814"
+        refid = "_core_2_core_8h_1a51c118ba84dbfd1cf419f515771988d5"
     )]
-    pub fn load_font_face<P: Into<String>>(&self, path: P) -> Result<(), Error> {
+    #[inline]
+    pub fn load_font_face<F: Into<String>>(
+        &self,
+        source: FontFaceSource,
+        family: F,
+    ) -> Result<(), Error> {
+        self.load_font_face_with_options(source, family, FontFaceOptions::default())
+    }
+
+    #[rmldoc(
+        name = "Rml::LoadFontFace",
+        refid = "_core_2_core_8h_1a51c118ba84dbfd1cf419f515771988d5"
+    )]
+    pub fn load_font_face_with_options<F: Into<String>>(
+        &self,
+        source: FontFaceSource,
+        family: F,
+        options: FontFaceOptions,
+    ) -> Result<(), Error> {
         if !is_core_initialized() {
             return Err(Error::NotInitialized);
         }
 
-        let success = core::load_font_face(path.into());
+        let success = match source {
+            FontFaceSource::Path(path) => core::load_font_face_from_file(
+                path.into(),
+                family.into(),
+                options.style,
+                options.fallback_face,
+                options.weight,
+                options.face_index,
+            ),
+            FontFaceSource::Memory(data) => core::load_font_face_from_memory(
+                data,
+                family.into(),
+                options.style,
+                options.fallback_face,
+                options.weight,
+                options.face_index,
+            ),
+        };
 
         if !success {
             return Err(Error::FontFaceLoadFailed);

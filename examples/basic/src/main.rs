@@ -1,4 +1,4 @@
-use rsmlui::core::core::Rml;
+use rsmlui::core::core::{FontFaceSource, Rml};
 use rsmlui::monolithic::{Win32Gl2Backend, Win32Gl2BackendOptions};
 
 fn main() {
@@ -18,7 +18,8 @@ fn main() {
 
     rml.initialise().unwrap();
 
-    rml.load_font_face("../assets/Roboto.ttf").unwrap();
+    rml.load_font_face(FontFaceSource::Path("../assets/Roboto.ttf"), "Roboto")
+        .unwrap();
 
     let context = rml.create_context("main", (800, 600)).unwrap();
 
