@@ -1,4 +1,11 @@
+#pragma once
 #include <RmlUi/Core/SystemInterface.h>
+
+#include "RmlUi/Core/RenderInterface.h"
+
+namespace rsmlui {
+class Opaque;
+} // namespace rsmlui
 
 namespace rsmlui::system_interface {
 
@@ -30,3 +37,67 @@ struct RustSystemInterface: public Rml::SystemInterface {
 };
 
 } // namespace rsmlui::system_interface
+
+namespace rsmlui::render_interface {
+struct RustRenderInterface: public Rml::RenderInterface {
+    RustRenderInterface(void* rust_meta, void* rust_data) :
+        rust_meta(rust_meta),
+        rust_data(rust_data) {}
+
+    auto CompileGeometry(
+        Rml::Span<const Rml::Vertex> vertices,
+        Rml::Span<const int> indices
+    ) -> Rml::CompiledGeometryHandle override;
+    void RenderGeometry(
+        Rml::CompiledGeometryHandle geometry,
+        Rml::Vector2f translation,
+        Rml::TextureHandle texture
+    ) override;
+    void ReleaseGeometry(Rml::CompiledGeometryHandle geometry) override;
+    auto
+    LoadTexture(Rml::Vector2i& texture_dimensions, const Rml::String& source)
+        -> Rml::TextureHandle override;
+    auto GenerateTexture(
+        Rml::Span<const Rml::byte> source,
+        Rml::Vector2i source_dimensions
+    ) -> Rml::TextureHandle override;
+    void ReleaseTexture(Rml::TextureHandle texture) override;
+    void EnableScissorRegion(bool enable) override;
+    void SetScissorRegion(Rml::Rectanglei region) override;
+    void EnableClipMask(bool enable) override;
+    void RenderToClipMask(
+        Rml::ClipMaskOperation operation,
+        Rml::CompiledGeometryHandle geometry,
+        Rml::Vector2f translation
+    ) override;
+    void SetTransform(const Rml::Matrix4f* transform) override;
+    auto PushLayer() -> Rml::LayerHandle override;
+    void CompositeLayers(
+        Rml::LayerHandle source,
+        Rml::LayerHandle destination,
+        Rml::BlendMode blend_mode,
+        Rml::Span<const Rml::CompiledFilterHandle> filters
+    ) override;
+    void PopLayer() override;
+    auto SaveLayerAsTexture() -> Rml::TextureHandle override;
+    auto SaveLayerAsMaskImage() -> Rml::CompiledFilterHandle override;
+    auto
+    CompileFilter(const Rml::String& name, const Rml::Dictionary& parameters)
+        -> Rml::CompiledFilterHandle override;
+    void ReleaseFilter(Rml::CompiledFilterHandle filter) override;
+    auto
+    CompileShader(const Rml::String& name, const Rml::Dictionary& parameters)
+        -> Rml::CompiledShaderHandle override;
+    void RenderShader(
+        Rml::CompiledShaderHandle shader,
+        Rml::CompiledGeometryHandle geometry,
+        Rml::Vector2f translation,
+        Rml::TextureHandle texture
+    ) override;
+    void ReleaseShader(Rml::CompiledShaderHandle shader) override;
+
+  public:
+    void* rust_meta;
+    void* rust_data;
+};
+} // namespace rsmlui::render_interface

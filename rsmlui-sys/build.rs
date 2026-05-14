@@ -2,6 +2,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use bindgen::callbacks::ParseCallbacks;
 use cxx_build::CFG;
 
 // TODO: mutually exclusive but dont kill rust analyzer
@@ -116,7 +117,6 @@ fn main() {
     let cxx_include_dir = rust_out_dir.join("cxxbridge/include");
 
     let bindings = bindgen::Builder::default()
-        .allowlist_recursively(false)
         .header("src/include/rsmlui/Bindings.h")
         .clang_arg("-x")
         .clang_arg("c++")
@@ -125,6 +125,18 @@ fn main() {
         .clang_arg("-I./src/include")
         .clang_arg("-I./RmlUi/Include")
         .clang_arg("-I./RmlUi/Backends")
+        .blocklist_item("std::.*")
+        .blocklist_item("__.*")
+        .blocklist_item("_[A-Z].*")
+        .blocklist_item("Rml::SystemInterface")
+        .blocklist_item("Rml::RenderInterface")
+        .blocklist_item("Rml::Variant.*")
+        .blocklist_item("Rml::String")
+        .blocklist_item("Rml::byte")
+        .blocklist_item("Rml::Span")
+        .blocklist_item("Rml::Dictionary")
+        .blocklist_function(".*SystemInterface.*")
+        .blocklist_function(".*RenderInterface.*")
         .allowlist_type("Rml::Colour")
         .allowlist_type("Rml::Colourb")
         .allowlist_type("Rml::ColourbPremultiplied")
@@ -136,20 +148,31 @@ fn main() {
         .allowlist_type("Rml::Vector2")
         .allowlist_type("Rml::Vector2f")
         .allowlist_type("Rml::Vector2i")
+        .allowlist_type("Rml::Vector4")
+        .allowlist_type("Rml::Vector4f")
+        .allowlist_type("Rml::Vector4i")
+        .blocklist_item("Rml::Matrix.*")
+        .blocklist_item("Rml::RowMajorStorage.*")
+        .blocklist_item("Rml::ColumnMajorStorage.*")
+        .blocklist_item("Rml::ColumnMajorMatrix.*")
+        .blocklist_item("Rml::RowMajorMatrix.*")
         .allowlist_type("Rml::Log_Type")
         .allowlist_type("Rml::ModalFlag")
         .allowlist_type("Rml::FocusFlag")
         .allowlist_type("Rml::ScrollFlag")
         .allowlist_type("Rml::Style::FontWeight")
         .allowlist_type("Rml::Style::FontStyle")
-        // FIXME: this still generates constructors for types. I don't think bindgen has a way of stopping that but it would be nice
-        // if they weren't generated
-        .allowlist_type("Rml::SystemInterface")
-        .opaque_type("Rml::SystemInterface")
+        .allowlist_type("Rml::CompiledGeometryHandle")
+        .allowlist_type("Rml::CompiledShaderHandle")
+        .allowlist_type("Rml::CompiledFilterHandle")
+        .allowlist_type("Rml::TextureHandle")
+        .allowlist_type("Rml::Rectangle")
+        .allowlist_type("Rml::Rectanglei")
+        .allowlist_type("Rml::Rectanglef")
         .allowlist_type("Layouts::SystemInterfaceLayoutGuard")
         .allowlist_type("rsmlui::system_interface::RustSystemInterface")
-        .allowlist_var("")
-        .allowlist_function("")
+        .allowlist_type("Layouts::RenderInterfaceLayoutGuard")
+        .allowlist_type("rsmlui::render_interface::RustRenderInterface")
         .bitfield_enum("Rml::Input::KeyModifier")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: true,
@@ -160,6 +183,8 @@ fn main() {
         .vtable_generation(false)
         .generate_pure_virtual_functions(false)
         .raw_line("#![allow(unused_variables, non_camel_case_types, unsafe_op_in_unsafe_fn)]")
+        // FIXME: bindgen can't currently generate working bindings for the Matrix types (see https://github.com/rust-lang/rust-bindgen/issues/3373)
+        .raw_line("pub type Rml_Matrix4f = [[f32; 4]; 4];")
         .clang_args(
             DEFINTIONS
                 .iter()

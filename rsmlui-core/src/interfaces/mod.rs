@@ -131,26 +131,27 @@ impl<T, B> DerefMut for InterfaceHandle<T, B> {
 /// trait (e.g. [`SystemInterface`]). It is a sealed trait and can't be implemented
 /// outside `rsmlui-core`.
 ///
+/// The type parameter `B` is the raw C++ bridge object type (e.g. `RustSystemInterface`).
+/// Parameterizing by `B` lets both the system and render interface provide blanket impls
+/// without conflicting — they target different instantiations of this trait.
+///
 /// [`SystemInterface`]: crate::interfaces::system::SystemInterface
 #[sealed(pub(crate))]
-pub trait OwnedInterfaceHandle: Sized {
-    /// The raw C++ bridge object type, such as `RustSystemInterface`.
-    type BridgeObj;
-
+pub trait OwnedInterfaceHandle<B>: Sized {
     /// Constructs the c++ bridge and stores the resulting pointer into `handle.bridge`.
     /// Called once, immediately after the handle is heap-pinned in [`OwnedInterface::new`].
-    fn init_bridge(handle: &mut InterfaceHandle<Self, Self::BridgeObj>);
+    fn init_bridge(handle: &mut InterfaceHandle<Self, B>);
 
     /// Destroys the C++ bridge.
     ///
     /// # Safety
     ///
     /// - Must be called exactly once, before the `InterfaceHandle` is dropped.
-    unsafe fn destroy(handle: &mut InterfaceHandle<Self, Self::BridgeObj>);
+    unsafe fn destroy(handle: &mut InterfaceHandle<Self, B>);
 
     /// Asserts if the respective interface is already registered in C++.
     /// Prevents an interface from being dropped if it's still in use.
-    fn assert_not_registered(handle: &InterfaceHandle<Self, Self::BridgeObj>);
+    fn assert_not_registered(handle: &InterfaceHandle<Self, B>);
 }
 
 /// Owns a heap-pinned [`InterfaceHandle`] and its associated C++ bridge object.
@@ -161,13 +162,19 @@ pub trait OwnedInterfaceHandle: Sized {
 /// # Notes
 ///
 /// Dropping the interface while the interface is registered in RmlUi will cause a panic.
-pub struct OwnedInterface<T: OwnedInterfaceHandle> {
-    handle: std::pin::Pin<Box<InterfaceHandle<T, T::BridgeObj>>>,
+pub struct OwnedInterface<T, B>
+where
+    T: OwnedInterfaceHandle<B>,
+{
+    handle: std::pin::Pin<Box<InterfaceHandle<T, B>>>,
 }
 
-not_send_sync!([T: OwnedInterfaceHandle] OwnedInterface[T]);
+not_send_sync!([T: OwnedInterfaceHandle<B>, B] OwnedInterface[T, B]);
 
-impl<T: OwnedInterfaceHandle> OwnedInterface<T> {
+impl<T, B> OwnedInterface<T, B>
+where
+    T: OwnedInterfaceHandle<B>,
+{
     pub fn new(interface: T) -> Self {
         let mut handle = InterfaceHandle::new_pinned(interface);
 
@@ -177,12 +184,15 @@ impl<T: OwnedInterfaceHandle> OwnedInterface<T> {
     }
 
     /// Raw pointer to the C++ bridge object.
-    pub(crate) fn as_sys_ptr(&self) -> *mut T::BridgeObj {
+    pub(crate) fn as_sys_ptr(&self) -> *mut B {
         unsafe { self.handle.bridge_ptr() }
     }
 }
 
-impl<T: OwnedInterfaceHandle> std::ops::Deref for OwnedInterface<T> {
+impl<T, B> std::ops::Deref for OwnedInterface<T, B>
+where
+    T: OwnedInterfaceHandle<B>,
+{
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -190,7 +200,10 @@ impl<T: OwnedInterfaceHandle> std::ops::Deref for OwnedInterface<T> {
     }
 }
 
-impl<T: OwnedInterfaceHandle> std::ops::DerefMut for OwnedInterface<T> {
+impl<T, B> std::ops::DerefMut for OwnedInterface<T, B>
+where
+    T: OwnedInterfaceHandle<B>,
+{
     fn deref_mut(&mut self) -> &mut T {
         // Safety: inner is non-structurally pinned. We only access it in place;
         // the InterfaceHandle address does not change.
@@ -198,7 +211,10 @@ impl<T: OwnedInterfaceHandle> std::ops::DerefMut for OwnedInterface<T> {
     }
 }
 
-impl<T: OwnedInterfaceHandle> Drop for OwnedInterface<T> {
+impl<T, B> Drop for OwnedInterface<T, B>
+where
+    T: OwnedInterfaceHandle<B>,
+{
     fn drop(&mut self) {
         T::assert_not_registered(&self.handle);
 

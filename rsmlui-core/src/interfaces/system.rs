@@ -22,6 +22,9 @@ use crate::utils::conversions::{FromSys, IntoSys};
 /// The receiver type for all [`SystemInterface`] methods.
 pub type SystemInterfaceHandle<T> = InterfaceHandle<T, RustSystemInterface>;
 
+/// An owned, heap-pinned system interface. Construct via [`OwnedInterface::new`].
+pub type OwnedSystemInterface<T> = OwnedInterface<T, RustSystemInterface>;
+
 /// Implement this trait to create a custom [`Rml::SystemInterface`] for RmlUi.
 ///
 /// Every method has a default implementation that forwards to the C++ base class behaviour.
@@ -193,9 +196,7 @@ unsafe impl<T: SystemInterface> SystemInterfaceBridge for SystemInterfaceHandle<
 }
 
 #[sealed]
-impl<T: SystemInterface> super::OwnedInterfaceHandle for T {
-    type BridgeObj = RustSystemInterface;
-
+impl<T: SystemInterface> super::OwnedInterfaceHandle<RustSystemInterface> for T {
     fn init_bridge(handle: &mut SystemInterfaceHandle<T>) {
         // The fat pointer data component is the address of the heap-allocated InterfaceHandle.
         // That address is stable for the lifetime of the OwnedInterface.
@@ -215,7 +216,7 @@ impl<T: SystemInterface> super::OwnedInterfaceHandle for T {
         unsafe { rust_system_interface_destructor(handle.bridge_ptr()) }
     }
 
-    fn assert_not_registered(handle: &InterfaceHandle<Self, Self::BridgeObj>) {
+    fn assert_not_registered(handle: &InterfaceHandle<Self, RustSystemInterface>) {
         let current_interface_ptr = core::get_system_interface();
 
         let self_ptr = unsafe { handle.bridge_ptr() }.cast();
@@ -228,7 +229,9 @@ impl<T: SystemInterface> super::OwnedInterfaceHandle for T {
 }
 
 // Implemented on a shared borrow so the value and C++ object outlives the pointer.
-impl<T: SystemInterface> IntoRawInterface<RmlSystemInterface> for &OwnedInterface<T> {
+impl<T: SystemInterface> IntoRawInterface<RmlSystemInterface>
+    for &OwnedInterface<T, RustSystemInterface>
+{
     fn into_raw(self) -> RawInterface<RmlSystemInterface> {
         // `RustSystemInterface` is a subclass of `RmlSystemInterface` so the cast is valid.
         RawInterface::new(self.as_sys_ptr().cast())

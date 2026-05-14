@@ -1,14 +1,14 @@
-use std::mem::{offset_of, transmute};
-use std::ptr::{self, DynMetadata};
+use std::mem::offset_of;
 
-use crate::interfaces::{InterfaceBridgeLayout, Opaque};
+use crate::ffi::utils::fat_from_cpp;
+use crate::interfaces::InterfaceBridgeLayout;
 use crate::{Layouts_SystemInterfaceLayoutGuard, const_assert_eq};
 
 // Asserts that the layout of the interface bridge matches the layout of the
 // `RustSystemInterface` struct in C++.
 const _: () = {
     const_assert_eq!(
-        offset_of!(Layouts_SystemInterfaceLayoutGuard, _base),
+        offset_of!(Layouts_SystemInterfaceLayoutGuard, vtable_),
         offset_of!(InterfaceBridgeLayout, cpp_vtable)
     );
     const_assert_eq!(
@@ -40,27 +40,12 @@ pub unsafe trait SystemInterfaceBridge {
     unsafe fn deactivate_keyboard(&mut self);
 }
 
-/// Reconstructs the fat `dyn SystemInterfaceBridge` pointer from the C++ `this`, which has the
-/// same memory layout as `InterfaceBridgeLayout`.
-///
-/// # Safety
-///
-/// - Callers must ensure `cpp_this` is a valid, non-null `InterfaceBridgeLayout` that was
-///   initialised in C++.
-#[inline]
-unsafe fn fat_from_cpp(cpp_this: *mut RustSystemInterface) -> *mut dyn SystemInterfaceBridge {
-    let bridge = unsafe { &*(cpp_this as *const InterfaceBridgeLayout) };
-    let meta: DynMetadata<dyn SystemInterfaceBridge> = unsafe { transmute(bridge.rust_meta) };
-
-    ptr::from_raw_parts_mut(bridge.rust_data, meta)
-}
-
 unsafe fn rust_get_elapsed_time(cpp_this: *mut RustSystemInterface) -> f64 {
-    unsafe { (*fat_from_cpp(cpp_this)).get_elapsed_time() }
+    unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).get_elapsed_time() }
 }
 
 unsafe fn rust_translate_string(cpp_this: *mut RustSystemInterface, input: &str) -> String {
-    unsafe { (*fat_from_cpp(cpp_this)).translate_string(input) }
+    unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).translate_string(input) }
 }
 
 unsafe fn rust_join_path(
@@ -68,7 +53,9 @@ unsafe fn rust_join_path(
     document_path: &str,
     path: &str,
 ) -> String {
-    unsafe { (*fat_from_cpp(cpp_this)).join_path(document_path, path) }
+    unsafe {
+        (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).join_path(document_path, path)
+    }
 }
 
 unsafe fn rust_log_message(
@@ -76,19 +63,19 @@ unsafe fn rust_log_message(
     level: crate::Rml_Log_Type,
     message: &str,
 ) -> bool {
-    unsafe { (*fat_from_cpp(cpp_this)).log_message(level, message) }
+    unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).log_message(level, message) }
 }
 
 unsafe fn rust_set_mouse_cursor(cpp_this: *mut RustSystemInterface, name: &str) {
-    unsafe { (*fat_from_cpp(cpp_this)).set_mouse_cursor(name) }
+    unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).set_mouse_cursor(name) }
 }
 
 unsafe fn rust_set_clipboard_text(cpp_this: *mut RustSystemInterface, text: &str) {
-    unsafe { (*fat_from_cpp(cpp_this)).set_clipboard_text(text) }
+    unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).set_clipboard_text(text) }
 }
 
 unsafe fn rust_get_clipboard_text(cpp_this: *mut RustSystemInterface) -> String {
-    unsafe { (*fat_from_cpp(cpp_this)).get_clipboard_text() }
+    unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).get_clipboard_text() }
 }
 
 unsafe fn rust_activate_keyboard(
@@ -96,11 +83,14 @@ unsafe fn rust_activate_keyboard(
     caret_position: crate::Rml_Vector2f,
     line_height: f32,
 ) {
-    unsafe { (*fat_from_cpp(cpp_this)).activate_keyboard(caret_position, line_height) }
+    unsafe {
+        (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this))
+            .activate_keyboard(caret_position, line_height)
+    }
 }
 
 unsafe fn rust_deactivate_keyboard(cpp_this: *mut RustSystemInterface) {
-    unsafe { (*fat_from_cpp(cpp_this)).deactivate_keyboard() }
+    unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).deactivate_keyboard() }
 }
 
 #[cxx::bridge]
@@ -120,6 +110,13 @@ mod ffi {
         include!("rsmlui/Utils.h");
 
         type RmlLogType = crate::Rml_Log_Type;
+    }
+
+    #[namespace = "rsmlui"]
+    unsafe extern "C++" {
+        include!("rsmlui/InterfaceDecls.h");
+
+        type Opaque = crate::interfaces::Opaque;
     }
 
     #[namespace = "rsmlui::system_interface"]
@@ -187,8 +184,6 @@ mod ffi {
     }
 
     extern "Rust" {
-        type Opaque;
-
         unsafe fn rust_get_elapsed_time(cpp_this: *mut RustSystemInterface) -> f64;
         unsafe fn rust_translate_string(cpp_this: *mut RustSystemInterface, input: &str) -> String;
         unsafe fn rust_join_path(

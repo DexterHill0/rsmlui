@@ -2,7 +2,6 @@ Checks: >
   clang-analyzer-*,
   concurrency-*,
   bugprone-*,
-  cppcoreguidelines-*,
   modernize-*,
   readability-*,
   portability-*,

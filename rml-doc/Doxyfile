@@ -61,8 +61,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::ClipMaskGeometry::* \
   Rml::ColorStop \
   Rml::ColorStop::* \
-  Rml::Colour \
-  Rml::Colour::* \
   Rml::ColumnMajorStorage \
   Rml::ColumnMajorStorage::* \
   Rml::CompiledFilter \
@@ -228,8 +226,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::PropertySource::* \
   Rml::PropertySpecification \
   Rml::PropertySpecification::* \
-  Rml::Rectangle \
-  Rml::Rectangle::* \
   Rml::Releasable \
   Rml::Releasable::* \
   Rml::Releaser \
@@ -238,8 +234,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::ReleaserBase::* \
   Rml::RenderBox \
   Rml::RenderBox::* \
-  Rml::RenderInterface \
-  Rml::RenderInterface::* \
   Rml::RenderInterfaceAdapter \
   Rml::RenderInterfaceAdapter::* \
   Rml::RenderInterfaceCompatibility \
@@ -339,8 +333,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::Vector3::* \
   Rml::Vector4 \
   Rml::Vector4::* \
-  Rml::Vertex \
-  Rml::Vertex::* \
   Rml::VoidMemberFunc \
   Rml::VoidMemberFunc::* \
   Rml::XMLNodeHandler \

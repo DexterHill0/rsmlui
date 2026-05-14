@@ -2,8 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use rsmlui_core::BackendHandle;
 use rsmlui_core::core::context::Context;
-use rsmlui_core::interfaces::OwnedInterface;
-use rsmlui_core::interfaces::system::SystemInterface;
+use rsmlui_core::interfaces::system::{OwnedSystemInterface, SystemInterface};
 
 use crate::error::BackendError;
 use crate::window::WindowDriver;
@@ -13,7 +12,7 @@ use crate::window::WindowDriver;
 /// You should not need to name this type directly. Access should
 /// happen through the `Backend` value itself.
 pub struct BackendInner<S: SystemInterface, W: WindowDriver> {
-    pub system: OwnedInterface<S>,
+    pub system: OwnedSystemInterface<S>,
     pub window: W,
 }
 
@@ -69,7 +68,7 @@ pub struct Backend<S: SystemInterface, W: WindowDriver> {
 }
 
 impl<S: SystemInterface + 'static, W: WindowDriver + 'static> Backend<S, W> {
-    pub fn new(system: OwnedInterface<S>, window: W) -> Self {
+    pub fn new(system: OwnedSystemInterface<S>, window: W) -> Self {
         let raw = Box::into_raw(Box::new(BackendInner { system, window }));
 
         // Safety: `raw` is boxed above. We give sole ownership

@@ -31,3 +31,8 @@ impl crate::Rml_Vector2i {
         }
     }
 }
+
+unsafe impl ExternType for crate::Rml_Rectanglei {
+    type Id = type_id!("Rml::Rectanglei");
+    type Kind = cxx::kind::Trivial;
+}

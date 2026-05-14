@@ -1,5 +1,3 @@
-use crate::const_assert_eq;
-
 /// Mirrors the memory layout of the C++ `RustSystemInterface` (and other interface) classes.
 /// Used by `fat_from_cpp` to reconstruct fat pointers from a C++ `this` pointer.
 ///
@@ -20,9 +18,11 @@ pub struct InterfaceBridgeLayout {
 /// Opaque zero-sized type used as the pointee for the `void*` parameters in
 /// `new_rust_system_interface` and similar C++ constructor helpers. CXX
 /// doesn't allow `*mut ()` pointers, so insteas we use `*mut Opaque`.
-#[repr(C, packed)]
 pub struct Opaque {
     _private: [u8; 0],
 }
 
-const_assert_eq!(std::mem::size_of::<Opaque>(), 0);
+unsafe impl cxx::ExternType for Opaque {
+    type Id = cxx::type_id!("rsmlui::Opaque");
+    type Kind = cxx::kind::Opaque;
+}

@@ -1,5 +1,6 @@
 use std::cell::Cell;
 use std::convert::Infallible;
+use std::panic::{RefUnwindSafe, UnwindSafe};
 
 use glam::IVec2;
 use rsmlui_core::core::context::Context;
@@ -230,6 +231,9 @@ impl Win32Gl2Backend {
         Ok(())
     }
 }
+
+impl !UnwindSafe for Win32Gl2Backend {}
+impl !RefUnwindSafe for Win32Gl2Backend {}
 
 fn noop_key_down(
     _context: &Context,

@@ -1,170 +1,111 @@
-use crate::bindings::Rml_Vertex;
+use std::mem::offset_of;
 
-pub trait RenderInterfaceExt {}
+use cxx::{ExternType, type_id};
 
-#[repr(C)]
-pub(crate) struct InterfaceOpaque {
-    _private: [u8; 0],
+use crate::interfaces::InterfaceBridgeLayout;
+use crate::utils::fat_from_cpp;
+use crate::{Layouts_RenderInterfaceLayoutGuard, const_assert_eq};
+
+unsafe impl ExternType for crate::Rml_Vertex {
+    type Id = type_id!("Rml::Vertex");
+    type Kind = cxx::kind::Trivial;
 }
 
-pub struct RenderInterface {
-    // pub(crate) inner:
-    //     crate::interfaces::InterfaceOwner<'a, dyn RustRenderInterface, RmlRenderInterface>,
-    pub raw: *mut RmlRenderInterface,
+// Asserts that the layout of the interface bridge matches the layout of the
+// `RustRenderInterface` struct in C++.
+const _: () = {
+    const_assert_eq!(
+        offset_of!(Layouts_RenderInterfaceLayoutGuard, vtable_),
+        offset_of!(InterfaceBridgeLayout, cpp_vtable)
+    );
+    const_assert_eq!(
+        offset_of!(Layouts_RenderInterfaceLayoutGuard, rust_meta),
+        offset_of!(InterfaceBridgeLayout, rust_meta)
+    );
+    const_assert_eq!(
+        offset_of!(Layouts_RenderInterfaceLayoutGuard, rust_data),
+        offset_of!(InterfaceBridgeLayout, rust_data)
+    );
+};
+
+pub unsafe trait RenderInterfaceBridge {
+    unsafe fn compile_geometry(
+        &mut self,
+        vertices: &[Vertex],
+        indices: &[i32],
+    ) -> CompiledGeometryHandle;
 }
 
-impl From<Box<dyn RenderInterfaceExt>> for RenderInterface {
-    fn from(value: Box<dyn RenderInterfaceExt>) -> Self {
-        let raw_opaque = Box::into_raw(value) as *mut InterfaceOpaque;
-
-        todo!();
-        // let unique = unsafe { rust_system_interface_new(raw_opaque) };
-        // let raw_rml_interface = cxx::UniquePtr::into_raw(unique);
-
-        // Self {
-        //     // inner: InterfaceOwner::Rust(value),
-        //     raw: raw_rml_interface,
-        // }
+unsafe fn rust_compile_geometry(
+    cpp_this: *mut RustRenderInterface,
+    vertices: &[Vertex],
+    indices: &[i32],
+) -> CompiledGeometryHandle {
+    unsafe {
+        (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this))
+            .compile_geometry(vertices, indices)
     }
 }
-
-// impl IntoPtr<RenderInterface> for *mut RenderInterface {
-//     fn into_ptr(self) -> *mut RenderInterface {
-//         self
-//     }
-// }
-
-// impl<T: RenderInterfaceExt + 'static> IntoPtr<RenderInterface> for T {
-//     fn into_ptr(self) -> *mut RenderInterface {
-//         // TODO: fix
-//         let boxed_trait: Box<dyn RenderInterfaceExt> = Box::new(self);
-
-//         let raw = Box::into_raw(boxed_trait) as *mut RenderInterface;
-
-//         raw
-
-//         // let unique = unsafe { rust_system_interface_new(raw) };
-//         // // drops rust's ownership so RmlUi can take ownership and control the lifetime of the interface
-//         // let raw_cpp_ptr = cxx::UniquePtr::into_raw(unique);
-
-//         // raw_cpp_ptr as *mut SystemInterface
-//     }
-// }
 
 #[cxx::bridge]
 mod ffi {
-    extern "Rust" {
-        type Rml_Vertex;
-    }
 
     #[namespace = "Rml"]
     extern "C++" {
         #[cxx_name = "RenderInterface"]
         type RmlRenderInterface;
+
+        type Vertex = crate::Rml_Vertex;
+    }
+
+    #[namespace = "rsmlui"]
+    unsafe extern "C++" {
+        include!("rsmlui/InterfaceDecls.h");
+
+        type Opaque = crate::interfaces::Opaque;
     }
 
     #[namespace = "rsmlui::render_interface"]
     unsafe extern "C++" {
-        include!("rsmlui/Renderer.h");
+        include!("rsmlui/RenderInterface.h");
 
-        // // Opaque placeholder types
-        // type Vector2f;
-        // type Vector2i;
-        // type Rectanglei;
-        // type Matrix4f;
-        // type Dictionary;
+        type RustRenderInterface;
 
-        // // Methods use Pin for mutable C++ references
-        // unsafe fn render_interface_compile_geometry(
-        //     ri: *mut RenderInterface,
-        //     vertices: &[Rml_Vertex],
-        //     indices: &[i32],
-        // ) -> usize;
+        /// # Safety
+        ///
+        /// - `interface_meta` and `interface_data` must be valid pointers constructed from `to_raw_parts`.
+        unsafe fn new_rust_render_interface(
+            interface_meta: *const Opaque,
+            interface_data: *mut Opaque,
+        ) -> *mut RustRenderInterface;
 
-        // unsafe fn render_interface_render_geometry(
-        //     ri: *mut RenderInterface,
-        //     geometry: usize,
-        //     translation: &Vector2f,
-        //     texture: usize,
-        // );
+        /// # Safety
+        ///
+        /// - `obj` must be a valid, non-null pointer to a `RustRenderInterface`.
+        unsafe fn rust_render_interface_destructor(obj: *mut RustRenderInterface);
 
-        // unsafe fn render_interface_release_geometry(ri: *mut RenderInterface, geometry: usize);
+        // Calls the base `Rml::RenderInterface` implementation directly, bypassing any override.
+        // Used by the default method implementations on the safe crate's `RenderInterface` trait.
+        #[doc(hidden)]
+        unsafe fn render_interface_default_compile_geometry(
+            ptr: *mut RustRenderInterface,
+            vertices: &[Vertex],
+            indices: &[i32],
+        ) -> usize; // `CompiledGeometryHandle`
+    }
 
-        // unsafe fn render_interface_load_texture(
-        //     ri: *mut RenderInterface,
-        //     texture_dimensions: *mut Vector2i,
-        //     source: &CxxString,
-        // ) -> usize;
-
-        // unsafe fn render_interface_generate_texture(
-        //     ri: *mut RenderInterface,
-        //     source: &[u8],
-        //     source_dimensions: &Vector2i,
-        // ) -> usize;
-
-        // unsafe fn render_interface_release_texture(ri: *mut RenderInterface, texture: usize);
-
-        // unsafe fn render_interface_enable_scissor_region(ri: *mut RenderInterface, enable: bool);
-
-        // unsafe fn render_interface_set_scissor_region(
-        //     ri: *mut RenderInterface,
-        //     region: &Rectanglei,
-        // );
-
-        // unsafe fn render_interface_enable_clip_mask(ri: *mut RenderInterface, enable: bool);
-
-        // unsafe fn render_interface_render_to_clip_mask(
-        //     ri: *mut RenderInterface,
-        //     operation: i32,
-        //     geometry: usize,
-        //     translation: &Vector2f,
-        // );
-
-        // unsafe fn render_interface_set_transform(
-        //     ri: *mut RenderInterface,
-        //     transform: *const Matrix4f,
-        // );
-
-        // unsafe fn render_interface_push_layer(ri: *mut RenderInterface) -> usize;
-
-        // unsafe fn render_interface_composite_layers(
-        //     ri: *mut RenderInterface,
-        //     source: usize,
-        //     destination: usize,
-        //     blend_mode: i32,
-        //     filters: &[usize],
-        // );
-
-        // unsafe fn render_interface_pop_layer(ri: *mut RenderInterface);
-
-        // unsafe fn render_interface_save_layer_as_texture(ri: *mut RenderInterface) -> usize;
-
-        // unsafe fn render_interface_save_layer_as_mask_image(ri: *mut RenderInterface) -> usize;
-
-        // unsafe fn render_interface_compile_filter(
-        //     ri: *mut RenderInterface,
-        //     name: &CxxString,
-        //     parameters: &Dictionary,
-        // ) -> usize;
-
-        // unsafe fn render_interface_release_filter(ri: *mut RenderInterface, filter: usize);
-
-        // unsafe fn render_interface_compile_shader(
-        //     ri: *mut RenderInterface,
-        //     name: &CxxString,
-        //     parameters: &Dictionary,
-        // ) -> usize;
-
-        // unsafe fn render_interface_render_shader(
-        //     ri: *mut RenderInterface,
-        //     shader: usize,
-        //     geometry: usize,
-        //     translation: &Vector2f,
-        //     texture: usize,
-        // );
-
-        // unsafe fn render_interface_release_shader(ri: *mut RenderInterface, shader: usize);
+    extern "Rust" {
+        unsafe fn rust_compile_geometry(
+            cpp_this: *mut RustRenderInterface,
+            vertices: &[Vertex],
+            indices: &[i32],
+        ) -> usize;
     }
 }
 
-pub use ffi::RmlRenderInterface;
+pub use ffi::{
+    RmlRenderInterface, RustRenderInterface, Vertex, new_rust_render_interface,
+    render_interface_default_compile_geometry, rust_render_interface_destructor,
+};
+
+pub type CompiledGeometryHandle = usize;

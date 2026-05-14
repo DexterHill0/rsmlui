@@ -60,7 +60,7 @@ inline void RustSystemInterface::DeactivateKeyboard() {
 }
 
 inline auto
-new_rust_system_interface(const Opaque* rust_meta, Opaque* rust_data)
+new_rust_system_interface(const rsmlui::Opaque* rust_meta, rsmlui::Opaque* rust_data)
     -> RustSystemInterface* {
     return new RustSystemInterface((void*)rust_meta, (void*)rust_data);
 }
@@ -70,8 +70,6 @@ inline void rust_system_interface_destructor(RustSystemInterface* obj) {
 }
 
 // The following functions call the base `Rml::SystemInterface` implementation directly.
-// Used by `RawSystemInterface` default methods to delegate to C++ without going through the
-// Rust dispatch path.
 inline auto
 system_interface_default_get_elapsed_time(RustSystemInterface* interface)
     -> double {
