@@ -1,6 +1,7 @@
 pub mod backend;
 pub mod context;
 pub mod core;
+pub mod dictionary;
 pub mod element_document;
 pub mod interfaces;
 pub mod log;
@@ -8,3 +9,4 @@ pub mod math;
 pub mod render_interface;
 pub mod system_interface;
 pub mod utils;
+pub mod variant;

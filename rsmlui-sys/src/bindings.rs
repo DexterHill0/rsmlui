@@ -33,6 +33,15 @@ pub type Rml_Vector2f = Rml_Vector2<f32>;
 pub type Rml_Vector2i = Rml_Vector2<::std::os::raw::c_int>;
 #[doc = "Templated class for a generic axis-aligned rectangle."]
 pub type Rml_Rectanglef = Rml_Rectangle<f32>;
+#[doc = "Templated class for a generic three-component vector."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct Rml_Vector3<Type> {
+    pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<Type>>,
+    pub x: Type,
+    pub y: Type,
+    pub z: Type,
+}
 #[doc = "Templated class for a generic four-component vector."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -61,6 +70,8 @@ pub struct Rml_Rectangle<Type> {
 }
 #[doc = "Templated class for a generic two-component vector."]
 pub type Rml_Rectangle_Vector2Type<Type> = Rml_Vector2<Type>;
+#[doc = "Templated class for a generic three-component vector."]
+pub type Rml_Vector3f = Rml_Vector3<f32>;
 #[doc = "Templated class for a generic four-component vector."]
 pub type Rml_Vector4i = Rml_Vector4<::std::os::raw::c_int>;
 #[doc = "Templated class for a generic four-component vector."]
@@ -84,6 +95,39 @@ pub enum Rml_Log_Type {
     LT_DEBUG = 5,
     LT_MAX = 6,
 }
+#[repr(u64)]
+#[non_exhaustive]
+#[doc = " Type of data stored in the variant. We use size_t as base to avoid 'padding due to alignment specifier' warning."]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum Rml_Variant_Type {
+    NONE = 45,
+    BOOL = 66,
+    BYTE = 98,
+    CHAR = 99,
+    FLOAT = 102,
+    DOUBLE = 100,
+    INT = 105,
+    INT64 = 73,
+    UINT = 117,
+    UINT64 = 85,
+    STRING = 115,
+    VECTOR2 = 50,
+    VECTOR3 = 51,
+    VECTOR4 = 52,
+    COLOURF = 103,
+    COLOURB = 104,
+    SCRIPTINTERFACE = 112,
+    TRANSFORMPTR = 116,
+    TRANSITIONLIST = 84,
+    ANIMATIONLIST = 65,
+    DECORATORSPTR = 68,
+    FILTERSPTR = 70,
+    FONTEFFECTSPTR = 69,
+    COLORSTOPLIST = 67,
+    BOXSHADOWLIST = 83,
+    VOIDPTR = 42,
+}
+pub const Rml_Variant_LOCAL_DATA_SIZE: usize = 32;
 #[repr(u8)]
 #[non_exhaustive]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -449,6 +493,20 @@ const _: () = {
 };
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector3<::std::os::raw::c_int>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector3<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector3<f32>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector3<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
     ["Size of template specialization: Rml_Vector4_open0_int_close0"]
         [::std::mem::size_of::<Rml_Vector4<::std::os::raw::c_int>>() - 16usize];
     ["Align of template specialization: Rml_Vector4_open0_int_close0"]
@@ -498,6 +556,34 @@ const _: () = {
 };
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector3<::std::os::raw::c_int>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector3<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector3<::std::os::raw::c_int>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector3<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector3<f32>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector3<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector3<f32>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector3<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
     ["Size of template specialization: Rml_Vector4_open0_int_close0"]
         [::std::mem::size_of::<Rml_Vector4<::std::os::raw::c_int>>() - 16usize];
     ["Align of template specialization: Rml_Vector4_open0_int_close0"]
@@ -540,6 +626,20 @@ const _: () = {
 };
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector3<::std::os::raw::c_int>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector3<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector3<f32>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector3<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
     ["Size of template specialization: Rml_Vector4_open0_int_close0"]
         [::std::mem::size_of::<Rml_Vector4<::std::os::raw::c_int>>() - 16usize];
     ["Align of template specialization: Rml_Vector4_open0_int_close0"]
@@ -565,6 +665,20 @@ const _: () = {
         [::std::mem::size_of::<Rml_Vector2<f32>>() - 8usize];
     ["Align of template specialization: Rml_Vector2_open0_float_close0"]
         [::std::mem::align_of::<Rml_Vector2<f32>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::size_of::<Rml_Vector3<::std::os::raw::c_int>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_int_close0"]
+        [::std::mem::align_of::<Rml_Vector3<::std::os::raw::c_int>>() - 4usize];
+};
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::size_of::<Rml_Vector3<f32>>() - 12usize];
+    ["Align of template specialization: Rml_Vector3_open0_float_close0"]
+        [::std::mem::align_of::<Rml_Vector3<f32>>() - 4usize];
 };
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {

@@ -6,6 +6,7 @@
 #![feature(negative_impls)]
 // optional: used for macro on `mod x;` syntax - can be worked around
 #![feature(proc_macro_hygiene)]
+pub mod containers;
 
 pub mod core;
 pub mod errors;

@@ -130,7 +130,6 @@ fn main() {
         .blocklist_item("_[A-Z].*")
         .blocklist_item("Rml::SystemInterface")
         .blocklist_item("Rml::RenderInterface")
-        .blocklist_item("Rml::Variant.*")
         .blocklist_item("Rml::String")
         .blocklist_item("Rml::byte")
         .blocklist_item("Rml::Span")
@@ -148,6 +147,8 @@ fn main() {
         .allowlist_type("Rml::Vector2")
         .allowlist_type("Rml::Vector2f")
         .allowlist_type("Rml::Vector2i")
+        .allowlist_type("Rml::Vector3")
+        .allowlist_type("Rml::Vector3f")
         .allowlist_type("Rml::Vector4")
         .allowlist_type("Rml::Vector4f")
         .allowlist_type("Rml::Vector4i")
@@ -169,6 +170,9 @@ fn main() {
         .allowlist_type("Rml::Rectangle")
         .allowlist_type("Rml::Rectanglei")
         .allowlist_type("Rml::Rectanglef")
+        .blocklist_type("Rml::Variant")
+        .allowlist_type("Rml::Variant::Type")
+        .blocklist_function(".*Variant.*")
         .allowlist_type("Layouts::SystemInterfaceLayoutGuard")
         .allowlist_type("rsmlui::system_interface::RustSystemInterface")
         .allowlist_type("Layouts::RenderInterfaceLayoutGuard")
@@ -210,6 +214,8 @@ fn main() {
         "src/ffi/backend.rs",
         "src/ffi/context.rs",
         "src/ffi/element_document.rs",
+        "src/ffi/variant.rs",
+        "src/ffi/dictionary.rs",
     ]);
 
     for file in cpp_files {

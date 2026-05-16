@@ -36,3 +36,13 @@ unsafe impl ExternType for crate::Rml_Rectanglei {
     type Id = type_id!("Rml::Rectanglei");
     type Kind = cxx::kind::Trivial;
 }
+
+unsafe impl ExternType for crate::Rml_Vector3f {
+    type Id = type_id!("Rml::Vector3f");
+    type Kind = cxx::kind::Trivial;
+}
+
+unsafe impl ExternType for crate::Rml_Vector4f {
+    type Id = type_id!("Rml::Vector4f");
+    type Kind = cxx::kind::Trivial;
+}

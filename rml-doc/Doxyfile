@@ -325,7 +325,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::Utilities::* \
   Rml::VariableDefinition \
   Rml::VariableDefinition::* \
-  Rml::Variant \
   Rml::Variant::* \
   Rml::Vector2 \
   Rml::Vector2::* \
