@@ -6,6 +6,8 @@ use rsmlui_sys::variant::{self as sys};
 use sealed::sealed;
 
 use crate::FromSys;
+use crate::types::colour::Colorb;
+use crate::types::renderer::ColorStop;
 use crate::utils::raw::{Ptr, Raw};
 
 #[sealed]
@@ -45,7 +47,7 @@ impl<'a> Variant<'a> {
     }
 
     #[rmldoc(name = "Rml::Variant::GetInto")]
-    pub fn try_get_as<T: TypeVariant>(&self) -> Option<&'a T> {
+    pub fn try_get_as<T: TypeVariant + ?Sized>(&self) -> Option<&'a T> {
         // Safety: `self.raw` is a valid `Variant`
         let ty = unsafe { sys::variant_get_type(self.raw()) };
 
@@ -57,7 +59,7 @@ impl<'a> Variant<'a> {
         unsafe { Some(T::from_variant(self.raw())) }
     }
 
-    pub fn get_as<T: TypeVariant>(&self) -> &'a T {
+    pub fn get_as<T: TypeVariant + ?Sized>(&self) -> &'a T {
         self.try_get_as().expect("variant is not the expected type")
     }
 }
@@ -158,5 +160,32 @@ impl TypeVariant for Vec4 {
 
     unsafe fn from_variant<'a>(variant: *const sys::Variant) -> &'a Self {
         unsafe { FromSys::from_sys(sys::variant_as_vector4f(variant)) }
+    }
+}
+
+#[sealed]
+impl TypeVariant for Colorb {
+    const VARIANT_TYPE: sys::VariantType = sys::VariantType::COLOURB;
+
+    unsafe fn from_variant<'a>(variant: *const sys::Variant) -> &'a Self {
+        unsafe { FromSys::from_sys(sys::variant_as_colorb(variant)) }
+    }
+}
+
+#[sealed]
+impl TypeVariant for [ColorStop] {
+    const VARIANT_TYPE: sys::VariantType = sys::VariantType::COLORSTOPLIST;
+
+    unsafe fn from_variant<'a>(variant: *const sys::Variant) -> &'a Self {
+        unsafe { FromSys::from_sys(sys::variant_as_color_stop_list(variant)) }
+    }
+}
+
+#[sealed]
+impl TypeVariant for str {
+    const VARIANT_TYPE: sys::VariantType = sys::VariantType::STRING;
+
+    unsafe fn from_variant<'a>(variant: *const sys::Variant) -> &'a Self {
+        unsafe { sys::variant_as_str(variant) }
     }
 }

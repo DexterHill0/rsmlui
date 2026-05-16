@@ -39,20 +39,24 @@ Returns the source address of this document.
 <!-- rsmlui:block["Rml::ElementDocument::GetStyleSheet"] refid="class_rml_1_1_element_document_1a3bc3682f4817af99f7a2122586c3db2e" -->
 
 Returns the document's compiled style sheet. 
-:::note
+<div class="warning">
+
 The style sheet may be regenerated when media query parameters change, invalidating the pointer. 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::ElementDocument::ReloadStyleSheet"] refid="class_rml_1_1_element_document_1afdb80ff42c479c8dbf8a496b820a7716" -->
 
 Reload the document's style sheet from source files. Styles will be reloaded from <style> tags and external style sheets, but not inline 'style' attributes. 
-:::note
+<div class="warning">
+
 The source url originally used to load the document must still be a valid RML document. 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 
@@ -96,10 +100,12 @@ Hide the document.
 <!-- rsmlui:block["Rml::ElementDocument::Close"] refid="class_rml_1_1_element_document_1a52acc4a2b58d92d3e7b01227be39f37b" -->
 
 Close the document. 
-:::note
+<div class="warning">
+
 The destruction of the document is deferred until the next call to [Context::Update()](api_Rml-Context.md#update). 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 

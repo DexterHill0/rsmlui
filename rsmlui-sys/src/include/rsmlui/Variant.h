@@ -2,6 +2,7 @@
 
 #include <RmlUi/Core.h>
 
+#include "RmlUi/Core/Types.h"
 #include "RmlUi/Core/Variant.h"
 #include "rust/cxx.h"
 
@@ -63,6 +64,24 @@ inline auto variant_as_vector3f(const Rml::Variant* variant)
 inline auto variant_as_vector4f(const Rml::Variant* variant)
     -> const Rml::Vector4f& {
     return variant->GetReference<Rml::Vector4f>();
+}
+
+inline auto variant_as_colorb(const Rml::Variant* variant)
+    -> const Rml::Colourb& {
+    return variant->GetReference<Rml::Colourb>();
+}
+
+inline auto variant_as_color_stop_list(const Rml::Variant* variant)
+    -> rust::Slice<const Rml::ColorStop> {
+    const auto& vec = variant->GetReference<Rml::Vector<Rml::ColorStop>>();
+
+    return {vec.data(), vec.size()};
+}
+
+inline auto variant_as_str(const Rml::Variant* variant) -> rust::Str {
+    const auto& str = variant->GetReference<std::string>();
+
+    return {str};
 }
 
 } // namespace rsmlui

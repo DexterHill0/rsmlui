@@ -8,7 +8,7 @@ use crate::utils::conversions::FromSys;
 #[rmldoc(file = "api_Rml-Colour.md", name = "Rml::Colour")]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[repr(C)]
-pub struct Colourb {
+pub struct Colorb {
     pub r: u8,
     pub g: u8,
     pub b: u8,
@@ -19,7 +19,7 @@ pub struct Colourb {
 #[rmldoc(file = "api_Rml-Colour.md", name = "Rml::Colour")]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[repr(C)]
-pub struct ColourbPremultiplied {
+pub struct ColorbPremultiplied {
     pub r: u8,
     pub g: u8,
     pub b: u8,
@@ -27,7 +27,7 @@ pub struct ColourbPremultiplied {
 }
 
 #[rmldoc(file = "api_Rml-Colour.md")]
-impl Colourb {
+impl Colorb {
     #[rmldoc(
         name = "Rml::Colour::Colour",
         refid = "class_rml_1_1_colour_1ac73a949b42ecff51c9cf2303bd2c1a03"
@@ -54,9 +54,9 @@ impl Colourb {
         }
     }
 
-    pub fn to_premultiplied(self) -> ColourbPremultiplied {
+    pub fn to_premultiplied(self) -> ColorbPremultiplied {
         let a = self.a as u32;
-        ColourbPremultiplied {
+        ColorbPremultiplied {
             r: ((self.r as u32 * a) / 255) as u8,
             g: ((self.g as u32 * a) / 255) as u8,
             b: ((self.b as u32 * a) / 255) as u8,
@@ -64,10 +64,10 @@ impl Colourb {
         }
     }
 
-    pub fn to_premultiplied_with_opacity(self, opacity: f32) -> ColourbPremultiplied {
+    pub fn to_premultiplied_with_opacity(self, opacity: f32) -> ColorbPremultiplied {
         let new_alpha = self.a as f32 * opacity;
         let factor = new_alpha / 255.0;
-        ColourbPremultiplied {
+        ColorbPremultiplied {
             r: (self.r as f32 * factor) as u8,
             g: (self.g as f32 * factor) as u8,
             b: (self.b as f32 * factor) as u8,
@@ -76,14 +76,14 @@ impl Colourb {
     }
 }
 
-impl ColourbPremultiplied {
+impl ColorbPremultiplied {
     pub const fn new(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self { r, g, b, a }
     }
 
-    pub fn to_non_premultiplied(self) -> Colourb {
+    pub fn to_non_premultiplied(self) -> Colorb {
         let a = self.a as u32;
-        Colourb {
+        Colorb {
             r: if a > 0 {
                 ((self.r as u32 * 255) / a) as u8
             } else {
@@ -104,14 +104,14 @@ impl ColourbPremultiplied {
     }
 }
 
-impl From<Colourb> for ColourbPremultiplied {
-    fn from(value: Colourb) -> Self {
+impl From<Colorb> for ColorbPremultiplied {
+    fn from(value: Colorb) -> Self {
         value.to_premultiplied()
     }
 }
 
-impl From<ColourbPremultiplied> for Colourb {
-    fn from(value: ColourbPremultiplied) -> Self {
+impl From<ColorbPremultiplied> for Colorb {
+    fn from(value: ColorbPremultiplied) -> Self {
         value.to_non_premultiplied()
     }
 }
@@ -213,8 +213,8 @@ macro_rules! impl_colour_ops {
     };
 }
 
-impl_colour_ops!(Colourb);
-impl_colour_ops!(ColourbPremultiplied);
+impl_colour_ops!(Colorb);
+impl_colour_ops!(ColorbPremultiplied);
 
 // Hardcoded layout assertions for safe transmutes.
 // If the C++ side changes and bindgen regenerates, these will catch the
@@ -224,44 +224,50 @@ impl_colour_ops!(ColourbPremultiplied);
 // deriving bytemuck on bindgen structs is a bit difficult.
 const _: () = {
     use std::mem::{align_of, offset_of, size_of};
-    rsmlui_sys::const_assert_eq!(size_of::<Colourb>(), 4);
-    rsmlui_sys::const_assert_eq!(align_of::<Colourb>(), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colourb, r), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colourb, g), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colourb, b), 2);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colourb, a), 3);
+    rsmlui_sys::const_assert_eq!(size_of::<Colorb>(), 4);
+    rsmlui_sys::const_assert_eq!(align_of::<Colorb>(), 1);
+    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, r), 0);
+    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, g), 1);
+    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, b), 2);
+    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, a), 3);
     rsmlui_sys::const_assert_eq!(size_of::<Rml_Colourb>(), 4);
     rsmlui_sys::const_assert_eq!(align_of::<Rml_Colourb>(), 1);
-    rsmlui_sys::const_assert_eq!(size_of::<ColourbPremultiplied>(), 4);
-    rsmlui_sys::const_assert_eq!(align_of::<ColourbPremultiplied>(), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColourbPremultiplied, r), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColourbPremultiplied, g), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColourbPremultiplied, b), 2);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColourbPremultiplied, a), 3);
+    rsmlui_sys::const_assert_eq!(size_of::<ColorbPremultiplied>(), 4);
+    rsmlui_sys::const_assert_eq!(align_of::<ColorbPremultiplied>(), 1);
+    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, r), 0);
+    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, g), 1);
+    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, b), 2);
+    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, a), 3);
     rsmlui_sys::const_assert_eq!(size_of::<Rml_ColourbPremultiplied>(), 4);
     rsmlui_sys::const_assert_eq!(align_of::<Rml_ColourbPremultiplied>(), 1);
 };
 
-impl FromSys<Colourb> for Rml_Colourb {
-    fn from_sys(value: Colourb) -> Self {
+impl FromSys<Colorb> for Rml_Colourb {
+    fn from_sys(value: Colorb) -> Self {
         // Safety: layout verified by const assertions above
         unsafe { std::mem::transmute(value) }
     }
 }
 
-impl FromSys<Rml_Colourb> for Colourb {
+impl FromSys<Rml_Colourb> for Colorb {
     fn from_sys(value: Rml_Colourb) -> Self {
         unsafe { std::mem::transmute(value) }
     }
 }
 
-impl FromSys<ColourbPremultiplied> for Rml_ColourbPremultiplied {
-    fn from_sys(value: ColourbPremultiplied) -> Self {
+impl FromSys<&Rml_Colourb> for &Colorb {
+    fn from_sys(value: &Rml_Colourb) -> Self {
         unsafe { std::mem::transmute(value) }
     }
 }
 
-impl FromSys<Rml_ColourbPremultiplied> for ColourbPremultiplied {
+impl FromSys<ColorbPremultiplied> for Rml_ColourbPremultiplied {
+    fn from_sys(value: ColorbPremultiplied) -> Self {
+        unsafe { std::mem::transmute(value) }
+    }
+}
+
+impl FromSys<Rml_ColourbPremultiplied> for ColorbPremultiplied {
     fn from_sys(value: Rml_ColourbPremultiplied) -> Self {
         unsafe { std::mem::transmute(value) }
     }

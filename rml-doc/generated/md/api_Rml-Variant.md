@@ -31,20 +31,24 @@ Templatised data accessor. TypeConverters will be used to attempt to convert fro
 #### Returns
 True if the value was converted and returned, false if no data was stored in the variant. 
 
-:::note
+<div class="warning">
+
 Can be used with enum types, will convert from stored integral value. 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Variant::GetReference"] refid="class_rml_1_1_variant_1a69205cf53cb4a9f39148547d738e0476" -->
 
 Returns a reference to the variant's underlying type. 
-:::warning
+<div class="warning">
+
 : Undefined behavior if T does not represent the underlying type of the variant. 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 
@@ -86,10 +90,12 @@ Values:
 <!-- rsmlui:block["Rml::Variant::Set"] refid="class_rml_1_1_variant_1a99b9687c88d187eb5a84af09d10e67f2" -->
 
 Copy another variant's data to this variant. 
-:::warning
+<div class="warning">
+
 Does not clear existing data. 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 

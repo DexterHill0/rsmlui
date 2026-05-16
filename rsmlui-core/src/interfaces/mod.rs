@@ -89,6 +89,7 @@ impl<T, B> InterfaceHandle<T, B> {
         })
     }
 
+    #[inline(always)]
     pub fn inner(&self) -> &T {
         &self.inner
     }
@@ -97,6 +98,7 @@ impl<T, B> InterfaceHandle<T, B> {
     ///
     /// Safe because `inner` is non-structurally pinned: mutating it in place does not move the
     /// `InterfaceHandle` struct and therefore does not invalidate the C++ pointer to it.
+    #[inline(always)]
     pub fn inner_mut(&mut self) -> &mut T {
         &mut self.inner
     }
@@ -106,6 +108,7 @@ impl<T, B> InterfaceHandle<T, B> {
     /// - `B` must have the same memory layout as [`InterfaceBridgeLayout`].
     ///
     /// [`InterfaceBridgeLayout`]: rsmlui_sys::ffi::interfaces::InterfaceBridgeLayout
+    #[inline(always)]
     pub(crate) unsafe fn bridge_ptr(&self) -> *mut B {
         self.bridge
     }

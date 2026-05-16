@@ -136,9 +136,9 @@ fn main() {
         .blocklist_item("Rml::Dictionary")
         .blocklist_function(".*SystemInterface.*")
         .blocklist_function(".*RenderInterface.*")
-        .allowlist_type("Rml::Colour")
-        .allowlist_type("Rml::Colourb")
-        .allowlist_type("Rml::ColourbPremultiplied")
+        .blocklist_type("Rml::Colour")
+        .blocklist_type("Rml::Colourb")
+        .blocklist_type("Rml::ColourbPremultiplied")
         .allowlist_type("Rml::Input::KeyIdentifier")
         .allowlist_type("Rml::Input::KeyModifier")
         .allowlist_type("Rml::ClipMaskOperation")
@@ -167,9 +167,13 @@ fn main() {
         .allowlist_type("Rml::CompiledShaderHandle")
         .allowlist_type("Rml::CompiledFilterHandle")
         .allowlist_type("Rml::TextureHandle")
+        .allowlist_type("Rml::LayerHandle")
         .allowlist_type("Rml::Rectangle")
         .allowlist_type("Rml::Rectanglei")
         .allowlist_type("Rml::Rectanglef")
+        .allowlist_type("Rml::Unit")
+        .allowlist_type("Rml::NumericValue")
+        .allowlist_type("Rml::ColorStop")
         .blocklist_type("Rml::Variant")
         .allowlist_type("Rml::Variant::Type")
         .blocklist_function(".*Variant.*")
@@ -178,6 +182,7 @@ fn main() {
         .allowlist_type("Layouts::RenderInterfaceLayoutGuard")
         .allowlist_type("rsmlui::render_interface::RustRenderInterface")
         .bitfield_enum("Rml::Input::KeyModifier")
+        .bitfield_enum("Rml::Unit")
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: true,
         })
@@ -187,8 +192,13 @@ fn main() {
         .vtable_generation(false)
         .generate_pure_virtual_functions(false)
         .raw_line("#![allow(unused_variables, non_camel_case_types, unsafe_op_in_unsafe_fn)]")
-        // FIXME: bindgen can't currently generate working bindings for the Matrix types (see https://github.com/rust-lang/rust-bindgen/issues/3373)
-        .raw_line("pub type Rml_Matrix4f = [[f32; 4]; 4];")
+        // FIXME: bindgen can't currently generate working bindings for some templated types (see https://github.com/rust-lang/rust-bindgen/issues/3373)
+        // so we do it manually instead
+        .raw_line("#[repr(C)] #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)] pub struct Rml_Colourb { pub red: u8, pub green: u8, pub blue: u8, pub alpha: u8 }")
+        .raw_line("#[repr(C)] #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)] pub struct Rml_ColourbPremultiplied { pub red: u8, pub green: u8, pub blue: u8, pub alpha: u8 }")
+        .raw_line(
+            "#[repr(C)] #[derive(Debug, Copy, Clone)] pub struct Rml_Matrix4f(pub [[f32; 4]; 4]);",
+        )
         .clang_args(
             DEFINTIONS
                 .iter()

@@ -7,6 +7,7 @@ unsafe impl ExternType for crate::Rml_Variant_Type {
 
 #[cxx::bridge]
 mod ffi {
+
     #[namespace = "Rml"]
     unsafe extern "C++" {
         type Variant;
@@ -14,6 +15,10 @@ mod ffi {
         type Vector2f = crate::Rml_Vector2f;
         type Vector3f = crate::Rml_Vector3f;
         type Vector4f = crate::Rml_Vector4f;
+
+        #[cxx_name = "Colourb"]
+        type Colorb = crate::Rml_Colourb;
+        type ColorStop = crate::Rml_ColorStop;
     }
 
     #[namespace = "Rml::Variant"]
@@ -41,12 +46,17 @@ mod ffi {
         unsafe fn variant_as_vector2f<'a>(variant: *const Variant) -> &'a Vector2f;
         unsafe fn variant_as_vector3f<'a>(variant: *const Variant) -> &'a Vector3f;
         unsafe fn variant_as_vector4f<'a>(variant: *const Variant) -> &'a Vector4f;
+
+        unsafe fn variant_as_colorb<'a>(variant: *const Variant) -> &'a Colorb;
+        unsafe fn variant_as_color_stop_list<'a>(variant: *const Variant) -> &'a [ColorStop];
+        unsafe fn variant_as_str<'a>(variant: *const Variant) -> &'a str;
     }
 }
 
 pub use ffi::{
     Variant, VariantType, Vector2f, Vector3f, Vector4f, variant_as_bool, variant_as_byte,
-    variant_as_char, variant_as_double, variant_as_float, variant_as_int, variant_as_int64,
-    variant_as_uint, variant_as_uint64, variant_as_vector2f, variant_as_vector3f,
-    variant_as_vector4f, variant_get_type,
+    variant_as_char, variant_as_color_stop_list, variant_as_colorb, variant_as_double,
+    variant_as_float, variant_as_int, variant_as_int64, variant_as_str, variant_as_uint,
+    variant_as_uint64, variant_as_vector2f, variant_as_vector3f, variant_as_vector4f,
+    variant_get_type,
 };

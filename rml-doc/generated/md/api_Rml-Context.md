@@ -131,20 +131,24 @@ Unload the given document.
 #### Parameters
 * `document` The document to unload. 
 
-:::note
+<div class="warning">
+
 The destruction of the document is deferred until the next call to [Context::Update()](#update). 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::UnloadAllDocuments"] refid="class_rml_1_1_context_1a6713747bac32bed6d64cfdd5f07e0527" -->
 
 Unloads all loaded documents. 
-:::note
+<div class="warning">
+
 The destruction of the documents is deferred until the next call to [Context::Update()](#update). 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 
@@ -412,10 +416,12 @@ Tells the context the mouse has left the window. This removes any hover state fr
 #### Returns
 True if the mouse is not interacting with any elements in the context (see 'IsMouseInteracting'), otherwise false. 
 
-:::note
+<div class="warning">
+
 The mouse is considered activated again after the next call to '[ProcessMouseMove()](#processmousemove)'. 
 
-:::
+</div>
+
 
 <!-- /rsmlui:block -->
 
@@ -472,10 +478,12 @@ True if no touch points are interacting with any elements in the context, otherw
 <!-- rsmlui:block["Rml::Context::IsMouseInteracting"] refid="class_rml_1_1_context_1a8db4a9a220d477420f2b429b1ba9601d" -->
 
 Returns a hint on whether the mouse is currently interacting with any elements in this context, based on previously submitted 'ProcessMouse...()' commands. 
-:::note
+<div class="warning">
+
 Interaction is determined irrespective of background and opacity. See the RCSS property 'pointer-events' to disable interaction for specific elements. 
 
-:::
+</div>
+
 
 #### Returns
 True if the mouse hovers over or has activated an element in this context, otherwise false.
@@ -547,10 +555,12 @@ A map of all data models in this context, keyed by their name.
 <!-- rsmlui:block["Rml::Context::RemoveDataModel"] refid="class_rml_1_1_context_1a9c3bb9393cc7aeb65c6989ece77da412" -->
 
 Removes the given data model. This also removes all data views, controllers, and bindings contained by the data model. 
-:::warning
+<div class="warning">
+
 Invalidates all handles and constructors pointing to the data model. 
 
-:::
+</div>
+
 
 #### Parameters
 * `name` The name of the data model. 

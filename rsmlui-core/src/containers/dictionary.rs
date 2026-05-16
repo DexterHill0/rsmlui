@@ -11,7 +11,7 @@ pub struct Dictionary<'a> {
 }
 
 impl<'a> Raw for Dictionary<'a> {
-    type Ptr = *mut rsmlui_sys::dictionary::Dictionary;
+    type Ptr = *const rsmlui_sys::dictionary::Dictionary;
 
     fn raw(&self) -> Self::Ptr {
         self.raw
@@ -19,7 +19,16 @@ impl<'a> Raw for Dictionary<'a> {
 }
 
 impl<'a> Dictionary<'a> {
-    pub fn try_get<T: TypeVariant, K: AsRef<str>>(&self, key: K) -> Option<&'a T> {
+    /// # Safety:
+    /// - `raw` must be a valid non-null `Dictionary` pointer
+    pub(crate) unsafe fn from_raw(raw: Ptr<Self>) -> Self {
+        Self {
+            raw,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn try_get<T: TypeVariant + ?Sized, K: AsRef<str>>(&self, key: K) -> Option<&'a T> {
         // Safety: `self.raw` is a valid `Dictionary`
         let variant = unsafe { dictionary_get_variant(self.raw(), key.as_ref()) };
 
@@ -33,7 +42,7 @@ impl<'a> Dictionary<'a> {
         variant.try_get_as::<T>()
     }
 
-    pub fn get<T: TypeVariant, K: AsRef<str>>(&self, key: K) -> &'a T {
+    pub fn get<T: TypeVariant + ?Sized, K: AsRef<str>>(&self, key: K) -> &'a T {
         self.try_get::<T, K>(key).expect("could not get key")
     }
 }
