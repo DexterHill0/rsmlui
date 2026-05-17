@@ -198,7 +198,7 @@ pub trait RenderInterface {
             render_interface_default_render_to_clip_mask(
                 self.bridge_ptr(),
                 operation,
-                geometry,
+                geometry.into_sys(),
                 translation.into_sys(),
             )
         }
@@ -222,7 +222,7 @@ pub trait RenderInterface {
     where
         Self: Sized,
     {
-        unsafe { render_interface_default_push_layer(self.bridge_ptr()) }
+        unsafe { LayerHandle(render_interface_default_push_layer(self.bridge_ptr())) }
     }
 
     #[rmldoc(name = "Rml::RenderInterface::CompositeLayers")]
@@ -238,10 +238,10 @@ pub trait RenderInterface {
         unsafe {
             render_interface_default_composite_layers(
                 self.bridge_ptr(),
-                source,
-                destination,
+                source.into_sys(),
+                destination.into_sys(),
                 blend_mode,
-                filters,
+                filters.into_sys(),
             )
         }
     }
@@ -259,7 +259,11 @@ pub trait RenderInterface {
     where
         Self: Sized,
     {
-        unsafe { render_interface_default_save_layer_as_texture(self.bridge_ptr()) }
+        unsafe {
+            TextureHandle(render_interface_default_save_layer_as_texture(
+                self.bridge_ptr(),
+            ))
+        }
     }
 
     #[rmldoc(name = "Rml::RenderInterface::SaveLayerAsMaskImage")]
@@ -267,7 +271,11 @@ pub trait RenderInterface {
     where
         Self: Sized,
     {
-        unsafe { render_interface_default_save_layer_as_mask_image(self.bridge_ptr()) }
+        unsafe {
+            CompiledFilterHandle(render_interface_default_save_layer_as_mask_image(
+                self.bridge_ptr(),
+            ))
+        }
     }
 
     #[rmldoc(name = "Rml::RenderInterface::CompileFilter")]
@@ -293,7 +301,11 @@ pub trait RenderInterface {
 
         // FIXME: null-ptr is okay because it's unused in the default, but still not ideal
         unsafe {
-            render_interface_default_compile_filter(self.bridge_ptr(), name, std::ptr::null())
+            CompiledFilterHandle(render_interface_default_compile_filter(
+                self.bridge_ptr(),
+                name,
+                std::ptr::null(),
+            ))
         }
     }
 
@@ -302,7 +314,7 @@ pub trait RenderInterface {
     where
         Self: Sized,
     {
-        unsafe { render_interface_default_release_filter(self.bridge_ptr(), filter) }
+        unsafe { render_interface_default_release_filter(self.bridge_ptr(), filter.into_sys()) }
     }
 
     #[rmldoc(name = "Rml::RenderInterface::CompileShader")]
@@ -322,7 +334,11 @@ pub trait RenderInterface {
 
         // FIXME: null-ptr is okay because it's unused in the default, but still not ideal
         unsafe {
-            render_interface_default_compile_shader(self.bridge_ptr(), name, std::ptr::null())
+            CompiledShaderHandle(render_interface_default_compile_shader(
+                self.bridge_ptr(),
+                name,
+                std::ptr::null(),
+            ))
         }
     }
 
@@ -339,10 +355,10 @@ pub trait RenderInterface {
         unsafe {
             render_interface_default_render_shader(
                 self.bridge_ptr(),
-                shader,
-                geometry,
+                shader.into_sys(),
+                geometry.into_sys(),
                 translation.into_sys(),
-                texture,
+                texture.into_sys(),
             )
         }
     }
@@ -352,7 +368,7 @@ pub trait RenderInterface {
     where
         Self: Sized,
     {
-        unsafe { render_interface_default_release_shader(self.bridge_ptr(), shader) }
+        unsafe { render_interface_default_release_shader(self.bridge_ptr(), shader.into_sys()) }
     }
 }
 
@@ -364,8 +380,8 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
         &mut self,
         vertices: &[rsmlui_sys::Rml_Vertex],
         indices: &[i32],
-    ) -> CompiledGeometryHandle {
-        T::compile_geometry(self, FromSys::from_sys(vertices), indices)
+    ) -> rsmlui_sys::Rml_CompiledGeometryHandle {
+        T::compile_geometry(self, FromSys::from_sys(vertices), indices).into_sys()
     }
 
     #[inline]
@@ -375,12 +391,17 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
         translation: rsmlui_sys::render_interface::Vector2f,
         texture: rsmlui_sys::Rml_TextureHandle,
     ) {
-        T::render_geometry(self, geometry, FromSys::from_sys(translation), texture);
+        T::render_geometry(
+            self,
+            CompiledGeometryHandle(geometry),
+            FromSys::from_sys(translation),
+            TextureHandle(texture),
+        );
     }
 
     #[inline]
     unsafe fn release_geometry(&mut self, geometry: rsmlui_sys::Rml_CompiledGeometryHandle) {
-        T::release_geometry(self, geometry);
+        T::release_geometry(self, CompiledGeometryHandle(geometry));
     }
 
     #[inline]
@@ -396,11 +417,10 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
                 // Safety: RmlUi gives us a valid pointer
                 unsafe { *texture_dimensions = texture.dimensions.into_sys() }
 
-                texture.handle
+                texture.handle.into_sys()
             },
-            // As per docs:
-            // > The value zero (0) is reserved for invalid handles, and should only be used to indicate an error while trying to load the texture.
-            None => 0,
+
+            None => TextureHandle::INVALID.into_sys(),
         }
     }
 
@@ -412,12 +432,12 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
     ) -> rsmlui_sys::Rml_TextureHandle {
         let texture = T::generate_texture(self, source, FromSys::from_sys(source_dimensions));
 
-        texture.unwrap_or(0)
+        texture.unwrap_or(TextureHandle::INVALID).into_sys()
     }
 
     #[inline]
     unsafe fn release_texture(&mut self, texture: rsmlui_sys::Rml_TextureHandle) {
-        T::release_texture(self, texture);
+        T::release_texture(self, TextureHandle(texture));
     }
 
     #[inline]
@@ -442,7 +462,12 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
         geometry: rsmlui_sys::Rml_CompiledGeometryHandle,
         translation: rsmlui_sys::render_interface::Vector2f,
     ) {
-        T::render_to_clip_mask(self, operation, geometry, FromSys::from_sys(translation));
+        T::render_to_clip_mask(
+            self,
+            operation,
+            CompiledGeometryHandle(geometry),
+            FromSys::from_sys(translation),
+        );
     }
 
     #[inline]
@@ -453,7 +478,7 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
 
     #[inline]
     unsafe fn push_layer(&mut self) -> rsmlui_sys::Rml_LayerHandle {
-        T::push_layer(self)
+        T::push_layer(self).into_sys()
     }
 
     #[inline]
@@ -464,7 +489,13 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
         blend_mode: rsmlui_sys::render_interface::BlendMode,
         filters: &[rsmlui_sys::Rml_CompiledFilterHandle],
     ) {
-        T::composite_layers(self, source, destination, blend_mode, filters);
+        T::composite_layers(
+            self,
+            LayerHandle(source),
+            LayerHandle(destination),
+            blend_mode,
+            FromSys::from_sys(filters),
+        );
     }
 
     #[inline]
@@ -474,12 +505,12 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
 
     #[inline]
     unsafe fn save_layer_as_texture(&mut self) -> rsmlui_sys::Rml_TextureHandle {
-        T::save_layer_as_texture(self)
+        T::save_layer_as_texture(self).into_sys()
     }
 
     #[inline]
     unsafe fn save_layer_as_mask_image(&mut self) -> rsmlui_sys::Rml_CompiledFilterHandle {
-        T::save_layer_as_mask_image(self)
+        T::save_layer_as_mask_image(self).into_sys()
     }
 
     #[inline]
@@ -575,12 +606,12 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
             _ => panic!("unknown filter name: {}", name),
         };
 
-        T::compile_filter(self, kind)
+        T::compile_filter(self, kind).into_sys()
     }
 
     #[inline]
     unsafe fn release_filter(&mut self, filter: rsmlui_sys::Rml_CompiledFilterHandle) {
-        T::release_filter(self, filter);
+        T::release_filter(self, CompiledFilterHandle(filter));
     }
 
     #[inline]
@@ -677,7 +708,7 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
             _ => panic!("unknown shader name: {}", name),
         };
 
-        T::compile_shader(self, kind)
+        T::compile_shader(self, kind).into_sys()
     }
 
     #[inline]
@@ -690,16 +721,16 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
     ) {
         T::render_shader(
             self,
-            shader,
-            geometry,
+            CompiledShaderHandle(shader),
+            CompiledGeometryHandle(geometry),
             FromSys::from_sys(translation),
-            texture,
+            TextureHandle(texture),
         );
     }
 
     #[inline]
     unsafe fn release_shader(&mut self, shader: rsmlui_sys::Rml_CompiledShaderHandle) {
-        T::release_shader(self, shader);
+        T::release_shader(self, CompiledShaderHandle(shader));
     }
 }
 
