@@ -6,7 +6,7 @@ use glam::IVec2;
 use rsmlui_core::core::context::Context;
 use rsmlui_core::errors::Error as CoreError;
 use rsmlui_core::interfaces::BorrowedInterface;
-use rsmlui_core::types::input::{KeyCode, KeyModifier};
+use rsmlui_core::types::aliases::{KeyCode, KeyModifier};
 use rsmlui_core::{BackendHandle, IntoSys};
 use rsmlui_sys::backend;
 use rsmlui_sys::render_interface::RmlRenderInterface;

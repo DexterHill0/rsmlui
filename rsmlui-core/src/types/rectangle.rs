@@ -1,7 +1,7 @@
 use glam::{IVec2, Vec2};
 use rsmlui_sys::{Rml_Rectanglef, Rml_Rectanglei};
 
-use crate::FromSys;
+use crate::{FromSys, IntoSys};
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
@@ -218,15 +218,15 @@ impl FromSys<&Rml_Rectanglef> for &Rectanglef {
     }
 }
 
-impl FromSys<Rectanglef> for Rml_Rectanglef {
-    fn from_sys(value: Rectanglef) -> Self {
-        unsafe { std::mem::transmute(value) }
+impl IntoSys<Rml_Rectanglef> for Rectanglef {
+    fn into_sys(self) -> Rml_Rectanglef {
+        unsafe { std::mem::transmute(self) }
     }
 }
 
-impl FromSys<&Rectanglef> for &Rml_Rectanglef {
-    fn from_sys(value: &Rectanglef) -> Self {
-        unsafe { std::mem::transmute(value) }
+impl<'a> IntoSys<&'a Rml_Rectanglef> for &'a Rectanglef {
+    fn into_sys(self) -> &'a Rml_Rectanglef {
+        unsafe { std::mem::transmute(self) }
     }
 }
 
@@ -242,14 +242,14 @@ impl FromSys<&Rml_Rectanglei> for &Rectanglei {
     }
 }
 
-impl FromSys<Rectanglei> for Rml_Rectanglei {
-    fn from_sys(value: Rectanglei) -> Self {
-        unsafe { std::mem::transmute(value) }
+impl IntoSys<Rml_Rectanglei> for Rectanglei {
+    fn into_sys(self) -> Rml_Rectanglei {
+        unsafe { std::mem::transmute(self) }
     }
 }
 
-impl FromSys<&Rectanglei> for &Rml_Rectanglei {
-    fn from_sys(value: &Rectanglei) -> Self {
-        unsafe { std::mem::transmute(value) }
+impl<'a> IntoSys<&'a Rml_Rectanglei> for &'a Rectanglei {
+    fn into_sys(self) -> &'a Rml_Rectanglei {
+        unsafe { std::mem::transmute(self) }
     }
 }

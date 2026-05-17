@@ -1,14 +1,3 @@
-use cxx::{ExternType, type_id};
-
-unsafe impl ExternType for crate::Rml_Style_FontWeight {
-    type Id = type_id!("Rml::Style::FontWeight");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl ExternType for crate::Rml_Style_FontStyle {
-    type Id = type_id!("Rml::Style::FontStyle");
-    type Kind = cxx::kind::Trivial;
-}
 
 #[cxx::bridge]
 mod ffi {

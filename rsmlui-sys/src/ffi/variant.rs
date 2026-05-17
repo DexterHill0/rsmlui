@@ -1,9 +1,3 @@
-use cxx::{ExternType, type_id};
-
-unsafe impl ExternType for crate::Rml_Variant_Type {
-    type Id = type_id!("Rml::Variant::Type");
-    type Kind = cxx::kind::Trivial;
-}
 
 #[cxx::bridge]
 mod ffi {

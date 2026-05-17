@@ -3,7 +3,7 @@ use drop_tree::drop_tree;
 use rsmlui_macros::rmldoc;
 
 use crate::not_send_sync;
-use crate::types::flags::{FocusFlag, ModalFlag, ScrollFlag};
+use crate::types::aliases::{FocusFlag, ModalFlag, ScrollFlag};
 use crate::utils::raw::{Ptr, Raw};
 
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Builder)]

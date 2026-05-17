@@ -1,14 +1,3 @@
-use cxx::{ExternType, type_id};
-
-unsafe impl ExternType for crate::Rml_Input_KeyIdentifier {
-    type Id = type_id!("Rml::Input::KeyIdentifier");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl ExternType for crate::Rml_Input_KeyModifier {
-    type Id = type_id!("Rml::Input::KeyModifier");
-    type Kind = cxx::kind::Trivial;
-}
 
 #[cxx::bridge]
 mod ffi {

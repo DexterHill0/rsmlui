@@ -19,12 +19,13 @@ use sealed::sealed;
 
 use crate::containers::dictionary::Dictionary;
 use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
+use crate::types::aliases::{BlendMode, ClipMaskOperation};
 use crate::types::colour::Colorb;
-use crate::types::rectangle::Rectanglei;
-use crate::types::renderer::{
-    BlendMode, ClipMaskOperation, ColorStopList, ColorStops, CompiledFilterHandle,
-    CompiledGeometryHandle, CompiledShaderHandle, LayerHandle, TextureHandle, Vertex,
+use crate::types::handles::{
+    CompiledFilterHandle, CompiledGeometryHandle, CompiledShaderHandle, LayerHandle, TextureHandle,
 };
+use crate::types::rectangle::Rectanglei;
+use crate::types::renderer::{ColorStopList, ColorStops, Vertex};
 use crate::utils::conversions::{FromSys, IntoSys};
 
 /// The receiver type for all [`RenderInterface`] methods.

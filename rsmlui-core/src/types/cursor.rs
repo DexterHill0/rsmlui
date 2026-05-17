@@ -13,9 +13,9 @@ pub enum Cursor {
     Unknown(String),
 }
 
-impl Into<String> for Cursor {
-    fn into(self) -> String {
-        match self {
+impl From<Cursor> for String {
+    fn from(val: Cursor) -> Self {
+        match val {
             Cursor::Arrow => "arrow".to_owned(),
             Cursor::Move => "move".to_owned(),
             Cursor::Pointer => "pointer".to_owned(),
@@ -29,9 +29,9 @@ impl Into<String> for Cursor {
     }
 }
 
-impl Into<Cursor> for &str {
-    fn into(self) -> Cursor {
-        match self {
+impl From<&str> for Cursor {
+    fn from(val: &str) -> Self {
+        match val {
             "" | "arrow" => Cursor::Arrow,
             "move" => Cursor::Move,
             "pointer" => Cursor::Pointer,
@@ -42,7 +42,7 @@ impl Into<Cursor> for &str {
             scroll if scroll.starts_with("rmlui-scroll") => {
                 Cursor::Scroll(scroll.replace("rmlui-scroll", ""))
             },
-            _ => Cursor::Unknown(self.into()),
+            _ => Cursor::Unknown(val.into()),
         }
     }
 }

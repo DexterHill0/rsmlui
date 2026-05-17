@@ -1,19 +1,3 @@
-use cxx::{ExternType, type_id};
-
-unsafe impl ExternType for crate::Rml_ModalFlag {
-    type Id = type_id!("Rml::ModalFlag");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl ExternType for crate::Rml_FocusFlag {
-    type Id = type_id!("Rml::FocusFlag");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl ExternType for crate::Rml_ScrollFlag {
-    type Id = type_id!("Rml::ScrollFlag");
-    type Kind = cxx::kind::Trivial;
-}
 
 #[cxx::bridge]
 mod ffi {

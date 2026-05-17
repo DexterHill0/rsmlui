@@ -3,7 +3,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::{Rml_Colourb, Rml_ColourbPremultiplied};
 
-use crate::utils::conversions::FromSys;
+use crate::utils::conversions::{FromSys, IntoSys};
 
 #[rmldoc(file = "api_Rml-Colour.md", name = "Rml::Colour")]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
@@ -84,21 +84,9 @@ impl ColorbPremultiplied {
     pub fn to_non_premultiplied(self) -> Colorb {
         let a = self.a as u32;
         Colorb {
-            r: if a > 0 {
-                ((self.r as u32 * 255) / a) as u8
-            } else {
-                0
-            },
-            g: if a > 0 {
-                ((self.g as u32 * 255) / a) as u8
-            } else {
-                0
-            },
-            b: if a > 0 {
-                ((self.b as u32 * 255) / a) as u8
-            } else {
-                0
-            },
+            r: (self.r as u32 * 255).checked_div(a).unwrap_or(0) as u8,
+            g: (self.g as u32 * 255).checked_div(a).unwrap_or(0) as u8,
+            b: (self.b as u32 * 255).checked_div(a).unwrap_or(0) as u8,
             a: self.a,
         }
     }
@@ -242,13 +230,6 @@ const _: () = {
     rsmlui_sys::const_assert_eq!(align_of::<Rml_ColourbPremultiplied>(), 1);
 };
 
-impl FromSys<Colorb> for Rml_Colourb {
-    fn from_sys(value: Colorb) -> Self {
-        // Safety: layout verified by const assertions above
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
 impl FromSys<Rml_Colourb> for Colorb {
     fn from_sys(value: Rml_Colourb) -> Self {
         unsafe { std::mem::transmute(value) }
@@ -261,14 +242,20 @@ impl FromSys<&Rml_Colourb> for &Colorb {
     }
 }
 
-impl FromSys<ColorbPremultiplied> for Rml_ColourbPremultiplied {
-    fn from_sys(value: ColorbPremultiplied) -> Self {
-        unsafe { std::mem::transmute(value) }
+impl IntoSys<Rml_Colourb> for Colorb {
+    fn into_sys(self) -> Rml_Colourb {
+        unsafe { std::mem::transmute(self) }
     }
 }
 
 impl FromSys<Rml_ColourbPremultiplied> for ColorbPremultiplied {
     fn from_sys(value: Rml_ColourbPremultiplied) -> Self {
         unsafe { std::mem::transmute(value) }
+    }
+}
+
+impl IntoSys<Rml_ColourbPremultiplied> for ColorbPremultiplied {
+    fn into_sys(self) -> Rml_ColourbPremultiplied {
+        unsafe { std::mem::transmute(self) }
     }
 }

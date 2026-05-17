@@ -1,7 +1,5 @@
 use std::mem::offset_of;
 
-use cxx::{ExternType, type_id};
-
 use crate::interfaces::InterfaceBridgeLayout;
 use crate::utils::fat_from_cpp;
 use crate::{
@@ -9,25 +7,6 @@ use crate::{
     Rml_CompiledShaderHandle, Rml_LayerHandle, Rml_TextureHandle, const_assert_eq,
 };
 
-unsafe impl ExternType for crate::Rml_Vertex {
-    type Id = type_id!("Rml::Vertex");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl ExternType for crate::Rml_ClipMaskOperation {
-    type Id = type_id!("Rml::ClipMaskOperation");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl ExternType for crate::Rml_BlendMode {
-    type Id = type_id!("Rml::BlendMode");
-    type Kind = cxx::kind::Trivial;
-}
-
-unsafe impl ExternType for crate::Rml_ColorStop {
-    type Id = type_id!("Rml::ColorStop");
-    type Kind = cxx::kind::Trivial;
-}
 
 // Asserts that the layout of the interface bridge matches the layout of the
 // `RustRenderInterface` struct in C++.

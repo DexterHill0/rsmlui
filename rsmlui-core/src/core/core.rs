@@ -14,7 +14,7 @@ use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
 use crate::errors::Error;
 use crate::interfaces::{BorrowedInterface, IntoRawInterface};
-use crate::types::style::{FontStyle, FontWeight};
+use crate::types::aliases::{FontStyle, FontWeight};
 use crate::utils::conversions::IntoSys;
 
 static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);
