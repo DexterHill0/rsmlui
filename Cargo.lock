@@ -52,9 +52,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "2.10.0"
+version = "2.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
+checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
 
 [[package]]
 name = "bon"
@@ -355,6 +355,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd47b05dddf0005d850e5644cae7f2b14ac3df487979dbfff3b56f20b1a6ae46"
 
 [[package]]
+name = "glam"
+version = "0.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fb167719045debebe9f532320accc7b5c993c5a3b813f5696a11d5ca7bdc57b"
+
+[[package]]
 name = "glob"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -445,6 +451,12 @@ name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
+name = "mint"
+version = "0.5.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
 name = "nom"
@@ -549,7 +561,7 @@ dependencies = [
 name = "rsmlui-backends"
 version = "0.1.0"
 dependencies = [
- "glam",
+ "glam 0.30.9",
  "rsmlui-core",
  "rsmlui-sys",
  "thiserror",
@@ -559,9 +571,11 @@ dependencies = [
 name = "rsmlui-core"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "bon",
  "drop-tree",
- "glam",
+ "glam 0.33.0",
+ "mint",
  "rsmlui-macros",
  "rsmlui-sys",
  "sealed",
@@ -572,6 +586,7 @@ dependencies = [
 name = "rsmlui-macros"
 version = "0.1.0"
 dependencies = [
+ "bitflags",
  "proc-macro2",
  "quote",
  "regex",

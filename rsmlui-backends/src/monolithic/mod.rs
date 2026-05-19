@@ -18,7 +18,7 @@
 pub mod win32_gl2;
 
 use rsmlui_core::core::context::Context;
-use rsmlui_core::types::aliases::{KeyCode, KeyModifier};
+use rsmlui_core::types::input::{KeyCode, KeyModifier};
 #[cfg(feature = "backend-win32-gl2")]
 pub use win32_gl2::{Win32Gl2Backend, Win32Gl2BackendOptions};
 

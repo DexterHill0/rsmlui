@@ -1,9 +1,17 @@
-use glam::{IVec2, Vec2};
+use rsmlui_macros::sys_cast;
 use rsmlui_sys::{Rml_Rectanglef, Rml_Rectanglei};
 
-use crate::{FromSys, IntoSys};
+use crate::math::{IVec2, Vec2};
 
-#[repr(C)]
+#[sys_cast(
+    struct(
+        from(
+            pair(from = Rml_Rectanglef, self = Rectangle<Vec2>),
+            pair(from = Rml_Rectanglei, self = Rectangle<IVec2>),
+        )
+    ),
+    gen_ref
+)]
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct Rectangle<V> {
     pub p0: V,
@@ -12,30 +20,6 @@ pub struct Rectangle<V> {
 
 pub type Rectanglef = Rectangle<Vec2>;
 pub type Rectanglei = Rectangle<IVec2>;
-
-const _: () = {
-    use std::mem::{align_of, offset_of, size_of};
-
-    // Rectanglef / Rml_Rectanglef
-    rsmlui_sys::const_assert_eq!(size_of::<Rectanglef>(), 16);
-    rsmlui_sys::const_assert_eq!(align_of::<Rectanglef>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rectanglef, p0), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rectanglef, p1), 8);
-    rsmlui_sys::const_assert_eq!(size_of::<Rml_Rectanglef>(), 16);
-    rsmlui_sys::const_assert_eq!(align_of::<Rml_Rectanglef>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_Rectanglef, p0), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_Rectanglef, p1), 8);
-
-    // Rectanglei / Rml_Rectanglei
-    rsmlui_sys::const_assert_eq!(size_of::<Rectanglei>(), 16);
-    rsmlui_sys::const_assert_eq!(align_of::<Rectanglei>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rectanglei, p0), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rectanglei, p1), 8);
-    rsmlui_sys::const_assert_eq!(size_of::<Rml_Rectanglei>(), 16);
-    rsmlui_sys::const_assert_eq!(align_of::<Rml_Rectanglei>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_Rectanglei, p0), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_Rectanglei, p1), 8);
-};
 
 macro_rules! impl_rectangle {
     ($vec:ty, $scalar:ty, $neg_one:expr, $half:expr) => {
@@ -47,7 +31,7 @@ macro_rules! impl_rectangle {
             pub fn from_position_size(pos: $vec, size: $vec) -> Self {
                 Self {
                     p0: pos,
-                    p1: pos + size,
+                    p1: <$vec>::new(pos.0.x + size.0.x, pos.0.y + size.0.y),
                 }
             }
 
@@ -77,7 +61,7 @@ macro_rules! impl_rectangle {
             }
 
             pub fn size(&self) -> $vec {
-                self.p1 - self.p0
+                <$vec>::new(self.p1.x - self.p0.x, self.p1.y - self.p0.y)
             }
 
             pub const fn top_left(&self) -> $vec {
@@ -85,7 +69,7 @@ macro_rules! impl_rectangle {
             }
 
             pub const fn top_right(&self) -> $vec {
-                <$vec>::new(self.p1.x, self.p0.y)
+                <$vec>::new(self.p1.0.x, self.p0.0.y)
             }
 
             pub const fn bottom_right(&self) -> $vec {
@@ -93,41 +77,44 @@ macro_rules! impl_rectangle {
             }
 
             pub const fn bottom_left(&self) -> $vec {
-                <$vec>::new(self.p0.x, self.p1.y)
+                <$vec>::new(self.p0.0.x, self.p1.0.y)
             }
 
             pub fn center(&self) -> $vec {
-                (self.p0 + self.p1) / $half
+                <$vec>::new(
+                    (self.p0.x + self.p1.x) / $half,
+                    (self.p0.y + self.p1.y) / $half,
+                )
             }
 
             pub const fn left(&self) -> $scalar {
-                self.p0.x
+                self.p0.0.x
             }
 
             pub const fn right(&self) -> $scalar {
-                self.p1.x
+                self.p1.0.x
             }
 
             pub const fn top(&self) -> $scalar {
-                self.p0.y
+                self.p0.0.y
             }
 
             pub const fn bottom(&self) -> $scalar {
-                self.p1.y
+                self.p1.0.y
             }
 
             pub const fn width(&self) -> $scalar {
-                self.p1.x - self.p0.x
+                self.p1.0.x - self.p0.0.x
             }
 
             pub const fn height(&self) -> $scalar {
-                self.p1.y - self.p0.y
+                self.p1.0.y - self.p0.0.y
             }
 
             pub fn extend(&self, v: $vec) -> Self {
                 Self {
-                    p0: self.p0 - v,
-                    p1: self.p1 + v,
+                    p0: <$vec>::new(self.p0.x - v.x, self.p0.y - v.y),
+                    p1: <$vec>::new(self.p1.x + v.x, self.p1.y + v.y),
                 }
             }
 
@@ -137,39 +124,44 @@ macro_rules! impl_rectangle {
 
             pub fn extend_asymmetric(&self, top_left: $vec, bottom_right: $vec) -> Self {
                 Self {
-                    p0: self.p0 - top_left,
-                    p1: self.p1 + bottom_right,
+                    p0: <$vec>::new(self.p0.x - top_left.x, self.p0.y - top_left.y),
+                    p1: <$vec>::new(self.p1.x + bottom_right.x, self.p1.y + bottom_right.y),
                 }
             }
 
             pub fn translate(&self, v: $vec) -> Self {
                 Self {
-                    p0: self.p0 + v,
-                    p1: self.p1 + v,
+                    p0: <$vec>::new(self.p0.x + v.x, self.p0.y + v.y),
+                    p1: <$vec>::new(self.p1.x + v.x, self.p1.y + v.y),
                 }
             }
 
             pub fn join_point(&self, p: $vec) -> Self {
                 Self {
-                    p0: self.p0.min(p),
-                    p1: self.p1.max(p),
+                    p0: <$vec>::new(self.p0.x.min(p.x), self.p0.y.min(p.y)),
+                    p1: <$vec>::new(self.p1.x.max(p.x), self.p1.y.max(p.y)),
                 }
             }
 
             pub fn join(&self, other: Self) -> Self {
                 Self {
-                    p0: self.p0.min(other.p0),
-                    p1: self.p1.max(other.p1),
+                    p0: <$vec>::new(self.p0.x.min(other.p0.x), self.p0.y.min(other.p0.y)),
+                    p1: <$vec>::new(self.p1.x.max(other.p1.x), self.p1.y.max(other.p1.y)),
                 }
             }
 
             pub fn intersect(&self, other: Self) -> Self {
                 debug_assert!(self.valid() && other.valid());
 
-                let p0 = self.p0.max(other.p0);
-                let p1 = self.p1.min(other.p1).max(p0);
+                let p0x = self.p0.x.max(other.p0.x);
+                let p0y = self.p0.y.max(other.p0.y);
+                let p1x = self.p1.x.min(other.p1.x).max(p0x);
+                let p1y = self.p1.y.min(other.p1.y).max(p0y);
 
-                Self { p0, p1 }
+                Self {
+                    p0: <$vec>::new(p0x, p0y),
+                    p1: <$vec>::new(p1x, p1y),
+                }
             }
 
             pub fn intersect_if_valid(&self, other: Self) -> Self {
@@ -181,21 +173,21 @@ macro_rules! impl_rectangle {
             }
 
             pub const fn intersects(&self, other: Self) -> bool {
-                self.p0.x < other.p1.x
-                    && self.p1.x > other.p0.x
-                    && self.p0.y < other.p1.y
-                    && self.p1.y > other.p0.y
+                self.p0.0.x < other.p1.0.x
+                    && self.p1.0.x > other.p0.0.x
+                    && self.p0.0.y < other.p1.0.y
+                    && self.p1.0.y > other.p0.0.y
             }
 
             pub const fn contains(&self, point: $vec) -> bool {
-                point.x >= self.p0.x
-                    && point.x <= self.p1.x
-                    && point.y >= self.p0.y
-                    && point.y <= self.p1.y
+                point.0.x >= self.p0.0.x
+                    && point.0.x <= self.p1.0.x
+                    && point.0.y >= self.p0.0.y
+                    && point.0.y <= self.p1.0.y
             }
 
             pub const fn valid(&self) -> bool {
-                self.p0.x <= self.p1.x && self.p0.y <= self.p1.y
+                self.p0.0.x <= self.p1.0.x && self.p0.0.y <= self.p1.0.y
             }
         }
     };
@@ -204,52 +196,4 @@ macro_rules! impl_rectangle {
 impl_rectangle!(Vec2, f32, -1.0f32, 2.0f32);
 impl_rectangle!(IVec2, i32, -1i32, 2i32);
 
-impl Eq for Rectangle<IVec2> {}
-
-impl FromSys<Rml_Rectanglef> for Rectanglef {
-    fn from_sys(value: Rml_Rectanglef) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl FromSys<&Rml_Rectanglef> for &Rectanglef {
-    fn from_sys(value: &Rml_Rectanglef) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl IntoSys<Rml_Rectanglef> for Rectanglef {
-    fn into_sys(self) -> Rml_Rectanglef {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl<'a> IntoSys<&'a Rml_Rectanglef> for &'a Rectanglef {
-    fn into_sys(self) -> &'a Rml_Rectanglef {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl FromSys<Rml_Rectanglei> for Rectanglei {
-    fn from_sys(value: Rml_Rectanglei) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl FromSys<&Rml_Rectanglei> for &Rectanglei {
-    fn from_sys(value: &Rml_Rectanglei) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl IntoSys<Rml_Rectanglei> for Rectanglei {
-    fn into_sys(self) -> Rml_Rectanglei {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl<'a> IntoSys<&'a Rml_Rectanglei> for &'a Rectanglei {
-    fn into_sys(self) -> &'a Rml_Rectanglei {
-        unsafe { std::mem::transmute(self) }
-    }
-}
+impl Eq for Rectanglei {}

@@ -1,3 +1,4 @@
+#![allow(incomplete_features)]
 // required: `self: &mut InterfaceHandle<Self>` receivers on interfaces
 #![feature(arbitrary_self_types)]
 // required: `(*mut dyn Trait).to_raw_parts()` and `ptr::from_raw_parts_mut` for fat-pointer bridge
@@ -6,6 +7,7 @@
 #![feature(negative_impls)]
 // optional: used for macro on `mod x;` syntax - can be worked around
 #![feature(proc_macro_hygiene)]
+
 pub mod containers;
 
 pub mod core;
@@ -18,5 +20,5 @@ mod utils;
 
 pub use core::backend_handle::BackendHandle;
 
-pub use glam;
+pub use types::math;
 pub use utils::conversions::{FromSys, IntoSys};

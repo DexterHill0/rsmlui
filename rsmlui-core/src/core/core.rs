@@ -4,7 +4,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use bon::Builder;
 use drop_tree::{DropCtx, drop_tree};
-use glam::IVec2;
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
 use rsmlui_sys::render_interface::RmlRenderInterface;
@@ -14,7 +13,8 @@ use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
 use crate::errors::Error;
 use crate::interfaces::{BorrowedInterface, IntoRawInterface};
-use crate::types::aliases::{FontStyle, FontWeight};
+use crate::math::IVec2;
+use crate::types::style::{FontStyle, FontWeight};
 use crate::utils::conversions::IntoSys;
 
 static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -221,17 +221,17 @@ impl Rml {
             FontFaceSource::Path(path) => core::load_font_face_from_file(
                 path.into(),
                 family.into(),
-                options.style,
+                options.style.into_sys(),
                 options.fallback_face,
-                options.weight,
+                options.weight.into_sys(),
                 options.face_index,
             ),
             FontFaceSource::Memory(data) => core::load_font_face_from_memory(
                 data,
                 family.into(),
-                options.style,
+                options.style.into_sys(),
                 options.fallback_face,
-                options.weight,
+                options.weight.into_sys(),
                 options.face_index,
             ),
         };

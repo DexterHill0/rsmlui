@@ -1,15 +1,89 @@
-use glam::Vec2;
-use rsmlui_macros::rmldoc;
-use rsmlui_sys::{Rml_ColorStop, Rml_NumericValue, Rml_Unit, Rml_Vertex};
+use bitflags::bitflags;
+use rsmlui_macros::{rmldoc, sys_cast};
+use rsmlui_sys::{
+    Rml_BlendMode, Rml_ClipMaskOperation, Rml_ColorStop, Rml_NumericValue, Rml_Unit, Rml_Vertex,
+};
 
+use crate::math::Vec2;
 use crate::types::colour::ColorbPremultiplied;
-use crate::utils::conversions::{FromSys, IntoSys};
 
-pub type Unit = Rml_Unit;
+#[sys_cast(bitflags(from = Rml_Unit, repr = i32))]
+bitflags! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    pub struct Unit: i32 {
+        const KEYWORD = 1 << 0;
+        const STRING  = 1 << 1;
+        const COLOUR  = 1 << 2;
+        const RATIO   = 1 << 3;
+        const NUMBER  = 1 << 4;
+        const PERCENT = 1 << 5;
+        const PX = 1 << 6;
+        const DP = 1 << 7;
+        const VW = 1 << 8;
+        const VH = 1 << 9;
+        const X = 1 << 10;
+        const EM = 1 << 11;
+        const REM = 1 << 12;
+        const INCH = 1 << 13;
+        const CM = 1 << 14;
+        const MM = 1 << 15;
+        const PT = 1 << 16;
+        const PC = 1 << 17;
+        const DEG = 1 << 18;
+        const RAD = 1 << 19;
+        const TRANSFORM = 1 << 20;
+        const TRANSITION = 1 << 21;
+        const ANIMATION = 1 << 22;
+        const DECORATOR = 1 << 23;
+        const FILTER = 1 << 24;
+        const FONTEFFECT = 1 << 25;
+        const COLORSTOPLIST = 1 << 26;
+        const BOXSHADOWLIST = 1 << 27;
+    }
+}
 
+impl Unit {
+    // `BitOr` is not const
+    pub const ANGLE: Unit = Self::DEG.union(Self::RAD);
+    pub const DP_SCALABLE_LENGTH: Unit = Self::DP.union(Self::PPI_UNIT);
+    pub const LENGTH: Unit = Self::PX
+        .union(Self::DP)
+        .union(Self::VW)
+        .union(Self::VH)
+        .union(Self::EM)
+        .union(Self::REM)
+        .union(Self::PPI_UNIT);
+    pub const LENGTH_PERCENT: Unit = Self::LENGTH.union(Self::PERCENT);
+    pub const NUMBER_LENGTH_PERCENT: Unit = Self::NUMBER.union(Self::LENGTH).union(Self::PERCENT);
+    pub const NUMBER_PERCENT: Unit = Self::NUMBER.union(Self::PERCENT);
+    pub const NUMERIC: Unit = Self::NUMBER_LENGTH_PERCENT
+        .union(Self::ANGLE)
+        .union(Self::X);
+    pub const PPI_UNIT: Unit = Self::INCH
+        .union(Self::CM)
+        .union(Self::MM)
+        .union(Self::PT)
+        .union(Self::PC);
+}
+
+#[sys_cast(enum(from = Rml_BlendMode, repr = i32))]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum BlendMode {
+    Blend = 0,
+    Replace = 1,
+}
+
+#[sys_cast(enum(from = Rml_ClipMaskOperation, repr = i32))]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ClipMaskOperation {
+    Set = 0,
+    SetInverse = 1,
+    Intersect = 2,
+}
+
+#[sys_cast(struct(from = Rml_Vertex), gen_ref, gen_slice)]
 #[rmldoc(file = "api_Rml-Vertex.md", name = "Rml::Vertex")]
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
-#[repr(C)]
 pub struct Vertex {
     #[rmldoc(name = "Rml::Vertex::position")]
     pub position: Vec2,
@@ -19,14 +93,14 @@ pub struct Vertex {
     pub tex_coord: Vec2,
 }
 
-#[repr(C)]
+#[sys_cast(struct(from = Rml_NumericValue), gen_ref)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct NumericValue {
     pub number: f32,
     pub unit: Unit,
 }
 
-#[repr(C)]
+#[sys_cast(struct(from = Rml_ColorStop), gen_ref, gen_slice)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ColorStop {
     pub(crate) color: ColorbPremultiplied,
@@ -35,114 +109,3 @@ pub struct ColorStop {
 
 pub type ColorStopList = Vec<ColorStop>;
 pub type ColorStops = [ColorStop];
-
-const _: () = {
-    use std::mem::{align_of, offset_of, size_of};
-
-    rsmlui_sys::const_assert_eq!(size_of::<NumericValue>(), 8);
-    rsmlui_sys::const_assert_eq!(align_of::<NumericValue>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(NumericValue, number), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(NumericValue, unit), 4);
-    rsmlui_sys::const_assert_eq!(size_of::<Rml_NumericValue>(), 8);
-    rsmlui_sys::const_assert_eq!(align_of::<Rml_NumericValue>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_NumericValue, number), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_NumericValue, unit), 4);
-
-    rsmlui_sys::const_assert_eq!(size_of::<ColorStop>(), 12);
-    rsmlui_sys::const_assert_eq!(align_of::<ColorStop>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColorStop, color), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColorStop, position), 4);
-    rsmlui_sys::const_assert_eq!(size_of::<Rml_ColorStop>(), 12);
-    rsmlui_sys::const_assert_eq!(align_of::<Rml_ColorStop>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_ColorStop, color), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_ColorStop, position), 4);
-
-    rsmlui_sys::const_assert_eq!(size_of::<Vertex>(), 20);
-    rsmlui_sys::const_assert_eq!(align_of::<Vertex>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Vertex, position), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Vertex, colour), 8);
-    rsmlui_sys::const_assert_eq!(offset_of!(Vertex, tex_coord), 12);
-    rsmlui_sys::const_assert_eq!(size_of::<Rml_Vertex>(), 20);
-    rsmlui_sys::const_assert_eq!(align_of::<Rml_Vertex>(), 4);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_Vertex, position), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_Vertex, colour), 8);
-    rsmlui_sys::const_assert_eq!(offset_of!(Rml_Vertex, tex_coord), 12);
-};
-
-impl FromSys<Rml_NumericValue> for NumericValue {
-    fn from_sys(value: Rml_NumericValue) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl FromSys<&Rml_NumericValue> for &NumericValue {
-    fn from_sys(value: &Rml_NumericValue) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl IntoSys<Rml_NumericValue> for NumericValue {
-    fn into_sys(self) -> Rml_NumericValue {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl<'a> IntoSys<&'a Rml_NumericValue> for &'a NumericValue {
-    fn into_sys(self) -> &'a Rml_NumericValue {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl FromSys<Rml_ColorStop> for ColorStop {
-    fn from_sys(value: Rml_ColorStop) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl FromSys<&Rml_ColorStop> for &ColorStop {
-    fn from_sys(value: &Rml_ColorStop) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl FromSys<&[Rml_ColorStop]> for &[ColorStop] {
-    fn from_sys(value: &[Rml_ColorStop]) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl IntoSys<Rml_ColorStop> for ColorStop {
-    fn into_sys(self) -> Rml_ColorStop {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl<'a> IntoSys<&'a Rml_ColorStop> for &'a ColorStop {
-    fn into_sys(self) -> &'a Rml_ColorStop {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl FromSys<Rml_Vertex> for Vertex {
-    fn from_sys(value: Rml_Vertex) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl FromSys<&[Rml_Vertex]> for &[Vertex] {
-    fn from_sys(value: &[Rml_Vertex]) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl IntoSys<Rml_Vertex> for Vertex {
-    fn into_sys(self) -> Rml_Vertex {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl<'a> IntoSys<&'a [Rml_Vertex]> for &'a [Vertex] {
-    fn into_sys(self) -> &'a [Rml_Vertex] {
-        unsafe { std::mem::transmute(self) }
-    }
-}

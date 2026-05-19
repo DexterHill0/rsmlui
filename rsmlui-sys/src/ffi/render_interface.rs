@@ -7,7 +7,6 @@ use crate::{
     Rml_CompiledShaderHandle, Rml_LayerHandle, Rml_TextureHandle, const_assert_eq,
 };
 
-
 // Asserts that the layout of the interface bridge matches the layout of the
 // `RustRenderInterface` struct in C++.
 const _: () = {

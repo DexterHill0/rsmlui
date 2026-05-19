@@ -2,15 +2,15 @@ use std::cell::Cell;
 use std::convert::Infallible;
 use std::panic::{RefUnwindSafe, UnwindSafe};
 
-use glam::IVec2;
 use rsmlui_core::core::context::Context;
 use rsmlui_core::errors::Error as CoreError;
 use rsmlui_core::interfaces::BorrowedInterface;
-use rsmlui_core::types::aliases::{KeyCode, KeyModifier};
-use rsmlui_core::{BackendHandle, IntoSys};
-use rsmlui_sys::backend;
+use rsmlui_core::math::IVec2;
+use rsmlui_core::types::input::{KeyCode, KeyModifier};
+use rsmlui_core::{BackendHandle, FromSys, IntoSys};
 use rsmlui_sys::render_interface::RmlRenderInterface;
 use rsmlui_sys::system_interface::RmlSystemInterface;
+use rsmlui_sys::{Rml_Input_KeyIdentifier, Rml_Input_KeyModifier, backend};
 
 use crate::error::BackendError;
 use crate::monolithic::{KeyDownCallback, KeyDownCallbackDyn};
@@ -167,8 +167,8 @@ impl Win32Gl2Backend {
 
         fn trampoline(
             trampoline_context_ptr: *mut rsmlui_sys::context::Context,
-            key: KeyCode,
-            modifier: KeyModifier,
+            key: Rml_Input_KeyIdentifier,
+            modifier: Rml_Input_KeyModifier,
             dp_ratio: f32,
             priority: bool,
         ) -> bool {
@@ -190,8 +190,8 @@ impl Win32Gl2Backend {
 
                         return (*callback_pointer)(
                             tick_context,
-                            key,
-                            modifier,
+                            FromSys::from_sys(key),
+                            FromSys::from_sys(modifier),
                             dp_ratio,
                             priority,
                         );

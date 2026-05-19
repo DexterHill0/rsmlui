@@ -326,9 +326,7 @@ fn make_doc_attributes<'a, A: Iterator<Item = &'a Attribute> + Clone>(
 fn remove_rmldoc_attrs(
     attrs: &[Attribute],
 ) -> syn::Result<impl Iterator<Item = &'_ Attribute> + Clone> {
-    Ok(attrs
-        .iter()
-        .filter(|attr| !attr.path().is_ident("rmldoc")))
+    Ok(attrs.iter().filter(|attr| !attr.path().is_ident("rmldoc")))
 }
 
 fn parse_replace_rmldoc_attr(
@@ -450,7 +448,14 @@ fn make_doc_comments(
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
                 let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?
+                make_doc_attributes(
+                    attrs.iter(),
+                    &parsed_doc_file,
+                    name,
+                    refid,
+                    name_span,
+                    false,
+                )?
             } else {
                 vec![]
             };
@@ -490,7 +495,14 @@ fn make_doc_comments(
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
                 let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?
+                make_doc_attributes(
+                    attrs.iter(),
+                    &parsed_doc_file,
+                    name,
+                    refid,
+                    name_span,
+                    false,
+                )?
             } else {
                 vec![]
             };
@@ -530,7 +542,14 @@ fn make_doc_comments(
 
             let container_attrs = if let Some((ref name, name_span)) = arguments.name {
                 let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
-                make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?
+                make_doc_attributes(
+                    attrs.iter(),
+                    &parsed_doc_file,
+                    name,
+                    refid,
+                    name_span,
+                    false,
+                )?
             } else {
                 vec![]
             };
@@ -633,8 +652,14 @@ fn make_doc_comments(
                 } = item_type;
 
                 let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
-                let container_attrs =
-                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?;
+                let container_attrs = make_doc_attributes(
+                    attrs.iter(),
+                    &parsed_doc_file,
+                    name,
+                    refid,
+                    name_span,
+                    false,
+                )?;
 
                 Ok(quote! {
                     #(#container_attrs)*
@@ -667,8 +692,14 @@ fn make_doc_comments(
                 }
 
                 let refid = arguments.refid.as_ref().map(|(s, _)| s.as_str());
-                let container_attrs =
-                    make_doc_attributes(attrs.iter(), &parsed_doc_file, name, refid, name_span, false)?;
+                let container_attrs = make_doc_attributes(
+                    attrs.iter(),
+                    &parsed_doc_file,
+                    name,
+                    refid,
+                    name_span,
+                    false,
+                )?;
 
                 Ok(quote! {
                     #(#container_attrs)*

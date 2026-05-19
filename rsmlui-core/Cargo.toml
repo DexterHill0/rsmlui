@@ -8,13 +8,18 @@ rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
 rsmlui-macros = { path = "../rsmlui-macros", default-features = false }
 drop-tree = { path = "../drop-tree" }
 
-glam = { version = "0.30.9", features = ["scalar-math"] }
+mint = "0.5.9"
 thiserror = "2.0.17"
 sealed = "0.6.0"
 bon = "3.9.1"
+bitflags = "2.11.1"
+
+glam = { version = "0.33", optional = true }
 
 [features]
 default = ["generate-documentation"]
+
+glam = ["dep:glam"]
 
 generate-documentation = ["rsmlui-macros/generate-documentation"]
 

@@ -10,6 +10,7 @@ proc-macro = true
 quote = "1"
 proc-macro2 = "1"
 syn = { version = "2", features = ["full"] }
+bitflags = "2.11.1"
 
 regex = { version = "1.12.3", optional = true }
 

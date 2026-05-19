@@ -13,6 +13,8 @@ default = ["freetype", "generate-documentation"]
 
 generate-documentation = ["rsmlui-core/generate-documentation"]
 
+glam = ["rsmlui-core/glam"]
+
 freetype = ["rsmlui-core/freetype"]
 
 backend-win32-gl2 = ["rsmlui-backends/backend-win32-gl2"]

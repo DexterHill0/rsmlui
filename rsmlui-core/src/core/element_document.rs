@@ -3,7 +3,8 @@ use drop_tree::drop_tree;
 use rsmlui_macros::rmldoc;
 
 use crate::not_send_sync;
-use crate::types::aliases::{FocusFlag, ModalFlag, ScrollFlag};
+use crate::types::document::{FocusFlag, ModalFlag, ScrollFlag};
+use crate::utils::conversions::IntoSys;
 use crate::utils::raw::{Ptr, Raw};
 
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Builder)]
@@ -53,9 +54,9 @@ impl ElementDocument {
         unsafe {
             rsmlui_sys::element_document::element_document_show(
                 self.raw,
-                options.modal_flag,
-                options.focus_flag,
-                options.scroll_flag,
+                options.modal_flag.into_sys(),
+                options.focus_flag.into_sys(),
+                options.scroll_flag.into_sys(),
             )
         }
     }

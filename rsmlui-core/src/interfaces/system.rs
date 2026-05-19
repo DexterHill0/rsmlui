@@ -1,6 +1,5 @@
 use std::mem::transmute;
 
-use glam::Vec2;
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
 use rsmlui_sys::interfaces::Opaque;
@@ -16,6 +15,7 @@ use sealed::sealed;
 
 use crate::core::log::LogLevel;
 use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
+use crate::math::Vec2;
 use crate::types::cursor::Cursor;
 use crate::utils::conversions::{FromSys, IntoSys};
 

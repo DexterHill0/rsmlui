@@ -1,6 +1,5 @@
 use std::mem::transmute;
 
-use glam::{IVec2, Mat4, Vec2};
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
 use rsmlui_sys::interfaces::Opaque;
@@ -19,13 +18,13 @@ use sealed::sealed;
 
 use crate::containers::dictionary::Dictionary;
 use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
-use crate::types::aliases::{BlendMode, ClipMaskOperation};
+use crate::math::{IVec2, Mat4, Vec2};
 use crate::types::colour::Colorb;
 use crate::types::handles::{
     CompiledFilterHandle, CompiledGeometryHandle, CompiledShaderHandle, LayerHandle, TextureHandle,
 };
 use crate::types::rectangle::Rectanglei;
-use crate::types::renderer::{ColorStopList, ColorStops, Vertex};
+use crate::types::renderer::{BlendMode, ClipMaskOperation, ColorStopList, ColorStops, Vertex};
 use crate::utils::conversions::{FromSys, IntoSys};
 
 /// The receiver type for all [`RenderInterface`] methods.
@@ -197,7 +196,7 @@ pub trait RenderInterface {
         unsafe {
             render_interface_default_render_to_clip_mask(
                 self.bridge_ptr(),
-                operation,
+                operation.into_sys(),
                 geometry.into_sys(),
                 translation.into_sys(),
             )
@@ -240,7 +239,7 @@ pub trait RenderInterface {
                 self.bridge_ptr(),
                 source.into_sys(),
                 destination.into_sys(),
-                blend_mode,
+                blend_mode.into_sys(),
                 filters.into_sys(),
             )
         }
@@ -464,7 +463,7 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
     ) {
         T::render_to_clip_mask(
             self,
-            operation,
+            FromSys::from_sys(operation),
             CompiledGeometryHandle(geometry),
             FromSys::from_sys(translation),
         );
@@ -493,7 +492,7 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
             self,
             LayerHandle(source),
             LayerHandle(destination),
-            blend_mode,
+            FromSys::from_sys(blend_mode),
             FromSys::from_sys(filters),
         );
     }

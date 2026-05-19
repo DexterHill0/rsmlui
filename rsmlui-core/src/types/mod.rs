@@ -1,7 +1,9 @@
-pub mod aliases;
 pub mod colour;
 pub mod cursor;
-pub mod glam;
+pub mod document;
 pub mod handles;
+pub mod input;
+pub mod math;
 pub mod rectangle;
 pub mod renderer;
+pub mod style;

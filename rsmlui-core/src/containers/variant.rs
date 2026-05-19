@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
-use glam::{Vec2, Vec3, Vec4};
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::variant::{self as sys};
 use sealed::sealed;
 
 use crate::FromSys;
+use crate::math::{Vec2, Vec3, Vec4};
 use crate::types::colour::Colorb;
 use crate::types::renderer::ColorStop;
 use crate::utils::raw::{Ptr, Raw};

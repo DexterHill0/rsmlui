@@ -1,28 +1,34 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-use rsmlui_macros::rmldoc;
+use rsmlui_macros::{rmldoc, sys_cast};
 use rsmlui_sys::{Rml_Colourb, Rml_ColourbPremultiplied};
 
-use crate::utils::conversions::{FromSys, IntoSys};
-
 #[rmldoc(file = "api_Rml-Colour.md", name = "Rml::Colour")]
+#[sys_cast(struct(from = Rml_Colourb), gen_ref)]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-#[repr(C)]
 pub struct Colorb {
+    #[sys(red)]
     pub r: u8,
+    #[sys(green)]
     pub g: u8,
+    #[sys(blue)]
     pub b: u8,
+    #[sys(alpha)]
     pub a: u8,
 }
 
 /// Alpha premultiplied version.
 #[rmldoc(file = "api_Rml-Colour.md", name = "Rml::Colour")]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-#[repr(C)]
+#[sys_cast(struct(from = Rml_ColourbPremultiplied), gen_ref)]
 pub struct ColorbPremultiplied {
+    #[sys(red)]
     pub r: u8,
+    #[sys(green)]
     pub g: u8,
+    #[sys(blue)]
     pub b: u8,
+    #[sys(alpha)]
     pub a: u8,
 }
 
@@ -204,58 +210,14 @@ macro_rules! impl_colour_ops {
 impl_colour_ops!(Colorb);
 impl_colour_ops!(ColorbPremultiplied);
 
-// Hardcoded layout assertions for safe transmutes.
-// If the C++ side changes and bindgen regenerates, these will catch the
-// mismatch before any transmute silently reinterprets wrong bytes.
-//
-// I think ideally these would be done with something like bytemuck, but
-// deriving bytemuck on bindgen structs is a bit difficult.
-const _: () = {
-    use std::mem::{align_of, offset_of, size_of};
-    rsmlui_sys::const_assert_eq!(size_of::<Colorb>(), 4);
-    rsmlui_sys::const_assert_eq!(align_of::<Colorb>(), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, r), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, g), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, b), 2);
-    rsmlui_sys::const_assert_eq!(offset_of!(Colorb, a), 3);
-    rsmlui_sys::const_assert_eq!(size_of::<Rml_Colourb>(), 4);
-    rsmlui_sys::const_assert_eq!(align_of::<Rml_Colourb>(), 1);
-    rsmlui_sys::const_assert_eq!(size_of::<ColorbPremultiplied>(), 4);
-    rsmlui_sys::const_assert_eq!(align_of::<ColorbPremultiplied>(), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, r), 0);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, g), 1);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, b), 2);
-    rsmlui_sys::const_assert_eq!(offset_of!(ColorbPremultiplied, a), 3);
-    rsmlui_sys::const_assert_eq!(size_of::<Rml_ColourbPremultiplied>(), 4);
-    rsmlui_sys::const_assert_eq!(align_of::<Rml_ColourbPremultiplied>(), 1);
-};
+// impl FromSys<Rml_ColourbPremultiplied> for ColorbPremultiplied {
+//     fn from_sys(value: Rml_ColourbPremultiplied) -> Self {
+//         mold::cast(value)
+//     }
+// }
 
-impl FromSys<Rml_Colourb> for Colorb {
-    fn from_sys(value: Rml_Colourb) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl FromSys<&Rml_Colourb> for &Colorb {
-    fn from_sys(value: &Rml_Colourb) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl IntoSys<Rml_Colourb> for Colorb {
-    fn into_sys(self) -> Rml_Colourb {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-
-impl FromSys<Rml_ColourbPremultiplied> for ColorbPremultiplied {
-    fn from_sys(value: Rml_ColourbPremultiplied) -> Self {
-        unsafe { std::mem::transmute(value) }
-    }
-}
-
-impl IntoSys<Rml_ColourbPremultiplied> for ColorbPremultiplied {
-    fn into_sys(self) -> Rml_ColourbPremultiplied {
-        unsafe { std::mem::transmute(self) }
-    }
-}
+// impl IntoSys<Rml_ColourbPremultiplied> for ColorbPremultiplied {
+//     fn into_sys(self) -> Rml_ColourbPremultiplied {
+//         mold::cast(self)
+//     }
+// }

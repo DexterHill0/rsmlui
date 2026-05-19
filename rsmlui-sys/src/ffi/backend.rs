@@ -1,4 +1,3 @@
-
 #[cxx::bridge]
 mod ffi {
     #[namespace = "Rml::Input"]
