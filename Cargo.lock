@@ -350,12 +350,6 @@ checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
 name = "glam"
-version = "0.30.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd47b05dddf0005d850e5644cae7f2b14ac3df487979dbfff3b56f20b1a6ae46"
-
-[[package]]
-name = "glam"
 version = "0.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fb167719045debebe9f532320accc7b5c993c5a3b813f5696a11d5ca7bdc57b"
@@ -561,7 +555,6 @@ dependencies = [
 name = "rsmlui-backends"
 version = "0.1.0"
 dependencies = [
- "glam 0.30.9",
  "rsmlui-core",
  "rsmlui-sys",
  "thiserror",
@@ -574,7 +567,7 @@ dependencies = [
  "bitflags",
  "bon",
  "drop-tree",
- "glam 0.33.0",
+ "glam",
  "mint",
  "rsmlui-macros",
  "rsmlui-sys",

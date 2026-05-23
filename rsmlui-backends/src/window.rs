@@ -1,7 +1,7 @@
 use std::error::Error as StdError;
 
-use glam::IVec2;
 use rsmlui_core::core::context::Context;
+use rsmlui_core::math::IVec2;
 
 /// Allows custom windowing and render-loop implementations.
 ///
@@ -35,5 +35,5 @@ pub trait WindowDriver {
     fn present_frame(&mut self) -> Result<(), Self::Error>;
 
     /// Current window dimensions in physical pixels.
-    fn dimensions(&self) -> IVec2;
+    fn dimensions(&self) -> impl Into<IVec2>;
 }
