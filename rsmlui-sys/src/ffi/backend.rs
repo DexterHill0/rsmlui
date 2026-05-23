@@ -18,6 +18,7 @@ mod ffi {
         type Vector2i = crate::Rml_Vector2i;
     }
 
+    #[cfg(feature = "backend-win32-gl2")]
     #[namespace = "rsmlui::backend"]
     unsafe extern "C++" {
         include!("rsmlui/Backend.h");
@@ -47,7 +48,9 @@ mod ffi {
     }
 }
 
+pub use ffi::Context;
+#[cfg(feature = "backend-win32-gl2")]
 pub use ffi::{
-    Context, begin_frame, get_render_interface, get_system_interface, initialize, present_frame,
+    begin_frame, get_render_interface, get_system_interface, initialize, present_frame,
     process_events, request_exit, shutdown,
 };
