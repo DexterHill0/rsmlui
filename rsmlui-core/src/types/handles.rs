@@ -8,21 +8,51 @@ use rsmlui_sys::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CompiledGeometryHandle(pub(crate) Rml_CompiledGeometryHandle);
 
+impl CompiledGeometryHandle {
+    pub const fn new(id: usize) -> Self {
+        Self(id)
+    }
+}
+
 #[sys_cast(struct(transparent, from = Rml_CompiledShaderHandle))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CompiledShaderHandle(pub(crate) Rml_CompiledShaderHandle);
+
+impl CompiledShaderHandle {
+    pub const fn new(id: usize) -> Self {
+        Self(id)
+    }
+}
 
 #[sys_cast(struct(transparent, from = Rml_CompiledFilterHandle), gen_slice)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct CompiledFilterHandle(pub(crate) Rml_CompiledFilterHandle);
 
+impl CompiledFilterHandle {
+    pub const fn new(id: usize) -> Self {
+        Self(id)
+    }
+}
+
 #[sys_cast(struct(transparent, from = Rml_LayerHandle))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LayerHandle(pub(crate) Rml_LayerHandle);
 
+impl LayerHandle {
+    pub const fn new(id: usize) -> Self {
+        Self(id)
+    }
+}
+
 #[sys_cast(struct(transparent, from = Rml_TextureHandle))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TextureHandle(pub(crate) Rml_TextureHandle);
+
+impl TextureHandle {
+    pub const fn new(id: usize) -> Self {
+        Self(id)
+    }
+}
 
 impl TextureHandle {
     // As per docs:
