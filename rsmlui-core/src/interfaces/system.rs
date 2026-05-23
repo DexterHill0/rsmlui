@@ -85,7 +85,9 @@ pub trait SystemInterface {
     where
         Self: Sized,
     {
-        unsafe { system_interface_default_log_message(self.bridge_ptr(), level, message) }
+        unsafe {
+            system_interface_default_log_message(self.bridge_ptr(), level.into_sys(), message)
+        }
     }
 
     #[rmldoc(name = "Rml::SystemInterface::SetMouseCursor")]
@@ -162,7 +164,7 @@ unsafe impl<T: SystemInterface> SystemInterfaceBridge for SystemInterfaceHandle<
 
     #[inline]
     unsafe fn log_message(&mut self, level: rsmlui_sys::Rml_Log_Type, message: &str) -> bool {
-        T::log_message(self, level, message)
+        T::log_message(self, FromSys::from_sys(level), message)
     }
 
     #[inline]
