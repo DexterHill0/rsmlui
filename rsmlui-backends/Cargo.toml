@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
 rsmlui-core = { path = "../rsmlui-core", default-features = false }
+
 thiserror = "2.0.17"
 
 [features]

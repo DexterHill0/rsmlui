@@ -1,6 +1,7 @@
 #pragma once
 #include <RmlUi/Core/SystemInterface.h>
 
+#include "RmlUi/Core/FileInterface.h"
 #include "RmlUi/Core/RenderInterface.h"
 
 namespace rsmlui {
@@ -101,3 +102,27 @@ struct RustRenderInterface: public Rml::RenderInterface {
     void* rust_data;
 };
 } // namespace rsmlui::render_interface
+
+namespace rsmlui::file_interface {
+
+struct RustFileInterface: public Rml::FileInterface {
+    RustFileInterface(void* rust_meta, void* rust_data) :
+        rust_meta(rust_meta),
+        rust_data(rust_data) {}
+
+    auto Open(const Rml::String& path) -> Rml::FileHandle override;
+    void Close(Rml::FileHandle file) override;
+    auto Read(void* buffer, size_t size, Rml::FileHandle file)
+        -> size_t override;
+    auto Seek(Rml::FileHandle file, long offset, int origin) -> bool override;
+    auto Tell(Rml::FileHandle file) -> size_t override;
+    auto Length(Rml::FileHandle file) -> size_t override;
+    auto LoadFile(const Rml::String& path, Rml::String& out_data)
+        -> bool override;
+
+  public:
+    void* rust_meta;
+    void* rust_data;
+};
+
+} // namespace rsmlui::file_interface

@@ -144,8 +144,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::Family::* \
   Rml::FamilyBase \
   Rml::FamilyBase::* \
-  Rml::FileInterface \
-  Rml::FileInterface::* \
   Rml::Filter \
   Rml::Filter::* \
   Rml::FilterDeclaration \

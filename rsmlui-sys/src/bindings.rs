@@ -66,6 +66,7 @@ pub type Rml_Vector4i = Rml_Vector4<::std::os::raw::c_int>;
 pub type Rml_Vector4f = Rml_Vector4<f32>;
 #[doc = "Templated class for a generic axis-aligned rectangle."]
 pub type Rml_Rectanglei = Rml_Rectangle<::std::os::raw::c_int>;
+pub type Rml_FileHandle = usize;
 pub type Rml_TextureHandle = usize;
 pub type Rml_CompiledGeometryHandle = usize;
 pub type Rml_CompiledFilterHandle = usize;
@@ -555,8 +556,31 @@ const _: () = {
     ["Offset of field: rsmlui_render_interface_RustRenderInterface::rust_data"]
         [::std::mem::offset_of!(rsmlui_render_interface_RustRenderInterface, rust_data) - 16usize];
 };
+#[repr(C)]
+pub struct rsmlui_file_interface_RustFileInterface__bindgen_vtable(::std::os::raw::c_void);
+#[repr(C)]
+pub struct rsmlui_file_interface_RustFileInterface {
+    pub vtable_: *const rsmlui_file_interface_RustFileInterface__bindgen_vtable,
+    pub rust_meta: *mut ::std::os::raw::c_void,
+    pub rust_data: *mut ::std::os::raw::c_void,
+}
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of rsmlui_file_interface_RustFileInterface"]
+        [::std::mem::size_of::<rsmlui_file_interface_RustFileInterface>() - 24usize];
+    ["Alignment of rsmlui_file_interface_RustFileInterface"]
+        [::std::mem::align_of::<rsmlui_file_interface_RustFileInterface>() - 8usize];
+    ["Offset of field: rsmlui_file_interface_RustFileInterface::rust_meta"]
+        [::std::mem::offset_of!(rsmlui_file_interface_RustFileInterface, rust_meta) - 8usize];
+    ["Offset of field: rsmlui_file_interface_RustFileInterface::rust_data"]
+        [::std::mem::offset_of!(rsmlui_file_interface_RustFileInterface, rust_data) - 16usize];
+};
 pub type Layouts_SystemInterfaceLayoutGuard = rsmlui_system_interface_RustSystemInterface;
 pub type Layouts_RenderInterfaceLayoutGuard = rsmlui_render_interface_RustRenderInterface;
+pub type Layouts_FileInterfaceLayoutGuard = rsmlui_file_interface_RustFileInterface;
+pub const Misc_STDIO_SEEK_CUR: i32 = 1;
+pub const Misc_STDIO_SEEK_END: i32 = 2;
+pub const Misc_STDIO_SEEK_SET: i32 = 0;
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
 const _: () = {
     ["Size of template specialization: Rml_Vector2_open0_float_close0"]

@@ -6,6 +6,7 @@ use bon::Builder;
 use drop_tree::{DropCtx, drop_tree};
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
+use rsmlui_sys::file_interface::RmlFileInterface;
 use rsmlui_sys::render_interface::RmlRenderInterface;
 use rsmlui_sys::system_interface::RmlSystemInterface;
 
@@ -155,6 +156,25 @@ impl Rml {
         }
     }
 
+    #[rmldoc(name = "Rml::SetFileInterface")]
+    pub fn set_file_interface(&self, interface: Option<impl IntoRawInterface<RmlFileInterface>>) {
+        let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw().0);
+
+        unsafe { core::set_file_interface(raw) }
+    }
+
+    /// See [`get_file_interface`](Rml::get_file_interface) for lifetime semantics.
+    #[rmldoc(name = "Rml::GetFileInterface")]
+    pub fn get_file_interface(&self) -> Option<BorrowedInterface<'_, RmlFileInterface>> {
+        let ptr = core::get_file_interface();
+
+        if ptr.is_null() {
+            None
+        } else {
+            Some(BorrowedInterface::new(ptr))
+        }
+    }
+
     #[rmldoc(name = "Rml::Initialise")]
     pub fn initialise(&self) -> Result<(), Error> {
         if is_core_initialized() {
@@ -167,9 +187,11 @@ impl Rml {
         if self.get_system_interface().is_none() {
             return Err(Error::NoSystemInterface);
         }
+        if self.get_file_interface().is_none() {
+            return Err(Error::NoFileInterface);
+        }
         // TODO: add the following
         // if self.get_font_interface().is_none() {}
-        // if self.get_file_interface().is_none() {}
 
         if !core::initialise() {
             return Err(Error::InitializationFailed);

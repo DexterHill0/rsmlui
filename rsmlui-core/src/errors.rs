@@ -1,7 +1,12 @@
 use thiserror::Error;
 
+use crate::interfaces::file::FileError;
+
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error(transparent)]
+    File(#[from] FileError),
+
     #[error("failed to initialize rmlui")]
     InitializationFailed,
 
@@ -12,6 +17,8 @@ pub enum Error {
     NoRenderInterface,
     #[error("no system interface installed")]
     NoSystemInterface,
+    #[error("no file interface installed")]
+    NoFileInterface,
 
     #[error("rsmlui not initialized")]
     NotInitialized,

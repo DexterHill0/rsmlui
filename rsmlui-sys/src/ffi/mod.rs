@@ -5,6 +5,7 @@ pub mod core;
 pub mod dictionary;
 pub mod element_document;
 pub mod extern_types;
+pub mod file_interface;
 pub mod interfaces;
 pub mod math;
 pub mod render_interface;

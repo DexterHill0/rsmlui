@@ -37,6 +37,14 @@ inline auto get_render_interface() -> Rml::RenderInterface* {
     return Rml::GetRenderInterface();
 }
 
+inline void set_file_interface(Rml::FileInterface* file_interface) {
+    Rml::SetFileInterface(file_interface);
+}
+
+inline auto get_file_interface() -> Rml::FileInterface* {
+    return Rml::GetFileInterface();
+}
+
 inline auto load_font_face_from_file(
     rust::String path,
     rust::String family,

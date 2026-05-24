@@ -6,6 +6,8 @@ mod ffi {
         type RmlSystemInterface = crate::ffi::system_interface::RmlSystemInterface;
         #[cxx_name = "RenderInterface"]
         type RmlRenderInterface = crate::ffi::render_interface::RmlRenderInterface;
+        #[cxx_name = "FileInterface"]
+        type RmlFileInterface = crate::file_interface::RmlFileInterface;
 
         type Context = crate::context::Context;
 
@@ -48,9 +50,11 @@ mod ffi {
 
         unsafe fn set_system_interface(system_interface: *mut RmlSystemInterface);
         unsafe fn set_render_interface(render_interface: *mut RmlRenderInterface);
+        unsafe fn set_file_interface(file_interface: *mut RmlFileInterface);
 
         fn get_system_interface() -> *mut RmlSystemInterface;
         fn get_render_interface() -> *mut RmlRenderInterface;
+        fn get_file_interface() -> *mut RmlFileInterface;
     }
 }
 
@@ -78,7 +82,8 @@ mod ffi {
 // }
 
 pub use ffi::{
-    FontStyle, FontWeight, create_context, get_render_interface, get_system_interface, get_version,
-    initialise, load_font_face_from_file, load_font_face_from_memory, set_render_interface,
-    set_system_interface, shutdown,
+    FontStyle, FontWeight, create_context, get_file_interface, get_render_interface,
+    get_system_interface, get_version, initialise, load_font_face_from_file,
+    load_font_face_from_memory, set_file_interface, set_render_interface, set_system_interface,
+    shutdown,
 };

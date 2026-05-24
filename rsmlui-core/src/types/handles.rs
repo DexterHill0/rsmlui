@@ -1,6 +1,6 @@
 use rsmlui_macros::sys_cast;
 use rsmlui_sys::{
-    Rml_CompiledFilterHandle, Rml_CompiledGeometryHandle, Rml_CompiledShaderHandle,
+    Rml_CompiledFilterHandle, Rml_CompiledGeometryHandle, Rml_CompiledShaderHandle, Rml_FileHandle,
     Rml_LayerHandle, Rml_TextureHandle,
 };
 
@@ -49,14 +49,24 @@ impl LayerHandle {
 pub struct TextureHandle(pub(crate) Rml_TextureHandle);
 
 impl TextureHandle {
+    // As per docs:
+    // > The value zero (0) is reserved for invalid handles, and should only be used to indicate an error while trying to load the texture.
+    /// Represents an invalid texture handle. It should only be used to indicate an error while trying to load the texture.
+    pub const INVALID: Self = Self(0);
+
     pub const fn new(id: usize) -> Self {
         Self(id)
     }
 }
 
-impl TextureHandle {
-    // As per docs:
-    // > The value zero (0) is reserved for invalid handles, and should only be used to indicate an error while trying to load the texture.
-    /// Represents an invalid texture handle. It should only be used to indicate an error while trying to load the texture.
+#[sys_cast(struct(transparent, from = Rml_FileHandle))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FileHandle(pub(crate) Rml_FileHandle);
+
+impl FileHandle {
     pub const INVALID: Self = Self(0);
+
+    pub const fn new(id: usize) -> Self {
+        Self(id)
+    }
 }

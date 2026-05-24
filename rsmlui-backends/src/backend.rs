@@ -2,6 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use rsmlui_core::BackendHandle;
 use rsmlui_core::core::context::Context;
+use rsmlui_core::interfaces::file::{FileInterface, OwnedFileInterface};
 use rsmlui_core::interfaces::renderer::{OwnedRenderInterface, RenderInterface};
 use rsmlui_core::interfaces::system::{OwnedSystemInterface, SystemInterface};
 
@@ -12,9 +13,16 @@ use crate::window::WindowDriver;
 ///
 /// You should not need to name this type directly. Access should
 /// happen through the `Backend` value itself.
-pub struct BackendInner<S: SystemInterface, R: RenderInterface, W: WindowDriver> {
+pub struct BackendInner<S, R, F, W>
+where
+    S: SystemInterface,
+    R: RenderInterface,
+    F: FileInterface,
+    W: WindowDriver,
+{
     pub system: OwnedSystemInterface<S>,
     pub render: OwnedRenderInterface<R>,
+    pub file: OwnedFileInterface<F>,
     pub window: W,
 }
 
@@ -62,24 +70,36 @@ pub struct BackendInner<S: SystemInterface, R: RenderInterface, W: WindowDriver>
 ///
 /// [`Rml`]: rsmlui_core::core::core::Rml
 /// [`Rml::initialise`]: rsmlui_core::core::core::Rml::initialise
-pub struct Backend<S: SystemInterface, R: RenderInterface, W: WindowDriver> {
+pub struct Backend<S, R, F, W>
+where
+    S: SystemInterface,
+    R: RenderInterface,
+    F: FileInterface,
+    W: WindowDriver,
+{
     // Non-owning pointer into the heap allocation owned by `handle`'s closure.
     // Valid for exactly as long as `handle` keeps the Rc alive.
-    inner: *mut BackendInner<S, R, W>,
+    inner: *mut BackendInner<S, R, F, W>,
     handle: BackendHandle,
 }
 
-impl<S: SystemInterface + 'static, R: RenderInterface + 'static, W: WindowDriver + 'static>
-    Backend<S, R, W>
+impl<S, R, F, W> Backend<S, R, F, W>
+where
+    S: SystemInterface + 'static,
+    R: RenderInterface + 'static,
+    F: FileInterface + 'static,
+    W: WindowDriver + 'static,
 {
     pub fn new(
         system: OwnedSystemInterface<S>,
         render: OwnedRenderInterface<R>,
+        file: OwnedFileInterface<F>,
         window: W,
     ) -> Self {
         let raw = Box::into_raw(Box::new(BackendInner {
             system,
             render,
+            file,
             window,
         }));
 
@@ -134,10 +154,16 @@ impl<S: SystemInterface + 'static, R: RenderInterface + 'static, W: WindowDriver
     }
 }
 
-impl<S: SystemInterface, R: RenderInterface, W: WindowDriver> Deref for Backend<S, R, W> {
-    type Target = BackendInner<S, R, W>;
+impl<S, R, F, W> Deref for Backend<S, R, F, W>
+where
+    S: SystemInterface,
+    R: RenderInterface,
+    F: FileInterface,
+    W: WindowDriver,
+{
+    type Target = BackendInner<S, R, F, W>;
 
-    fn deref(&self) -> &BackendInner<S, R, W> {
+    fn deref(&self) -> &BackendInner<S, R, F, W> {
         // Safety: `inner` points into the allocation owned by `handle`'s closure.
         // It is valid for the entire lifetime of `Backend` because `handle` keeps
         // the Rc alive. The closure (and its allocation) only fires after `Backend`
@@ -146,8 +172,14 @@ impl<S: SystemInterface, R: RenderInterface, W: WindowDriver> Deref for Backend<
     }
 }
 
-impl<S: SystemInterface, R: RenderInterface, W: WindowDriver> DerefMut for Backend<S, R, W> {
-    fn deref_mut(&mut self) -> &mut BackendInner<S, R, W> {
+impl<S, R, F, W> DerefMut for Backend<S, R, F, W>
+where
+    S: SystemInterface,
+    R: RenderInterface,
+    F: FileInterface,
+    W: WindowDriver,
+{
+    fn deref_mut(&mut self) -> &mut BackendInner<S, R, F, W> {
         // Safety: same as `Deref`. Exclusive access guaranteed by `&mut self`.
         unsafe { &mut *self.inner }
     }
