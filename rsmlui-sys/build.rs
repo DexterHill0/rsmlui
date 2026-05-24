@@ -2,7 +2,6 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use bindgen::callbacks::ParseCallbacks;
 use cxx_build::CFG;
 
 // TODO: mutually exclusive but dont kill rust analyzer
@@ -61,9 +60,9 @@ fn create_dummy_sources_from_headers(dummy_dir: &Path, ignore: &[&str]) -> Vec<S
     let mut cpp_files = Vec::new();
 
     if dummy_dir.exists() {
-        fs::remove_dir_all(&dummy_dir).unwrap();
+        fs::remove_dir_all(dummy_dir).unwrap();
     }
-    fs::create_dir_all(&dummy_dir).unwrap();
+    fs::create_dir_all(dummy_dir).unwrap();
 
     for entry in glob::glob("./src/include/rsmlui/**/*.h").expect("failed to read glob pattern") {
         match entry {
@@ -210,23 +209,28 @@ fn main() {
     bindings.write_to_file("src/bindings.rs").unwrap();
 
     let cpp_files_dir: PathBuf = "dummy_sources".into();
-    let mut cpp_files = create_dummy_sources_from_headers(&cpp_files_dir, &["Bindings.h"]);
+    let cpp_files = create_dummy_sources_from_headers(&cpp_files_dir, &["Bindings.h"]);
 
     // cpp_files.push("src/cxx/SystemInterface.cpp".into());
 
     // cxx MUST come before cmake so the codegenned headers exist
     // when cmake does the build, as these headers are part of the `compile_commands.json`
     // used for intellisense
-    let mut bridge = cxx_build::bridges(&[
+    let mut bridge_files = vec![
         "src/ffi/core.rs",
         "src/ffi/render_interface.rs",
         "src/ffi/system_interface.rs",
-        "src/ffi/backend.rs",
         "src/ffi/context.rs",
         "src/ffi/element_document.rs",
         "src/ffi/variant.rs",
         "src/ffi/dictionary.rs",
-    ]);
+        "src/ffi/file_interface.rs",
+    ];
+
+    #[cfg(feature = "backend-win32-gl2")]
+    bridge_files.push("src/ffi/backend.rs");
+
+    let mut bridge = cxx_build::bridges(bridge_files);
 
     for file in cpp_files {
         bridge.file(file);
@@ -289,6 +293,7 @@ fn main() {
         cmake_build_dir.display()
     );
 
+    println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=CMakeLists.txt");
     println!("cargo:rerun-if-changed=src/include/rsmlui");
