@@ -19,6 +19,7 @@ pub mod types;
 mod utils;
 
 pub use core::backend_handle::BackendHandle;
+pub use core::log::{assert, debug, error, info, warning};
 
 pub use types::math;
 pub use utils::conversions::{FromSys, IntoSys};

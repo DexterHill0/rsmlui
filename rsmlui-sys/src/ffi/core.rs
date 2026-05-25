@@ -20,6 +20,13 @@ mod ffi {
         type FontStyle = crate::Rml_Style_FontStyle;
     }
 
+    #[namespace = "rsmlui::log"]
+    extern "C++" {
+        include!("rsmlui/Utils.h");
+
+        type RmlLogType = crate::Rml_Log_Type;
+    }
+
     #[namespace = "rsmlui"]
     unsafe extern "C++" {
         include!("rsmlui/Core.h");
@@ -45,6 +52,8 @@ mod ffi {
             weight: FontWeight,
             face_index: i32,
         ) -> bool;
+
+        fn log_message(ty: RmlLogType, message: String);
 
         fn create_context(name: String, dimensions: Vector2i) -> *mut Context;
 
@@ -84,6 +93,6 @@ mod ffi {
 pub use ffi::{
     FontStyle, FontWeight, create_context, get_file_interface, get_render_interface,
     get_system_interface, get_version, initialise, load_font_face_from_file,
-    load_font_face_from_memory, set_file_interface, set_render_interface, set_system_interface,
-    shutdown,
+    load_font_face_from_memory, log_message, set_file_interface, set_render_interface,
+    set_system_interface, shutdown,
 };

@@ -3,6 +3,7 @@
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/Math.h>
 
+#include "RmlUi/Core/Log.h"
 #include "rust/cxx.h"
 
 namespace rsmlui {
@@ -79,6 +80,10 @@ inline auto load_font_face_from_memory(
         fallback_face,
         face_index
     );
+}
+
+inline void log_message(Rml::Log::Type type, rust::String message) {
+    Rml::Log::Message(type, "%s", message.c_str());
 }
 
 inline void shutdown() {

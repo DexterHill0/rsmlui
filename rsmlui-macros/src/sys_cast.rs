@@ -426,7 +426,7 @@ fn generate_owned_from_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N
         impl crate::FromSys<#sys_type> for #item_name {
             #[inline(always)]
             fn from_sys(value: #sys_type) -> Self {
-                assert!(
+                ::core::assert!(
                     unsafe { <Self as crate::utils::conversions::SysCast>::validate(&raw const value) },
                     concat!("sys_cast invariant violated: invalid sys value for `", stringify!(#item_name), "`"),
                 );
@@ -575,7 +575,7 @@ fn generate_struct(
         rust_name: &Ident,
     ) -> TokenStream2 {
         quote! {
-            assert!(
+            ::core::assert!(
                 ::std::mem::offset_of!(#struct_name, #rust_name)
                     == ::std::mem::offset_of!(#sys_type, #sys_name),
                 concat!(
@@ -594,7 +594,7 @@ fn generate_struct(
         sys_type: &S,
     ) -> TokenStream2 {
         quote! {
-            assert!(
+            ::core::assert!(
                 ::std::mem::size_of::<#rust_type>()
                     == ::std::mem::size_of::<#sys_type>(),
                 concat!(
@@ -604,7 +604,7 @@ fn generate_struct(
                     stringify!(#sys_type), "`"
                 )
             );
-            assert!(
+            ::core::assert!(
                 ::std::mem::align_of::<#rust_type>()
                     == ::std::mem::align_of::<#sys_type>(),
                 concat!(
@@ -698,7 +698,7 @@ fn generate_struct(
                         .iter()
                         .map(|field| {
                             quote! {
-                                assert!(
+                                ::core::assert!(
                                     ::std::mem::offset_of!(#inner_type, #field)
                                         == ::std::mem::offset_of!(#sys_type, #field),
                                     concat!(
@@ -926,7 +926,7 @@ fn generate_enum(
             let rust = &m.rust;
             let sys = &m.sys;
             quote! {
-                assert!(
+                ::core::assert!(
                     #enum_name::#rust as #repr == #sys_type::#sys as #repr,
                     concat!(
                         "discriminant mismatch: `",
@@ -963,11 +963,11 @@ fn generate_enum(
         #input
 
         const _: () = {
-            assert!(
+            ::core::assert!(
                 ::std::mem::size_of::<#enum_name>() == ::std::mem::size_of::<#sys_type>(),
                 concat!("size mismatch: `", stringify!(#enum_name), "` vs `", stringify!(#sys_type), "`")
             );
-            assert!(
+            ::core::assert!(
                 ::std::mem::align_of::<#enum_name>() == ::std::mem::align_of::<#sys_type>(),
                 concat!("alignment mismatch: `", stringify!(#enum_name), "` vs `", stringify!(#sys_type), "`")
             );
@@ -1188,7 +1188,7 @@ fn generate_bitflags(
             let rust = &m.rust;
 
             quote! {
-                assert!(
+                ::core::assert!(
                     #flags_name::#rust.bits() == #sys_type::#sys.0,
                     concat!(
                         "flag value mismatch: `",
@@ -1212,11 +1212,11 @@ fn generate_bitflags(
         #macro_invocation
 
         const _: () = {
-            assert!(
+            ::core::assert!(
                 ::std::mem::size_of::<#flags_name>() == ::std::mem::size_of::<#sys_type>(),
                 concat!("size mismatch: `", stringify!(#flags_name), "` vs `", stringify!(#sys_type), "`")
             );
-            assert!(
+            ::core::assert!(
                 ::std::mem::align_of::<#flags_name>() == ::std::mem::align_of::<#sys_type>(),
                 concat!("alignment mismatch: `", stringify!(#flags_name), "` vs `", stringify!(#sys_type), "`")
             );

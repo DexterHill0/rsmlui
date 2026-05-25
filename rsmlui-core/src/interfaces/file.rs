@@ -136,8 +136,9 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
     unsafe fn open(&mut self, path: &str) -> rsmlui_sys::Rml_FileHandle {
         match T::open(self, Path::new(path)) {
             Ok(handle) => handle.into_sys(),
-            Err(..) => {
-                // TODO: log error
+            Err(error) => {
+                crate::error!("[FileInterface] failed to open file {}: {:?}", path, error);
+
                 FileHandle::INVALID.into_sys()
             },
         }
@@ -147,8 +148,8 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
     unsafe fn close(&mut self, file: rsmlui_sys::Rml_FileHandle) {
         match T::close(self, FromSys::from_sys(file)) {
             Ok(..) => {},
-            Err(..) => {
-                // TODO: log error
+            Err(error) => {
+                crate::error!("[FileInterface] failed to close file: {:?}", error);
             },
         }
     }
@@ -167,8 +168,9 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
         #[allow(clippy::manual_unwrap_or_default, clippy::manual_unwrap_or)]
         match T::read(self, FromSys::from_sys(file), buf) {
             Ok(n) => n,
-            Err(..) => {
-                // TODO: log error
+            Err(error) => {
+                crate::error!("[FileInterface] failed to read file: {:?}", error);
+
                 0
             },
         }
@@ -185,8 +187,9 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
 
         match T::seek(self, FromSys::from_sys(file), seek) {
             Ok(..) => true,
-            Err(..) => {
-                // TODO: log error
+            Err(error) => {
+                crate::error!("[FileInterface] failed to seek file: {:?}", error);
+
                 false
             },
         }
@@ -210,8 +213,9 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
 
                 true
             },
-            Err(..) => {
-                // TODO: log error
+            Err(error) => {
+                crate::error!("[FileInterface] failed to load file {}: {:?}", path, error);
+
                 false
             },
         }
