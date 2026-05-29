@@ -1,4 +1,4 @@
-#[cfg(feature = "backend-win32-gl2")]
+#[cfg(any(all(target_os = "windows", feature = "renderer-gl2")))]
 pub mod backend;
 pub mod context;
 pub mod core;

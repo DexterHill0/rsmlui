@@ -12,4 +12,6 @@ thiserror = "2.0.17"
 [features]
 default = []
 
-backend-win32-gl2 = ["rsmlui-sys/backend-win32-gl2"]
+renderer-gl2 = ["rsmlui-sys/renderer-gl2"]
+
+freetype = ["rsmlui-sys/freetype"]

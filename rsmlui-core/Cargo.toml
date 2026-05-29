@@ -22,12 +22,3 @@ default = ["generate-documentation"]
 glam = ["dep:glam"]
 
 generate-documentation = ["rsmlui-macros/generate-documentation"]
-
-# cosmic-text = ["rsmlui-sys/cosmic-text"]
-freetype = ["rsmlui-sys/freetype"]
-
-# system-win32 = ["rsmlui-sys/system-win32"]
-
-# renderer-gl2 = ["rsmlui-sys/renderer-gl2"]
-
-# backend-win32-gl2 = ["rsmlui-sys/system-win32", "rsmlui-sys/renderer-gl2"]

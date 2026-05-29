@@ -19,7 +19,7 @@ const DEFINTIONS: &[(&str, &str)] = &[
     #[cfg(not(feature = "freetype"))]
     ("RMLUI_FONT_ENGINE", "none"),
 
-    #[cfg(not(feature = "system-win32"))]
+    #[cfg(not(target_os = "windows"))]
     ("RMLUI_DISABLE_INCLUDE_WINDOWS", "ON"),
 
     ("BUILD_SHARED_LIBS", "OFF"),
@@ -32,7 +32,7 @@ const DEFINTIONS: &[(&str, &str)] = &[
 ];
 
 fn build_rmlui_renderer(bridge: &mut cc::Build) {
-    #[cfg(feature = "system-win32")]
+    #[cfg(target_os = "windows")]
     {
         bridge.file("RmlUi/Backends/RmlUi_Platform_Win32.cpp");
     };
@@ -41,7 +41,7 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
         bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
     };
 
-    #[cfg(feature = "backend-win32-gl2")]
+    #[cfg(all(target_os = "windows", feature = "renderer-gl2"))]
     {
         bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_Gl2.cpp");
     };
@@ -235,7 +235,7 @@ fn main() {
         "src/ffi/file_interface.rs",
     ];
 
-    #[cfg(feature = "backend-win32-gl2")]
+    #[cfg(any(all(target_os = "windows", feature = "renderer-gl2")))]
     bridge_files.push("src/ffi/backend.rs");
 
     let mut bridge = cxx_build::bridges(bridge_files);

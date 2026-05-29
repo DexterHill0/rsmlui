@@ -15,6 +15,6 @@ generate-documentation = ["rsmlui-core/generate-documentation"]
 
 glam = ["rsmlui-core/glam"]
 
-freetype = ["rsmlui-core/freetype"]
+freetype = ["rsmlui-backends/freetype"]
 
-backend-win32-gl2 = ["rsmlui-backends/backend-win32-gl2"]
+renderer-gl2 = ["rsmlui-backends/renderer-gl2"]

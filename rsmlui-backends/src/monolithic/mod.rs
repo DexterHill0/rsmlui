@@ -14,12 +14,12 @@
 //! [`Backend`]: crate::backend::Backend
 //! [`WindowDriver`]: crate::window::WindowDriver
 
-#[cfg(feature = "backend-win32-gl2")]
+#[cfg(all(target_os = "windows", feature = "renderer-gl2"))]
 pub mod win32_gl2;
 
 use rsmlui_core::core::context::Context;
 use rsmlui_core::types::input::{KeyCode, KeyModifier};
-#[cfg(feature = "backend-win32-gl2")]
+#[cfg(all(target_os = "windows", feature = "renderer-gl2"))]
 pub use win32_gl2::{Win32Gl2Backend, Win32Gl2BackendOptions};
 
 pub(crate) type KeyDownCallbackDyn = dyn FnMut(&Context, KeyCode, KeyModifier, f32, bool) -> bool;
