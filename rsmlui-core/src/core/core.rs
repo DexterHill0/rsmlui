@@ -12,7 +12,7 @@ use rsmlui_sys::system_interface::RmlSystemInterface;
 
 use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
-use crate::errors::Error;
+use crate::error::Error;
 use crate::interfaces::{BorrowedInterface, IntoRawInterface};
 use crate::math::IVec2;
 use crate::types::style::{FontStyle, FontWeight};

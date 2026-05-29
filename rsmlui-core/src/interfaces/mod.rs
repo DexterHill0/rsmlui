@@ -6,7 +6,13 @@ use std::marker::{PhantomData, PhantomPinned};
 use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
 
+pub use file::{FileError, FileInterface, FileInterfaceHandle, OwnedFileInterface, SeekOffset};
+pub use renderer::{
+    FilterKind, LoadedTexture, OwnedRenderInterface, RenderInterface, RenderInterfaceHandle,
+    ShaderKind,
+};
 use sealed::sealed;
+pub use system::{OwnedSystemInterface, SystemInterface, SystemInterfaceHandle};
 
 use crate::not_send_sync;
 

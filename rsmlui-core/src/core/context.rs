@@ -2,7 +2,7 @@ use drop_tree::drop_tree;
 use rsmlui_macros::rmldoc;
 
 use crate::core::element_document::ElementDocument;
-use crate::errors::Error;
+use crate::error::Error;
 use crate::not_send_sync;
 use crate::utils::raw::{Ptr, Raw};
 

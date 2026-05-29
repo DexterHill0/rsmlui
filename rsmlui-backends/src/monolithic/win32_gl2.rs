@@ -3,7 +3,7 @@ use std::convert::Infallible;
 use std::panic::{RefUnwindSafe, UnwindSafe};
 
 use rsmlui_core::core::context::Context;
-use rsmlui_core::errors::Error as CoreError;
+use rsmlui_core::error::Error as CoreError;
 use rsmlui_core::interfaces::BorrowedInterface;
 use rsmlui_core::math::IVec2;
 use rsmlui_core::types::input::{KeyCode, KeyModifier};

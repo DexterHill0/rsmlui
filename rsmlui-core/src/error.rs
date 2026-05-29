@@ -44,3 +44,5 @@ pub enum Error {
     #[error("failed to load font face")]
     FontFaceLoadFailed,
 }
+
+pub type Result<T> = core::result::Result<T, Error>;

@@ -1,5 +1,5 @@
 use rsmlui_macros::sys_cast;
-pub use rsmlui_sys::Rml_Log_Type;
+use rsmlui_sys::Rml_Log_Type;
 
 use crate::IntoSys;
 

@@ -1,6 +1,6 @@
 use std::error::Error as StdError;
 
-use rsmlui_core::errors::Error as CoreError;
+use rsmlui_core::error::Error as CoreError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
