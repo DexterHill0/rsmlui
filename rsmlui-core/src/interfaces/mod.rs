@@ -14,7 +14,7 @@ pub use renderer::{
 use sealed::sealed;
 pub use system::{OwnedSystemInterface, SystemInterface, SystemInterfaceHandle};
 
-use crate::not_send_sync;
+use crate::_private::not_send_sync;
 
 pub struct RawInterface<T>(pub(crate) *mut T, PhantomData<*mut T>);
 

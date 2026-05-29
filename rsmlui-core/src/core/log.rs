@@ -1,7 +1,7 @@
 use rsmlui_macros::sys_cast;
 use rsmlui_sys::Rml_Log_Type;
 
-use crate::IntoSys;
+use crate::_private::IntoSys;
 
 #[sys_cast(enum(from = Rml_Log_Type, repr = i32))]
 #[non_exhaustive]

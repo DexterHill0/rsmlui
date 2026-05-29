@@ -2,7 +2,7 @@ use bon::Builder;
 use drop_tree::drop_tree;
 use rsmlui_macros::rmldoc;
 
-use crate::not_send_sync;
+use crate::_private::not_send_sync;
 use crate::types::document::{FocusFlag, ModalFlag, ScrollFlag};
 use crate::utils::conversions::IntoSys;
 use crate::utils::raw::{Ptr, Raw};

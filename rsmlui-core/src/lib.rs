@@ -12,8 +12,6 @@ pub mod containers;
 pub mod core;
 pub mod error;
 pub mod interfaces;
-pub mod renderers;
-pub mod systems;
 pub mod types;
 mod utils;
 
@@ -26,5 +24,9 @@ pub use core::log::{always, assert, debug, error, info, warning};
 
 pub use error::{Error, Result};
 pub use types::math;
+
 #[doc(hidden)]
-pub use utils::conversions::{FromSys, IntoSys};
+pub mod _private {
+    pub use crate::utils::conversions::{FromSys, IntoSys};
+    pub use crate::utils::macros::not_send_sync;
+}

@@ -1,6 +1,7 @@
 // makes a type !Send and !Sync
+#[doc(hidden)]
 #[macro_export]
-macro_rules! not_send_sync {
+macro_rules! _not_send_sync {
     ($($name:ident),* $(,)?) => {
         $(
             impl !Send for $name {}
@@ -19,3 +20,5 @@ macro_rules! not_send_sync {
         )*
     };
 }
+
+pub use _not_send_sync as not_send_sync;

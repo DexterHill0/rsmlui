@@ -423,7 +423,7 @@ fn remove_sys_attrs(attrs: &mut Vec<Attribute>) {
 fn generate_owned_from_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) -> TokenStream2 {
     quote! {
         #[automatically_derived]
-        impl crate::FromSys<#sys_type> for #item_name {
+        impl crate::_private::FromSys<#sys_type> for #item_name {
             #[inline(always)]
             fn from_sys(value: #sys_type) -> Self {
                 ::core::assert!(
@@ -439,7 +439,7 @@ fn generate_owned_from_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N
 fn generate_ref_from_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) -> TokenStream2 {
     quote! {
         #[automatically_derived]
-        impl<'__a> crate::FromSys<&'__a #sys_type> for &'__a #item_name {
+        impl<'__a> crate::_private::FromSys<&'__a #sys_type> for &'__a #item_name {
             #[inline(always)]
             fn from_sys(value: &'__a #sys_type) -> Self {
                 unsafe { &*(value as *const #sys_type as *const #item_name) }
@@ -451,7 +451,7 @@ fn generate_ref_from_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) 
 fn generate_slice_from_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) -> TokenStream2 {
     quote! {
         #[automatically_derived]
-        impl<'__a> crate::FromSys<&'__a [#sys_type]> for &'__a [#item_name] {
+        impl<'__a> crate::_private::FromSys<&'__a [#sys_type]> for &'__a [#item_name] {
             #[inline(always)]
             fn from_sys(value: &'__a [#sys_type]) -> Self {
                 unsafe {
@@ -465,7 +465,7 @@ fn generate_slice_from_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N
 fn generate_owned_into_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) -> TokenStream2 {
     quote! {
         #[automatically_derived]
-        impl crate::IntoSys<#sys_type> for #item_name {
+        impl crate::_private::IntoSys<#sys_type> for #item_name {
             #[inline(always)]
             fn into_sys(self) -> #sys_type {
                 unsafe { ::std::mem::transmute::<Self, #sys_type>(self) }
@@ -477,7 +477,7 @@ fn generate_owned_into_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N
 fn generate_ref_into_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) -> TokenStream2 {
     quote! {
         #[automatically_derived]
-        impl<'__a> crate::IntoSys<&'__a #sys_type> for &'__a #item_name {
+        impl<'__a> crate::_private::IntoSys<&'__a #sys_type> for &'__a #item_name {
             #[inline(always)]
             fn into_sys(self) -> &'__a #sys_type {
                 unsafe { &*(self as *const #item_name as *const #sys_type) }
@@ -489,7 +489,7 @@ fn generate_ref_into_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) 
 fn generate_slice_into_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N) -> TokenStream2 {
     quote! {
         #[automatically_derived]
-        impl<'__a> crate::IntoSys<&'__a [#sys_type]> for &'__a [#item_name] {
+        impl<'__a> crate::_private::IntoSys<&'__a [#sys_type]> for &'__a [#item_name] {
             #[inline(always)]
             fn into_sys(self) -> &'__a [#sys_type] {
                 unsafe {
