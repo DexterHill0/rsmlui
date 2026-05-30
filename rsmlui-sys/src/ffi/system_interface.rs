@@ -222,3 +222,5 @@ pub use ffi::{
     system_interface_default_set_mouse_cursor, system_interface_default_translate_string,
     win32_system_interface_destructor,
 };
+#[cfg(target_os = "windows")]
+pub use ffi::{new_win32_system_interface, win32_system_interface_destructor};
