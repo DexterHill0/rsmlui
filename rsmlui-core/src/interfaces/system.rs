@@ -13,6 +13,7 @@ use rsmlui_sys::system_interface::{
 };
 use sealed::sealed;
 
+use crate::_private::HasOwnedInterface;
 use crate::core::log::LogLevel;
 use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
 use crate::math::Vec2;
@@ -197,6 +198,18 @@ unsafe impl<T: SystemInterface> SystemInterfaceBridge for SystemInterfaceHandle<
     }
 }
 
+/// Marker trait for types that can supply a system interface to a [`Backend`].
+///
+/// Implemented automatically for any type where `&Self: IntoRawInterface<RmlSystemInterface>`,
+/// covering both [`OwnedSystemInterface<T>`] and C++ interface wrappers (e.g. `SystemWin32`).
+///
+/// [`Backend`]: rsmlui_backends::backend::Backend
+#[sealed]
+pub trait SystemInterfaceSource {}
+
+#[sealed]
+impl<T> SystemInterfaceSource for T where for<'a> &'a T: IntoRawInterface<RmlSystemInterface> {}
+
 #[sealed]
 impl<T: SystemInterface> super::OwnedInterfaceHandle<RustSystemInterface> for T {
     fn init_bridge(handle: &mut SystemInterfaceHandle<T>) {
@@ -238,4 +251,8 @@ impl<T: SystemInterface> IntoRawInterface<RmlSystemInterface>
         // `RustSystemInterface` is a subclass of `RmlSystemInterface` so the cast is valid.
         RawInterface::new(self.as_sys_ptr().cast())
     }
+}
+
+impl<T: SystemInterface> HasOwnedInterface<0> for T {
+    type Owned = OwnedSystemInterface<Self>;
 }

@@ -1,4 +1,4 @@
-use rsmlui_core::_private::not_send_sync;
+use rsmlui_core::_private::{HasOwnedInterface, not_send_sync};
 use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
 use rsmlui_sys::core;
 use rsmlui_sys::render_interface::{
@@ -48,4 +48,8 @@ impl Drop for RendererGl2 {
         // Safety: pointer is valid and confirmed not currently registered above.
         unsafe { gl2_render_interface_destructor(self_ptr) }
     }
+}
+
+impl HasOwnedInterface<1> for RendererGl2 {
+    type Owned = Self;
 }

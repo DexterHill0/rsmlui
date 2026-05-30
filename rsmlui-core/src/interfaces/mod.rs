@@ -244,3 +244,26 @@ where
         unsafe { T::destroy(self.handle.as_mut().get_unchecked_mut()) }
     }
 }
+
+pub(crate) mod _private {
+
+    /// Implemented on all interface types and provides access to the owned handle version of the interface.
+    ///
+    /// - For Rust-based interaces, `Owned` is the owned-handle version of the type (e.g. `OwnedSystemInterface`).
+    /// - For C++-based interfaces, it's just `Self` as they do not have owned handles.
+    ///
+    /// The trait is used in the [`backend!`] macro so it can generate a correct backend type without the user
+    /// needing to explicitely define if a given interface is Rust-based or C++-based.
+    ///
+    /// The const generic is simply to avoid conflicting implementations.
+    ///
+    /// - System interfaces are `0`
+    /// - Render interfaces are `1`
+    /// - File interfaces are `2`
+    ///
+    /// [`backend!`]: rsmlui::backend::backend
+    #[doc(hidden)]
+    pub trait HasOwnedInterface<const _N: usize> {
+        type Owned;
+    }
+}

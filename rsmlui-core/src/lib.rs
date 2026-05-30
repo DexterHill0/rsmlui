@@ -27,6 +27,7 @@ pub use types::math;
 
 #[doc(hidden)]
 pub mod _private {
+    pub use crate::interfaces::_private::HasOwnedInterface;
     pub use crate::utils::conversions::{FromSys, IntoSys};
     pub use crate::utils::macros::not_send_sync;
 }

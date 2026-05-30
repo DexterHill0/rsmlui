@@ -2,9 +2,10 @@ use std::ops::{Deref, DerefMut};
 
 use rsmlui_core::BackendHandle;
 use rsmlui_core::core::context::Context;
-use rsmlui_core::interfaces::file::{FileInterface, OwnedFileInterface};
-use rsmlui_core::interfaces::renderer::{OwnedRenderInterface, RenderInterface};
-use rsmlui_core::interfaces::system::{OwnedSystemInterface, SystemInterface};
+use rsmlui_core::interfaces::file::FileInterfaceSource;
+use rsmlui_core::interfaces::renderer::RenderInterfaceSource;
+use rsmlui_core::interfaces::system::SystemInterfaceSource;
+use rsmlui_core::interfaces::{OwnedFileInterface, OwnedRenderInterface, OwnedSystemInterface};
 
 use crate::error::BackendError;
 use crate::window::WindowDriver;
@@ -15,14 +16,14 @@ use crate::window::WindowDriver;
 /// happen through the `Backend` value itself.
 pub struct BackendInner<S, R, F, W>
 where
-    S: SystemInterface,
-    R: RenderInterface,
-    F: FileInterface,
+    S: SystemInterfaceSource,
+    R: RenderInterfaceSource,
+    F: FileInterfaceSource,
     W: WindowDriver,
 {
-    pub system: OwnedSystemInterface<S>,
-    pub render: OwnedRenderInterface<R>,
-    pub file: OwnedFileInterface<F>,
+    pub system: S,
+    pub render: R,
+    pub file: F,
     pub window: W,
 }
 
@@ -47,7 +48,8 @@ where
 ///     fn dimensions(&self) -> IVec2 { IVec2::ZERO }
 /// }
 ///
-/// let mut backend = Backend::new(OwnedInterface::new(MySys), ..., MyWin);
+/// let cpp_renderer_gl2 = RendererGl2::new();
+/// let mut backend = Backend::new(OwnedInterface::new(MySys), &cpp_renderer_gl2, ..., MyWin);
 /// let rml = Rml::new(backend.backend_handle());
 ///
 /// // Register interfaces before initialise.
@@ -72,9 +74,9 @@ where
 /// [`Rml::initialise`]: rsmlui_core::core::core::Rml::initialise
 pub struct Backend<S, R, F, W>
 where
-    S: SystemInterface,
-    R: RenderInterface,
-    F: FileInterface,
+    S: SystemInterfaceSource,
+    R: RenderInterfaceSource,
+    F: FileInterfaceSource,
     W: WindowDriver,
 {
     // Non-owning pointer into the heap allocation owned by `handle`'s closure.
@@ -83,19 +85,17 @@ where
     handle: BackendHandle,
 }
 
+pub type RustBackend<S, R, F, W> =
+    Backend<OwnedSystemInterface<S>, OwnedRenderInterface<R>, OwnedFileInterface<F>, W>;
+
 impl<S, R, F, W> Backend<S, R, F, W>
 where
-    S: SystemInterface + 'static,
-    R: RenderInterface + 'static,
-    F: FileInterface + 'static,
+    S: SystemInterfaceSource + 'static,
+    R: RenderInterfaceSource + 'static,
+    F: FileInterfaceSource + 'static,
     W: WindowDriver + 'static,
 {
-    pub fn new(
-        system: OwnedSystemInterface<S>,
-        render: OwnedRenderInterface<R>,
-        file: OwnedFileInterface<F>,
-        window: W,
-    ) -> Self {
+    pub fn new(system: S, render: R, file: F, window: W) -> Self {
         let raw = Box::into_raw(Box::new(BackendInner {
             system,
             render,
@@ -156,9 +156,9 @@ where
 
 impl<S, R, F, W> Deref for Backend<S, R, F, W>
 where
-    S: SystemInterface,
-    R: RenderInterface,
-    F: FileInterface,
+    S: SystemInterfaceSource,
+    R: RenderInterfaceSource,
+    F: FileInterfaceSource,
     W: WindowDriver,
 {
     type Target = BackendInner<S, R, F, W>;
@@ -174,9 +174,9 @@ where
 
 impl<S, R, F, W> DerefMut for Backend<S, R, F, W>
 where
-    S: SystemInterface,
-    R: RenderInterface,
-    F: FileInterface,
+    S: SystemInterfaceSource,
+    R: RenderInterfaceSource,
+    F: FileInterfaceSource,
     W: WindowDriver,
 {
     fn deref_mut(&mut self) -> &mut BackendInner<S, R, F, W> {

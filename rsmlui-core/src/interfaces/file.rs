@@ -11,6 +11,7 @@ use rsmlui_sys::interfaces::Opaque;
 use sealed::sealed;
 use thiserror::Error;
 
+use crate::_private::HasOwnedInterface;
 use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
 use crate::types::handles::FileHandle;
 use crate::utils::conversions::{FromSys, IntoSys};
@@ -222,6 +223,18 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
     }
 }
 
+/// Marker trait for types that can supply a file interface to a [`Backend`].
+///
+/// Implemented automatically for any type where `&Self: IntoRawInterface<RmlFileInterface>`,
+/// covering both [`OwnedFileInterface<T>`] and C++ interface wrappers.
+///
+/// [`Backend`]: rsmlui_backends::backend::Backend
+#[sealed]
+pub trait FileInterfaceSource {}
+
+#[sealed]
+impl<T> FileInterfaceSource for T where for<'a> &'a T: IntoRawInterface<RmlFileInterface> {}
+
 #[sealed]
 impl<T: FileInterface> super::OwnedInterfaceHandle<RustFileInterface> for T {
     fn init_bridge(handle: &mut FileInterfaceHandle<T>) {
@@ -263,4 +276,8 @@ impl<T: FileInterface> IntoRawInterface<RmlFileInterface>
         // `RustFileInterface` is a subclass of `RmlFileInterface` so the cast is valid.
         RawInterface::new(self.as_sys_ptr().cast())
     }
+}
+
+impl<T: FileInterface> HasOwnedInterface<2> for T {
+    type Owned = OwnedFileInterface<Self>;
 }

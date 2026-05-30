@@ -1,7 +1,16 @@
 #![allow(unused_imports)]
 
+mod macros;
+
+pub use macros::*;
 pub use rsmlui_backends::*;
 pub use rsmlui_core::*;
+
+pub mod backend {
+    pub use rsmlui_backends::backend::*;
+
+    pub use crate::macros::backend;
+}
 
 pub mod interfaces {
     pub use rsmlui_backends::interfaces::*;

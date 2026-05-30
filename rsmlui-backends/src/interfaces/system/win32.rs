@@ -1,4 +1,4 @@
-use rsmlui_core::_private::not_send_sync;
+use rsmlui_core::_private::{HasOwnedInterface, not_send_sync};
 use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
 use rsmlui_sys::core;
 use rsmlui_sys::system_interface::{
@@ -48,4 +48,8 @@ impl Drop for SystemWin32 {
         // Safety: pointer is valid and confirmed not currently registered above.
         unsafe { win32_system_interface_destructor(self_ptr) }
     }
+}
+
+impl HasOwnedInterface<0> for SystemWin32 {
+    type Owned = Self;
 }

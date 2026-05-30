@@ -16,6 +16,7 @@ use rsmlui_sys::render_interface::{
 };
 use sealed::sealed;
 
+use crate::_private::HasOwnedInterface;
 use crate::containers::dictionary::Dictionary;
 use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
 use crate::math::{IVec2, Mat4, Vec2};
@@ -733,6 +734,18 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
     }
 }
 
+/// Marker trait for types that can supply a render interface to a [`Backend`].
+///
+/// Implemented automatically for any type where `&Self: IntoRawInterface<RmlRenderInterface>`,
+/// covering both [`OwnedRenderInterface<T>`] and C++ interface wrappers (e.g. `RendererGl2`).
+///
+/// [`Backend`]: rsmlui_backends::backend::Backend
+#[sealed]
+pub trait RenderInterfaceSource {}
+
+#[sealed]
+impl<T> RenderInterfaceSource for T where for<'a> &'a T: IntoRawInterface<RmlRenderInterface> {}
+
 #[sealed]
 impl<T: RenderInterface> super::OwnedInterfaceHandle<RustRenderInterface> for T {
     fn init_bridge(handle: &mut RenderInterfaceHandle<T>) {
@@ -774,4 +787,8 @@ impl<T: RenderInterface> IntoRawInterface<RmlRenderInterface>
         // `RustRenderInterface` is a subclass of `RmlRenderInterface` so the cast is valid.
         RawInterface::new(self.as_sys_ptr().cast())
     }
+}
+
+impl<T: RenderInterface> HasOwnedInterface<1> for T {
+    type Owned = OwnedRenderInterface<Self>;
 }
