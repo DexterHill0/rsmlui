@@ -1,6 +1,7 @@
 // use crate::interfaces::renderer::RenderInterfaceMarker;
 // use crate::interfaces::{BorrowedInterface, RawInterface};
-// use crate::not_send_sync;
+// use crate::_private::not_send_sync;
+
 
 // #[repr(transparent)]
 // pub struct RendererGl2(pub(crate) BorrowedInterface<RenderInterfaceMarker>);

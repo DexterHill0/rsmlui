@@ -130,7 +130,8 @@ impl Rml {
         if ptr.is_null() {
             None
         } else {
-            Some(BorrowedInterface::new(ptr))
+            // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
+            Some(unsafe { BorrowedInterface::new(ptr) })
         }
     }
 
@@ -152,7 +153,8 @@ impl Rml {
         if ptr.is_null() {
             None
         } else {
-            Some(BorrowedInterface::new(ptr))
+            // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
+            Some(unsafe { BorrowedInterface::new(ptr) })
         }
     }
 
@@ -171,7 +173,8 @@ impl Rml {
         if ptr.is_null() {
             None
         } else {
-            Some(BorrowedInterface::new(ptr))
+            // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
+            Some(unsafe { BorrowedInterface::new(ptr) })
         }
     }
 

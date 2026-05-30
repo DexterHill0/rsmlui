@@ -105,7 +105,8 @@ impl Win32Gl2Backend {
             return None;
         }
 
-        Some(BorrowedInterface::new(itf))
+        // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
+        Some(unsafe { BorrowedInterface::new(itf) })
     }
 
     /// Pass this to [`Rml::set_render_interface`](rsmlui_core::core::core::Rml::set_render_interface).
@@ -118,7 +119,8 @@ impl Win32Gl2Backend {
             return None;
         }
 
-        Some(BorrowedInterface::new(itf))
+        // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
+        Some(unsafe { BorrowedInterface::new(itf) })
     }
 
     /// Override the key-down callback used during [`process_events`].

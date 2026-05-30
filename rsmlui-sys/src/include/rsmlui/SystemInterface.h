@@ -1,6 +1,9 @@
 #pragma once
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/SystemInterface.h>
+#if _WIN32
+    #include <RmlUi_Platform_Win32.h>
+#endif
 
 #include "./InterfaceDecls.h"
 #include "rust/cxx.h"
@@ -59,9 +62,10 @@ inline void RustSystemInterface::DeactivateKeyboard() {
     rust_deactivate_keyboard(this);
 }
 
-inline auto
-new_rust_system_interface(const rsmlui::Opaque* rust_meta, rsmlui::Opaque* rust_data)
-    -> RustSystemInterface* {
+inline auto new_rust_system_interface(
+    const rsmlui::Opaque* rust_meta,
+    rsmlui::Opaque* rust_data
+) -> RustSystemInterface* {
     return new RustSystemInterface((void*)rust_meta, (void*)rust_data);
 }
 
@@ -156,5 +160,19 @@ inline void
 system_interface_default_deactivate_keyboard(RustSystemInterface* interface) {
     interface->Rml::SystemInterface::DeactivateKeyboard();
 }
+
+} // namespace rsmlui::system_interface
+
+namespace rsmlui::system_interface {
+
+#if _WIN32
+inline auto new_win32_system_interface() -> Rml::SystemInterface* {
+    return new SystemInterface_Win32();
+}
+
+inline void win32_system_interface_destructor(Rml::SystemInterface* interface) {
+    delete interface;
+}
+#endif
 
 } // namespace rsmlui::system_interface

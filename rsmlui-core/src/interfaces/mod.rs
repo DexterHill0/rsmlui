@@ -21,7 +21,7 @@ pub struct RawInterface<T>(pub(crate) *mut T, PhantomData<*mut T>);
 not_send_sync!([T] RawInterface[T]);
 
 impl<T> RawInterface<T> {
-    pub(crate) fn new(ptr: *mut T) -> Self {
+    pub fn new(ptr: *mut T) -> Self {
         Self(ptr, PhantomData)
     }
 }
@@ -44,11 +44,21 @@ pub struct BorrowedInterface<'a, T> {
 not_send_sync!(['a, T] BorrowedInterface['a, T]);
 
 impl<'a, T> BorrowedInterface<'a, T> {
-    pub fn new(ptr: *mut T) -> Self {
+    /// Unsafe because it should not be used outside of rsmlui crates.
+    /// It could change at any time.
+    #[doc(hidden)]
+    pub unsafe fn new(ptr: *mut T) -> Self {
         Self {
             raw: ptr,
             _phantom: PhantomData,
         }
+    }
+
+    /// Unsafe because it should not be used outside of rsmlui crates.
+    /// It could change at any time.
+    #[doc(hidden)]
+    pub unsafe fn as_ptr(&self) -> *mut T {
+        self.raw
     }
 }
 

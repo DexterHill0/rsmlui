@@ -28,6 +28,7 @@ const DEFINTIONS: &[(&str, &str)] = &[
     ("RMLUI_NO_THIRDPARTY_CONTAINERS", "ON"),
     ("UNICODE", "ON"),
     ("_UNICODE", "ON"),
+    #[cfg(target_os = "windows")]
     ("WIN32_LEAN_AND_MEAN", "ON"),
 ];
 
