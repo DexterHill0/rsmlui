@@ -282,11 +282,11 @@ inline void render_interface_default_release_shader(
 
 #ifdef RSMLUI_RENDERER_GL2
 namespace rsmlui::render_interface {
-inline auto new_gl2_renderer_interface() -> Rml::RenderInterface* {
+inline auto new_gl2_render_interface() -> Rml::RenderInterface* {
     return new RenderInterface_GL2();
 }
 
-inline void gl2_renderer_interface_destructor(Rml::RenderInterface* interface) {
+inline void gl2_render_interface_destructor(Rml::RenderInterface* interface) {
     delete interface;
 }
 } // namespace rsmlui::render_interface

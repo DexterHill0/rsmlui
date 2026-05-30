@@ -237,6 +237,12 @@ fn main() {
         "src/ffi/file_interface.rs",
     ];
 
+    #[cfg(feature = "renderer-gl2")]
+    bridge_files.push("src/ffi/interfaces/render_interface_gl2.rs");
+
+    #[cfg(target_os = "windows")]
+    bridge_files.push("src/ffi/interfaces/system_win32.rs");
+
     #[cfg(any(all(target_os = "windows", feature = "renderer-gl2")))]
     bridge_files.push("src/ffi/backend.rs");
 

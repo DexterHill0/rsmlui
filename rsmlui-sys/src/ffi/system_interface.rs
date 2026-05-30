@@ -182,10 +182,6 @@ mod ffi {
         #[doc(hidden)]
         unsafe fn system_interface_default_deactivate_keyboard(ptr: *mut RustSystemInterface);
 
-        #[cfg(target_os = "windows")]
-        fn new_win32_system_interface() -> *mut RmlSystemInterface;
-        #[cfg(target_os = "windows")]
-        unsafe fn win32_system_interface_destructor(interface: *mut RmlSystemInterface);
     }
 
     extern "Rust" {
@@ -214,13 +210,13 @@ mod ffi {
 }
 
 pub use ffi::{
-    RmlSystemInterface, RustSystemInterface, new_rust_system_interface, new_win32_system_interface,
+    RmlSystemInterface, RustSystemInterface, new_rust_system_interface,
     rust_system_interface_destructor, system_interface_default_activate_keyboard,
     system_interface_default_deactivate_keyboard, system_interface_default_get_clipboard_text,
     system_interface_default_get_elapsed_time, system_interface_default_join_path,
     system_interface_default_log_message, system_interface_default_set_clipboard_text,
     system_interface_default_set_mouse_cursor, system_interface_default_translate_string,
-    win32_system_interface_destructor,
 };
+
 #[cfg(target_os = "windows")]
-pub use ffi::{new_win32_system_interface, win32_system_interface_destructor};
+pub use super::interfaces::system_win32::{new_win32_system_interface, win32_system_interface_destructor};

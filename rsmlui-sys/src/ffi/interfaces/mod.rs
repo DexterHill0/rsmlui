@@ -1,3 +1,9 @@
+#[cfg(feature = "renderer-gl2")]
+pub mod render_interface_gl2;
+
+#[cfg(target_os = "windows")]
+pub mod system_win32;
+
 /// Mirrors the memory layout of the C++ `RustSystemInterface` (and other interface) classes.
 /// Used by `fat_from_cpp` to reconstruct fat pointers from a C++ `this` pointer.
 ///

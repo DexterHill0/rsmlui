@@ -381,10 +381,6 @@ mod ffi {
             shader: usize, // `Rml_CompiledShaderHandle`
         );
 
-        #[cfg(feature = "renderer-gl2")]
-        fn new_gl2_render_interface() -> *mut RmlRenderInterface;
-        #[cfg(feature = "renderer-gl2")]
-        unsafe fn gl2_render_interface_destructor(interface: *mut RmlRenderInterface);
     }
 
     extern "Rust" {
@@ -469,5 +465,8 @@ pub use ffi::{
     render_interface_default_save_layer_as_texture, render_interface_default_set_transform,
     rust_render_interface_destructor,
 };
+
 #[cfg(feature = "renderer-gl2")]
-pub use ffi::{gl2_render_interface_destructor, new_gl2_render_interface};
+pub use super::interfaces::render_interface_gl2::{
+    gl2_render_interface_destructor, new_gl2_render_interface,
+};
