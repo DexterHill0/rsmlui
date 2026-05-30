@@ -13,5 +13,6 @@ thiserror = "2.0.17"
 default = []
 
 renderer-gl2 = ["rsmlui-sys/renderer-gl2"]
+renderer-gl3 = ["rsmlui-sys/renderer-gl3"]
 
 freetype = ["rsmlui-sys/freetype"]

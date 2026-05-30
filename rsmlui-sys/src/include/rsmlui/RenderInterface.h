@@ -5,6 +5,9 @@
 #ifdef RSMLUI_RENDERER_GL2
     #include <RmlUi_Renderer_GL2.h>
 #endif
+#ifdef RSMLUI_RENDERER_GL3
+    #include <RmlUi_Renderer_GL3.h>
+#endif
 
 #include "./InterfaceDecls.h"
 #include "RmlUi/Core/Types.h"
@@ -287,6 +290,18 @@ inline auto new_gl2_render_interface() -> Rml::RenderInterface* {
 }
 
 inline void gl2_render_interface_destructor(Rml::RenderInterface* interface) {
+    delete interface;
+}
+} // namespace rsmlui::render_interface
+#endif
+
+#ifdef RSMLUI_RENDERER_GL3
+namespace rsmlui::render_interface {
+inline auto new_gl3_render_interface() -> Rml::RenderInterface* {
+    return new RenderInterface_GL3();
+}
+
+inline void gl3_render_interface_destructor(Rml::RenderInterface* interface) {
     delete interface;
 }
 } // namespace rsmlui::render_interface

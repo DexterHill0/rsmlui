@@ -20,3 +20,4 @@ cosmic-text = []
 freetype = []
 
 renderer-gl2 = []
+renderer-gl3 = []

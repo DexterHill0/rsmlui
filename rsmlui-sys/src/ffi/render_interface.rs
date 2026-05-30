@@ -470,3 +470,8 @@ pub use ffi::{
 pub use super::interfaces::render_interface_gl2::{
     gl2_render_interface_destructor, new_gl2_render_interface,
 };
+#[cfg(feature = "renderer-gl3")]
+pub use super::interfaces::render_interface_gl3::{
+    gl3_render_interface_destructor, new_gl3_render_interface,
+};
+    

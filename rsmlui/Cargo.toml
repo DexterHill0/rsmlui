@@ -18,3 +18,4 @@ glam = ["rsmlui-core/glam"]
 freetype = ["rsmlui-backends/freetype"]
 
 renderer-gl2 = ["rsmlui-backends/renderer-gl2"]
+renderer-gl3 = ["rsmlui-backends/renderer-gl3"]

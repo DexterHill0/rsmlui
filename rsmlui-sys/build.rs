@@ -42,6 +42,11 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
         bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
         bridge.define("RSMLUI_RENDERER_GL2", "true");
     };
+    #[cfg(feature = "renderer-gl3")]
+    {
+        bridge.file("RmlUi/Backends/RmlUi_Renderer_GL3.cpp");
+        bridge.define("RSMLUI_RENDERER_GL3", "true");
+    };
 
     #[cfg(all(target_os = "windows", feature = "renderer-gl2"))]
     {
