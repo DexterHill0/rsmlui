@@ -6,6 +6,8 @@ pub mod render_interface_gl3;
 #[cfg(target_os = "windows")]
 pub mod system_win32;
 
+pub mod file_default;
+
 /// Mirrors the memory layout of the C++ `RustSystemInterface` (and other interface) classes.
 /// Used by `fat_from_cpp` to reconstruct fat pointers from a C++ `this` pointer.
 ///

@@ -47,6 +47,7 @@ target_include_directories(${RSMLUI_SYS_LIB_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/RmlUi/Include
         ${CMAKE_CURRENT_SOURCE_DIR}/RmlUi/Backends
+        ${CMAKE_CURRENT_SOURCE_DIR}/RmlUi/Source/Core
         ${RSMLUI_CXX_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
         ${CMAKE_CURRENT_BINARY_DIR}

@@ -157,3 +157,7 @@ pub use ffi::{
     RmlFileInterface, RustFileInterface, file_interface_default_length,
     file_interface_default_load_file, new_rust_file_interface, rust_file_interface_destructor,
 };
+
+pub use super::interfaces::file_default::{
+    default_file_interface_destructor, new_default_file_interface,
+};

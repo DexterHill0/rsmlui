@@ -53,9 +53,12 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
         bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_Gl2.cpp");
     };
 
+    bridge.file("RmlUi/Source/Core/FileInterfaceDefault.cpp");
+
     // required for vfuncs
     bridge.file("RmlUi/Source/Core/RenderInterface.cpp");
     bridge.file("RmlUi/Source/Core/SystemInterface.cpp");
+    bridge.file("RmlUi/Source/Core/FileInterface.cpp");
 
     // TODO: custom backend
     // #[cfg(not(feature = "backend_glfw_gl3"))]
@@ -240,10 +243,13 @@ fn main() {
         "src/ffi/variant.rs",
         "src/ffi/dictionary.rs",
         "src/ffi/file_interface.rs",
+        "src/ffi/interfaces/file_default.rs",
     ];
 
     #[cfg(feature = "renderer-gl2")]
     bridge_files.push("src/ffi/interfaces/render_interface_gl2.rs");
+    #[cfg(feature = "renderer-gl3")]
+    bridge_files.push("src/ffi/interfaces/render_interface_gl3.rs");
 
     #[cfg(target_os = "windows")]
     bridge_files.push("src/ffi/interfaces/system_win32.rs");
@@ -252,6 +258,8 @@ fn main() {
     bridge_files.push("src/ffi/backend.rs");
 
     let mut bridge = cxx_build::bridges(bridge_files);
+
+    bridge.file("src/cxx/FileInterfaceDefault.cpp");
 
     for file in cpp_files {
         bridge.file(file);
@@ -262,7 +270,8 @@ fn main() {
         .include(&cxx_include_dir)
         .include("./src/include")
         .include("./RmlUi/Include")
-        .include("./RmlUi/Backends");
+        .include("./RmlUi/Backends")
+        .include("./RmlUi/Source/Core");
 
     for (key, value) in DEFINTIONS {
         bridge.define(key, *value);

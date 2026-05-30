@@ -91,4 +91,9 @@ inline auto file_interface_default_load_file(
     return result;
 }
 
+// Defined in src/cxx/FileInterfaceDefault.cpp as the implementation requires the
+// internal RmlUi Source/Core header which is not in the public include path.
+auto new_default_file_interface() -> Rml::FileInterface*;
+void default_file_interface_destructor(Rml::FileInterface* interface);
+
 } // namespace rsmlui::file_interface
