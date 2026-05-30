@@ -40,6 +40,7 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
     #[cfg(feature = "renderer-gl2")]
     {
         bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
+        bridge.define("RSMLUI_RENDERER_GL2", "true");
     };
 
     #[cfg(all(target_os = "windows", feature = "renderer-gl2"))]

@@ -2,6 +2,10 @@
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/RenderInterface.h>
 
+#ifdef RSMLUI_RENDERER_GL2
+    #include <RmlUi_Renderer_GL2.h>
+#endif
+
 #include "./InterfaceDecls.h"
 #include "RmlUi/Core/Types.h"
 #include "rust/cxx.h"
@@ -275,3 +279,15 @@ inline void render_interface_default_release_shader(
 }
 
 } // namespace rsmlui::render_interface
+
+#ifdef RSMLUI_RENDERER_GL2
+namespace rsmlui::render_interface {
+inline auto new_gl2_renderer_interface() -> Rml::RenderInterface* {
+    return new RenderInterface_GL2();
+}
+
+inline void gl2_renderer_interface_destructor(Rml::RenderInterface* interface) {
+    delete interface;
+}
+} // namespace rsmlui::render_interface
+#endif
