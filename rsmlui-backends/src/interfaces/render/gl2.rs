@@ -13,17 +13,16 @@ pub struct RendererGl2(pub(crate) BorrowedInterface<'static, RmlRenderInterface>
 not_send_sync!(RendererGl2);
 
 impl RendererGl2 {
-    pub fn new() -> Self {
+    /// # Safety
+    ///
+    /// An OpenGL context must be current on the calling thread and all OpenGL
+    /// function pointers must be loaded before calling this. Constructing the
+    /// renderer without an active context causes undefined behaviour.
+    pub unsafe fn new() -> Self {
         // Safety: `new_gl2_render_interface` returns a valid, non-null pointer allocated
         // with `new`. The `'static` lifetime is correct because the allocation has no
         // lifetime tied to any other resource.
         Self(unsafe { BorrowedInterface::new(new_gl2_render_interface()) })
-    }
-}
-
-impl Default for RendererGl2 {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
