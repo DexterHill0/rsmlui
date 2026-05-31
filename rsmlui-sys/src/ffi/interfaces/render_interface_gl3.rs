@@ -16,7 +16,12 @@ mod ffi {
         ///
         /// - `interface` must be a valid, non-null pointer to a `RenderInterface_GL3`.
         unsafe fn gl3_render_interface_destructor(interface: *mut RmlRenderInterface);
+
+        fn gl3_initialize(error: &mut String) -> bool;
+        fn gl3_shutdown();
     }
 }
 
-pub use ffi::{gl3_render_interface_destructor, new_gl3_render_interface};
+pub use ffi::{
+    gl3_initialize, gl3_render_interface_destructor, gl3_shutdown, new_gl3_render_interface,
+};

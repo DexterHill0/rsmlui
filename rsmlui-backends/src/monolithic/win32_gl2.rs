@@ -1,8 +1,7 @@
 use std::cell::Cell;
 use std::convert::Infallible;
-use std::panic::{RefUnwindSafe, UnwindSafe};
 
-use rsmlui_core::_private::{FromSys, IntoSys};
+use rsmlui_core::_private::{FromSys, IntoSys, not_send_sync, not_unwind_safe};
 use rsmlui_core::BackendHandle;
 use rsmlui_core::core::context::Context;
 use rsmlui_core::error::Error as CoreError;
@@ -66,6 +65,9 @@ pub struct Win32Gl2Backend {
     key_down_callback: KeyDownCallback,
     options: Win32Gl2BackendOptions,
 }
+
+not_send_sync!(Win32Gl2Backend);
+not_unwind_safe!(Win32Gl2Backend);
 
 impl Win32Gl2Backend {
     /// Initialise the backend.
@@ -234,9 +236,6 @@ impl Win32Gl2Backend {
         Ok(())
     }
 }
-
-impl !UnwindSafe for Win32Gl2Backend {}
-impl !RefUnwindSafe for Win32Gl2Backend {}
 
 fn noop_key_down(
     _context: &Context,

@@ -304,5 +304,21 @@ inline auto new_gl3_render_interface() -> Rml::RenderInterface* {
 inline void gl3_render_interface_destructor(Rml::RenderInterface* interface) {
     delete interface;
 }
+
+inline void gl3_shutdown() {
+    RmlGL3::Shutdown();
+}
+
+inline auto gl3_initialize(rust::String& out_error) -> bool {
+    std::string message;
+
+    bool result = RmlGL3::Initialize(&message);
+
+    if (!result) {
+        out_error = rust::String(message);
+    }
+
+    return result;
+}
 } // namespace rsmlui::render_interface
 #endif

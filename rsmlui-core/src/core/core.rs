@@ -1,4 +1,3 @@
-use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -10,6 +9,7 @@ use rsmlui_sys::file_interface::RmlFileInterface;
 use rsmlui_sys::render_interface::RmlRenderInterface;
 use rsmlui_sys::system_interface::RmlSystemInterface;
 
+use crate::_private::not_unwind_safe;
 use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
 use crate::error::Error;
@@ -292,5 +292,4 @@ impl Rml {
 // Therefore, it should not be unwind safe.
 // `drop-tree` should indirectly cause this impl due to the use of `UnsafeCell` but we're
 // being explicit for documentation.
-impl !UnwindSafe for Rml {}
-impl !RefUnwindSafe for Rml {}
+not_unwind_safe!(Rml);
