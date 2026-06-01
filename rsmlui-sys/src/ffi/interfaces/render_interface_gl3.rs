@@ -19,9 +19,20 @@ mod ffi {
 
         fn gl3_initialize(error: &mut String) -> bool;
         fn gl3_shutdown();
+
+        unsafe fn gl3_render_interface_set_viewport(
+            interface: *mut RmlRenderInterface,
+            width: i32,
+            height: i32,
+        );
+        unsafe fn gl3_render_interface_begin_frame(interface: *mut RmlRenderInterface);
+        unsafe fn gl3_render_interface_end_frame(interface: *mut RmlRenderInterface);
+        unsafe fn gl3_render_interface_clear(interface: *mut RmlRenderInterface);
     }
 }
 
 pub use ffi::{
-    gl3_initialize, gl3_render_interface_destructor, gl3_shutdown, new_gl3_render_interface,
+    gl3_initialize, gl3_render_interface_begin_frame, gl3_render_interface_clear,
+    gl3_render_interface_destructor, gl3_render_interface_end_frame,
+    gl3_render_interface_set_viewport, gl3_shutdown, new_gl3_render_interface,
 };

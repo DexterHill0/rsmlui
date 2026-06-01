@@ -320,5 +320,25 @@ inline auto gl3_initialize(rust::String& out_error) -> bool {
 
     return result;
 }
+
+inline void gl3_render_interface_set_viewport(
+    Rml::RenderInterface* interface,
+    int width,
+    int height
+) {
+    static_cast<RenderInterface_GL3*>(interface)->SetViewport(width, height);
+}
+
+inline void gl3_render_interface_begin_frame(Rml::RenderInterface* interface) {
+    static_cast<RenderInterface_GL3*>(interface)->BeginFrame();
+}
+
+inline void gl3_render_interface_end_frame(Rml::RenderInterface* interface) {
+    static_cast<RenderInterface_GL3*>(interface)->EndFrame();
+}
+
+inline void gl3_render_interface_clear(Rml::RenderInterface* interface) {
+    static_cast<RenderInterface_GL3*>(interface)->Clear();
+}
 } // namespace rsmlui::render_interface
 #endif

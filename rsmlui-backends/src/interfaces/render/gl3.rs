@@ -1,7 +1,10 @@
 use rsmlui_core::_private::{HasOwnedInterface, not_send_sync, not_unwind_safe};
 use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
 use rsmlui_sys::core;
-use rsmlui_sys::interfaces::render_interface_gl3::{gl3_initialize, gl3_shutdown};
+use rsmlui_sys::interfaces::render_interface_gl3::{
+    gl3_initialize, gl3_render_interface_begin_frame, gl3_render_interface_clear,
+    gl3_render_interface_end_frame, gl3_render_interface_set_viewport, gl3_shutdown,
+};
 use rsmlui_sys::render_interface::{
     RmlRenderInterface, gl3_render_interface_destructor, new_gl3_render_interface,
 };
@@ -61,6 +64,42 @@ pub struct RendererGl3 {
 
 not_send_sync!(RendererGl3);
 not_unwind_safe!(RendererGl3);
+
+impl RendererGl3 {
+    /// Must be called before [`begin_frame`] whenever the window size changes.
+    ///
+    /// [`begin_frame`]: RendererGl3::begin_frame
+    pub fn set_viewport(&mut self, width: i32, height: i32) {
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe { gl3_render_interface_set_viewport(self.interface.as_ptr(), width, height) }
+    }
+
+    /// Sets up GL state for a frame. Call [`set_viewport`] first, then [`clear`], then this.
+    ///
+    /// [`set_viewport`]: RendererGl3::set_viewport
+    /// [`clear`]: RendererGl3::clear
+    pub fn begin_frame(&self) {
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe { gl3_render_interface_begin_frame(self.interface.as_ptr()) }
+    }
+
+    pub fn end_frame(&self) {
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe { gl3_render_interface_end_frame(self.interface.as_ptr()) }
+    }
+
+    /// Clears the framebuffer. Call before [`begin_frame`].
+    ///
+    /// [`begin_frame`]: RendererGl3::begin_frame
+    pub fn clear(&self) {
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe { gl3_render_interface_clear(self.interface.as_ptr()) }
+    }
+}
 
 impl IntoRawInterface<RmlRenderInterface> for &RendererGl3 {
     fn into_raw(self) -> RawInterface<RmlRenderInterface> {
