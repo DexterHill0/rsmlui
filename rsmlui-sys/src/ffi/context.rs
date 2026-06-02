@@ -5,6 +5,8 @@ mod ffi {
     unsafe extern "C++" {
         type Context;
         type ElementDocument = crate::element_document::ElementDocument;
+
+        type Vector2i = crate::Rml_Vector2i;
     }
 
     #[namespace = "rsmlui"]
@@ -17,6 +19,7 @@ mod ffi {
             ctx: *mut Context,
             document_path: String,
         ) -> *mut ElementDocument;
+        unsafe fn context_set_dimensions(ctx: *mut Context, dimensions: Vector2i);
     }
 }
 

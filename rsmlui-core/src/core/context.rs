@@ -1,9 +1,10 @@
 use drop_tree::drop_tree;
 use rsmlui_macros::rmldoc;
 
-use crate::_private::not_send_sync;
+use crate::_private::{IntoSys, not_send_sync};
 use crate::core::element_document::ElementDocument;
 use crate::error::Error;
+use crate::math::IVec2;
 use crate::utils::raw::{Ptr, Raw};
 
 #[rmldoc(file = "api_Rml-Context.md", name = "Rml::Context")]
@@ -72,5 +73,12 @@ impl Context {
         }
 
         Ok(ElementDocument::new_with_borrow(raw, self))
+    }
+
+    #[rmldoc(name = "Rml::Context::SetDimensions")]
+    pub fn set_dimensions(&self, dimensions: impl Into<IVec2>) {
+        unsafe {
+            rsmlui_sys::context::context_set_dimensions(self.raw, dimensions.into().into_sys())
+        }
     }
 }
