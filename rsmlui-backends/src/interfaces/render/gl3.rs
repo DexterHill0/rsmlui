@@ -1,6 +1,6 @@
-use rsmlui_core::_private::{HasOwnedInterface, not_send_sync, not_unwind_safe};
+use rsmlui_core::_private::{HasOwnedInterface, IntoSys, not_send_sync, not_unwind_safe};
 use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
-use rsmlui_sys::core;
+use rsmlui_core::math::UVec2;
 use rsmlui_sys::interfaces::render_interface_gl3::{
     gl3_initialize, gl3_render_interface_begin_frame, gl3_render_interface_clear,
     gl3_render_interface_end_frame, gl3_render_interface_set_viewport, gl3_shutdown,
@@ -8,6 +8,7 @@ use rsmlui_sys::interfaces::render_interface_gl3::{
 use rsmlui_sys::render_interface::{
     RmlRenderInterface, gl3_render_interface_destructor, new_gl3_render_interface,
 };
+use rsmlui_sys::{Rml_Vector2i, core};
 
 /// Token for constructing a [`RendererGl3`]. Holds no resources.
 pub struct UninitRendererGl3 {
@@ -69,10 +70,14 @@ impl RendererGl3 {
     /// Must be called before [`begin_frame`] whenever the window size changes.
     ///
     /// [`begin_frame`]: RendererGl3::begin_frame
-    pub fn set_viewport(&mut self, width: i32, height: i32) {
+    pub fn set_viewport(&mut self, dimensions: impl Into<UVec2>) {
+        let dimensions: Rml_Vector2i = dimensions.into().into_sys();
+
         // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
-        unsafe { gl3_render_interface_set_viewport(self.interface.as_ptr(), width, height) }
+        unsafe {
+            gl3_render_interface_set_viewport(self.interface.as_ptr(), dimensions.x, dimensions.y)
+        }
     }
 
     /// Sets up GL state for a frame. Call [`set_viewport`] first, then [`clear`], then this.

@@ -3,6 +3,8 @@ use std::ops::{Deref, DerefMut};
 use rsmlui_macros::sys_cast;
 use rsmlui_sys::{Rml_Vector2f, Rml_Vector2i, Rml_Vector3f, Rml_Vector4f, Rml_Vector4i};
 
+use crate::utils::conversions::SysCast;
+
 #[sys_cast(struct(from = Rml_Vector2f, transparent(fields(x, y))), gen_ref)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Vec2(pub mint::Vector2<f32>);
@@ -10,6 +12,25 @@ pub struct Vec2(pub mint::Vector2<f32>);
 #[sys_cast(struct(from = Rml_Vector2i, transparent(fields(x, y))))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct IVec2(pub mint::Vector2<i32>);
+
+#[sys_cast(struct(from = Rml_Vector2i, transparent(fields(x, y))), skip_impl)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct UVec2(pub mint::Vector2<u32>);
+
+unsafe impl SysCast for UVec2 {
+    type Sys = Rml_Vector2i;
+
+    unsafe fn validate(ptr: *const Self::Sys) -> bool {
+        // Safety: size, alignment and offset of struct is validated by the macro. All
+        // bit patterns are also all valid `i32s`.
+        let v = unsafe { &*ptr };
+        v.x >= 0 && v.y >= 0
+    }
+
+    fn validate_core(value: &Self) -> bool {
+        value.x <= i32::MAX as u32 && value.y <= i32::MAX as u32
+    }
+}
 
 #[sys_cast(struct(from = Rml_Vector3f, transparent(fields(x, y, z))), gen_ref)]
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -43,6 +64,18 @@ impl IVec2 {
     }
 
     pub const fn splat(v: i32) -> Self {
+        Self(mint::Vector2 { x: v, y: v })
+    }
+}
+
+impl UVec2 {
+    pub const ZERO: Self = Self(mint::Vector2 { x: 0, y: 0 });
+
+    pub const fn new(x: u32, y: u32) -> Self {
+        Self(mint::Vector2 { x, y })
+    }
+
+    pub const fn splat(v: u32) -> Self {
         Self(mint::Vector2 { x: v, y: v })
     }
 }
@@ -119,6 +152,12 @@ impl Default for IVec2 {
     }
 }
 
+impl Default for UVec2 {
+    fn default() -> Self {
+        Self::ZERO
+    }
+}
+
 impl Default for Vec3 {
     fn default() -> Self {
         Self::ZERO
@@ -158,6 +197,19 @@ impl Deref for IVec2 {
     }
 }
 impl DerefMut for IVec2 {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Deref for UVec2 {
+    type Target = mint::Vector2<u32>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for UVec2 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -224,6 +276,17 @@ impl From<IVec2> for (i32, i32) {
     }
 }
 
+impl From<(u32, u32)> for UVec2 {
+    fn from((x, y): (u32, u32)) -> Self {
+        Self::new(x, y)
+    }
+}
+impl From<UVec2> for (u32, u32) {
+    fn from(v: UVec2) -> Self {
+        (v.0.x, v.0.y)
+    }
+}
+
 impl From<mint::Vector2<f32>> for Vec2 {
     fn from(v: mint::Vector2<f32>) -> Self {
         Self(v)
@@ -242,6 +305,17 @@ impl From<mint::Vector2<i32>> for IVec2 {
 }
 impl From<IVec2> for mint::Vector2<i32> {
     fn from(v: IVec2) -> Self {
+        v.0
+    }
+}
+
+impl From<mint::Vector2<u32>> for UVec2 {
+    fn from(v: mint::Vector2<u32>) -> Self {
+        Self(v)
+    }
+}
+impl From<UVec2> for mint::Vector2<u32> {
+    fn from(v: UVec2) -> Self {
         v.0
     }
 }
@@ -302,6 +376,17 @@ mod glam_impls {
     impl From<IVec2> for glam::IVec2 {
         fn from(v: IVec2) -> Self {
             glam::IVec2::new(v.0.x, v.0.y)
+        }
+    }
+
+    impl From<glam::UVec2> for UVec2 {
+        fn from(v: glam::UVec2) -> Self {
+            Self(mint::Vector2 { x: v.x, y: v.y })
+        }
+    }
+    impl From<UVec2> for glam::UVec2 {
+        fn from(v: UVec2) -> Self {
+            glam::UVec2::new(v.0.x, v.0.y)
         }
     }
 

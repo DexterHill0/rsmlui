@@ -14,7 +14,7 @@ use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
 use crate::error::Error;
 use crate::interfaces::{BorrowedInterface, IntoRawInterface};
-use crate::math::IVec2;
+use crate::math::UVec2;
 use crate::types::style::{FontStyle, FontWeight};
 use crate::utils::conversions::IntoSys;
 
@@ -269,7 +269,7 @@ impl Rml {
     }
 
     #[rmldoc(name = "Rml::CreateContext")]
-    pub fn create_context<N: Into<String>, D: Into<IVec2>>(
+    pub fn create_context<N: Into<String>, D: Into<UVec2>>(
         &self,
         name: N,
         dimensions: D,
@@ -278,7 +278,9 @@ impl Rml {
             return Err(Error::NotInitialized);
         }
 
-        let context = core::create_context(name.into(), dimensions.into().into_sys());
+        let dimensions = dimensions.into();
+
+        let context = core::create_context(name.into(), dimensions.into_sys());
 
         if context.is_null() {
             return Err(Error::ContextCreateFailed);

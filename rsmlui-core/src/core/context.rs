@@ -4,7 +4,7 @@ use rsmlui_macros::rmldoc;
 use crate::_private::{IntoSys, not_send_sync};
 use crate::core::element_document::ElementDocument;
 use crate::error::Error;
-use crate::math::IVec2;
+use crate::math::{IVec2, UVec2};
 use crate::utils::raw::{Ptr, Raw};
 
 #[rmldoc(file = "api_Rml-Context.md", name = "Rml::Context")]
@@ -76,7 +76,7 @@ impl Context {
     }
 
     #[rmldoc(name = "Rml::Context::SetDimensions")]
-    pub fn set_dimensions(&self, dimensions: impl Into<IVec2>) {
+    pub fn set_dimensions(&self, dimensions: impl Into<UVec2>) {
         unsafe {
             rsmlui_sys::context::context_set_dimensions(self.raw, dimensions.into().into_sys())
         }

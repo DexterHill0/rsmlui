@@ -12,6 +12,7 @@ pub trait IntoSys<T> {
 /// reference (which would be UB for constructs like enums with invalid discriminants).
 ///
 /// # Safety
+///
 /// - `ptr` must be non-null, valid for reads, and aligned for `Self::Sys`.
 #[diagnostic::on_unimplemented(
     message = "`{Self}` cannot be used as a `sys_cast` struct field",
@@ -21,8 +22,17 @@ pub trait IntoSys<T> {
 pub unsafe trait SysCast: Sized {
     type Sys: Sized;
 
+    /// Validates that the bytes at `ptr` represent a valid `Self`.
+    /// Used when converting `sys -> core` at an FFI boundary.
     unsafe fn validate(ptr: *const Self::Sys) -> bool {
         let _ = ptr;
+        true
+    }
+
+    /// Validates that `value` can be safely represented as `Self::Sys`.
+    /// Used when converting `core -> sys`. Defaults to always valid.
+    fn validate_core(value: &Self) -> bool {
+        let _ = value;
         true
     }
 }
@@ -52,12 +62,35 @@ unsafe impl SysCast for bool {
 /// Panics if `T::validate` returns false (i.e. the bytes don't represent a valid `T`).
 ///
 /// # Safety
-/// `T` must have the same size and alignment as `T::Sys`. This is guaranteed for any
-/// type annotated with `#[sys_cast(...)]` via the compile-time assertions the macro emits.
+///
+/// - `T` must have the same size and alignment as `T::Sys`. This is guaranteed for any
+///   type annotated with `#[sys_cast(...)]` via the compile-time assertions the macro emits.
+#[allow(unused)]
 pub fn sys_cast<T: SysCast>(value: T::Sys) -> T {
     assert!(
         unsafe { T::validate(&raw const value) },
         "sys_cast: invalid sys value for {}",
+        std::any::type_name::<T>(),
+    );
+
+    // Safety: same size/align enforced by `sys_cast` macro const assertions.
+    // Validity also checked above.
+    unsafe { std::mem::transmute_copy(&value) }
+}
+
+/// Validate and convert a core value to its sys counterpart.
+///
+/// Panics if `T::validate_core` returns false (i.e. the value is out of range for `T::Sys`).
+///
+/// # Safety
+///
+/// - `T` must have the same size and alignment as `T::Sys`. This is guaranteed for any
+///   type annotated with `#[sys_cast(...)]` via the compile-time assertions the macro emits.
+#[allow(unused)]
+pub fn core_cast<T: SysCast>(value: T) -> T::Sys {
+    assert!(
+        T::validate_core(&value),
+        "core_cast: invalid core value for {}",
         std::any::type_name::<T>(),
     );
 

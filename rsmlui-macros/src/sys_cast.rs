@@ -45,6 +45,7 @@ struct SysCastArgs {
     flags: GenFlags,
     // `struct(...)`, `enum(...)` argument
     type_args: CastTypeArgs,
+    skip_impl: bool,
 }
 
 enum FromSpec {
@@ -173,6 +174,7 @@ impl Parse for SysCastArgs {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut flags = GenFlags::empty();
         let mut type_args: Option<CastTypeArgs> = None;
+        let mut skip_impl = false;
 
         loop {
             if input.is_empty() {
@@ -220,6 +222,10 @@ impl Parse for SysCastArgs {
                     meta.require_path_only()?;
 
                     flags |= GenFlags::Slice;
+                } else if meta.path().is_ident("skip_impl") {
+                    meta.require_path_only()?;
+
+                    skip_impl = true;
                 } else {
                     return Err(meta.error("unexpected argument"));
                 }
@@ -241,6 +247,7 @@ impl Parse for SysCastArgs {
         Ok(Self {
             flags,
             type_args: type_args.unwrap(),
+            skip_impl,
         })
     }
 }
@@ -468,6 +475,10 @@ fn generate_owned_into_sys<S: ToTokens, N: ToTokens>(sys_type: &S, item_name: &N
         impl crate::_private::IntoSys<#sys_type> for #item_name {
             #[inline(always)]
             fn into_sys(self) -> #sys_type {
+                ::core::assert!(
+                    <Self as crate::utils::conversions::SysCast>::validate_core(&self),
+                    concat!("sys_cast invariant violated: invalid core value for `", stringify!(#item_name), "`"),
+                );
                 unsafe { ::std::mem::transmute::<Self, #sys_type>(self) }
             }
         }
@@ -631,6 +642,15 @@ fn generate_struct(
         }
     }
 
+    fn generate_struct_validate_core_fields<T: ToTokens>(
+        field_ty: &T,
+        rust_name: &Ident,
+    ) -> TokenStream2 {
+        quote! {
+            <#field_ty as crate::utils::conversions::SysCast>::validate_core(&value.#rust_name)
+        }
+    }
+
     if args.transparent.is_some() {
         input.attrs.push(syn::parse_quote!(#[repr(transparent)]));
     } else {
@@ -717,6 +737,16 @@ fn generate_struct(
                 let owned_from = generate_owned_from_sys(sys_type, struct_name);
                 let owned_into = generate_owned_into_sys(sys_type, struct_name);
                 let extra = generate_extra_impls(cast_args.flags, sys_type, struct_name);
+                let sys_cast_impl = if cast_args.skip_impl {
+                    quote! {}
+                } else {
+                    quote! {
+                        #[automatically_derived]
+                        unsafe impl crate::utils::conversions::SysCast for #struct_name {
+                            type Sys = #sys_type;
+                        }
+                    }
+                };
 
                 return Ok(quote! {
                     #input
@@ -726,10 +756,7 @@ fn generate_struct(
                         #(#offset_assertions)*
                     };
 
-                    #[automatically_derived]
-                    unsafe impl crate::utils::conversions::SysCast for #struct_name {
-                        type Sys = #sys_type;
-                    }
+                    #sys_cast_impl
 
                     #owned_from
                     #extra
@@ -739,6 +766,7 @@ fn generate_struct(
 
             let mut offset_assertions = vec![];
             let mut validate_fields = vec![];
+            let mut validate_core_fields = vec![];
             let mut field_ty_checks = vec![];
 
             for (rust_name, sys_name, field_ty) in &field_mappings {
@@ -753,6 +781,8 @@ fn generate_struct(
                 validate_fields.push(generate_struct_validate_fields(
                     field_ty, sys_type, sys_name,
                 ));
+                validate_core_fields
+                    .push(generate_struct_validate_core_fields(field_ty, rust_name));
             }
 
             let owned_from = generate_owned_from_sys(sys_type, struct_name);
@@ -778,6 +808,10 @@ fn generate_struct(
 
                     unsafe fn validate(ptr: *const #sys_type) -> bool {
                         unsafe { true #(&& #validate_fields)* }
+                    }
+
+                    fn validate_core(value: &Self) -> bool {
+                        true #(&& #validate_core_fields)*
                     }
                 }
 
@@ -825,7 +859,6 @@ fn generate_struct(
                         _ => vec![],
                     };
 
-                    // Zip to build substitution map: V → Vec2, W → IVec2, etc.
                     let subst: Vec<(Ident, Type)> = type_params
                         .iter()
                         .zip(concrete_args.iter())
@@ -834,6 +867,7 @@ fn generate_struct(
 
                     let mut offset_assertions = vec![];
                     let mut validate_fields = vec![];
+                    let mut validate_core_fields = vec![];
                     let mut field_ty_checks = vec![];
 
                     for (rust_name, sys_name, field_ty) in &field_mappings {
@@ -848,6 +882,10 @@ fn generate_struct(
                             sys_type,
                             sys_name,
                         ));
+                        validate_core_fields.push(generate_struct_validate_core_fields(
+                            &concrete_field_ty,
+                            rust_name,
+                        ));
                     }
 
                     let owned_from = generate_owned_from_sys(sys_type, rust_type);
@@ -855,6 +893,24 @@ fn generate_struct(
                     let extra = generate_extra_impls(cast_args.flags, sys_type, rust_type);
                     let size_alignment =
                         generate_struct_size_alignment_assertions(rust_type, sys_type);
+                    let sys_cast_impl = if cast_args.skip_impl {
+                        quote! {}
+                    } else {
+                        quote! {
+                            #[automatically_derived]
+                            unsafe impl crate::utils::conversions::SysCast for #rust_type {
+                                type Sys = #sys_type;
+
+                                unsafe fn validate(ptr: *const #sys_type) -> bool {
+                                    unsafe { true #(&& #validate_fields)* }
+                                }
+
+                                fn validate_core(value: &Self) -> bool {
+                                    true #(&& #validate_core_fields)*
+                                }
+                            }
+                        }
+                    };
 
                     quote! {
                         const _: () = {
@@ -866,14 +922,7 @@ fn generate_struct(
                             #(#field_ty_checks)*
                         };
 
-                        #[automatically_derived]
-                        unsafe impl crate::utils::conversions::SysCast for #rust_type {
-                            type Sys = #sys_type;
-
-                            unsafe fn validate(ptr: *const #sys_type) -> bool {
-                                unsafe { true #(&& #validate_fields)* }
-                            }
-                        }
+                        #sys_cast_impl
 
                         #owned_from
                         #extra
@@ -958,6 +1007,21 @@ fn generate_enum(
     let owned_from = generate_owned_from_sys(&sys_type, &enum_name);
     let owned_into = generate_owned_into_sys(&sys_type, &enum_name);
     let extra = generate_extra_impls(cast_args.flags, &sys_type, &enum_name);
+    let sys_cast_impl = if cast_args.skip_impl {
+        quote! {}
+    } else {
+        quote! {
+            #[automatically_derived]
+            unsafe impl crate::utils::conversions::SysCast for #enum_name {
+                type Sys = #sys_type;
+
+                unsafe fn validate(ptr: *const #sys_type) -> bool {
+                    let raw: #repr = unsafe { *(ptr as *const #repr) };
+                    #is_valid_body
+                }
+            }
+        }
+    };
 
     Ok(quote! {
         #input
@@ -975,15 +1039,7 @@ fn generate_enum(
             #(#discriminant_assertions)*
         };
 
-        #[automatically_derived]
-        unsafe impl crate::utils::conversions::SysCast for #enum_name {
-            type Sys = #sys_type;
-
-            unsafe fn validate(ptr: *const #sys_type) -> bool {
-                let raw: #repr = unsafe { *(ptr as *const #repr) };
-                #is_valid_body
-            }
-        }
+        #sys_cast_impl
 
         #owned_from
         #extra
