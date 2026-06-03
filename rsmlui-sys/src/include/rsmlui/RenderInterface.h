@@ -292,6 +292,26 @@ inline auto new_gl2_render_interface() -> Rml::RenderInterface* {
 inline void gl2_render_interface_destructor(Rml::RenderInterface* interface) {
     delete interface;
 }
+
+inline void gl2_render_interface_set_viewport(
+    Rml::RenderInterface* interface,
+    int width,
+    int height
+) {
+    static_cast<RenderInterface_GL2*>(interface)->SetViewport(width, height);
+}
+
+inline void gl2_render_interface_begin_frame(Rml::RenderInterface* interface) {
+    static_cast<RenderInterface_GL2*>(interface)->BeginFrame();
+}
+
+inline void gl2_render_interface_end_frame(Rml::RenderInterface* interface) {
+    static_cast<RenderInterface_GL2*>(interface)->EndFrame();
+}
+
+inline void gl2_render_interface_clear(Rml::RenderInterface* interface) {
+    static_cast<RenderInterface_GL2*>(interface)->Clear();
+}
 } // namespace rsmlui::render_interface
 #endif
 

@@ -3,6 +3,10 @@ use std::mem::ManuallyDrop;
 use rsmlui_core::_private::{HasOwnedInterface, not_send_sync};
 use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
 use rsmlui_sys::core;
+use rsmlui_sys::interfaces::render_interface_gl2::{
+    gl2_render_interface_begin_frame, gl2_render_interface_clear, gl2_render_interface_end_frame,
+    gl2_render_interface_set_viewport,
+};
 use rsmlui_sys::render_interface::{
     RmlRenderInterface, gl2_render_interface_destructor, new_gl2_render_interface,
 };
@@ -59,6 +63,46 @@ pub struct RendererGl2 {
 }
 
 not_send_sync!(RendererGl2);
+
+impl RendererGl2 {
+    /// Must be called before [`begin_frame`] whenever the window size changes.
+    ///
+    /// [`begin_frame`]: RendererGl2::begin_frame
+    pub fn set_viewport(&mut self, dimensions: impl Into<UVec2>) {
+        let dimensions: Rml_Vector2i = dimensions.into().into_sys();
+
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL2` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe {
+            gl2_render_interface_set_viewport(self.interface.as_ptr(), dimensions.x, dimensions.y)
+        }
+    }
+
+    /// Sets up GL state for a frame. Call [`set_viewport`] first, then [`clear`], then this.
+    ///
+    /// [`set_viewport`]: RendererGl2::set_viewport
+    /// [`clear`]: RendererGl2::clear
+    pub fn begin_frame(&self) {
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL2` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe { gl2_render_interface_begin_frame(self.interface.as_ptr()) }
+    }
+
+    pub fn end_frame(&self) {
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL2` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe { gl2_render_interface_end_frame(self.interface.as_ptr()) }
+    }
+
+    /// Clears the framebuffer. Call before [`begin_frame`].
+    ///
+    /// [`begin_frame`]: RendererGl2::begin_frame
+    pub fn clear(&self) {
+        // Safety: `interface` is a valid, non-null `RenderInterface_GL2` and there is a
+        // valid GL context alive, due to the invariant of `assume_init`.
+        unsafe { gl2_render_interface_clear(self.interface.as_ptr()) }
+    }
+}
 
 impl IntoRawInterface<RmlRenderInterface> for &RendererGl2 {
     fn into_raw(self) -> RawInterface<RmlRenderInterface> {
