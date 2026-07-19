@@ -7,6 +7,7 @@ edition = "2024"
 rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
 rsmlui-core = { path = "../rsmlui-core", default-features = false }
 
+sealed = "0.6.0"
 thiserror = "2.0.17"
 
 [features]

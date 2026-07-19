@@ -1,8 +1,8 @@
 use std::mem::ManuallyDrop;
 
-use rsmlui_core::_private::{HasOwnedInterface, not_send_sync};
+use rsmlui_core::_private::{HasOwnedInterface, IntoSys, not_send_sync};
 use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
-use rsmlui_sys::core;
+use rsmlui_core::math::UVec2;
 use rsmlui_sys::interfaces::render_interface_gl2::{
     gl2_render_interface_begin_frame, gl2_render_interface_clear, gl2_render_interface_end_frame,
     gl2_render_interface_set_viewport,
@@ -10,6 +10,9 @@ use rsmlui_sys::interfaces::render_interface_gl2::{
 use rsmlui_sys::render_interface::{
     RmlRenderInterface, gl2_render_interface_destructor, new_gl2_render_interface,
 };
+use rsmlui_sys::{Rml_Vector2i, core};
+
+use crate::interfaces::RenderDriver;
 
 /// Uninitialized GL2 renderer. Holds the C++ object but is not yet usable as a render interface.
 ///
@@ -101,6 +104,24 @@ impl RendererGl2 {
         // Safety: `interface` is a valid, non-null `RenderInterface_GL2` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
         unsafe { gl2_render_interface_clear(self.interface.as_ptr()) }
+    }
+}
+
+impl RenderDriver for RendererGl2 {
+    fn set_viewport(&mut self, dimensions: impl Into<UVec2>) {
+        RendererGl2::set_viewport(self, dimensions);
+    }
+
+    fn clear(&mut self) {
+        RendererGl2::clear(&self);
+    }
+
+    fn begin_frame(&mut self) {
+        RendererGl2::begin_frame(&self);
+    }
+
+    fn end_frame(&mut self) {
+        RendererGl2::end_frame(&self);
     }
 }
 

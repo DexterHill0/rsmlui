@@ -1,0 +1,10 @@
+[package]
+name = "rsmlui-winit"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rsmlui-core = { path = "../rsmlui-core", default-features = false }
+rsmlui-backends = { path = "../rsmlui-backends", default-features = false }
+
+winit = "0.30"

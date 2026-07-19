@@ -3,16 +3,23 @@ use std::error::Error as StdError;
 use rsmlui_core::core::context::Context;
 use rsmlui_core::math::IVec2;
 
+#[non_exhaustive]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum WindowControlFlow {
+    Continue,
+    Exit,
+}
+
 /// Allows custom windowing and render-loop implementations.
 ///
 /// This trait only supports compositional [`Backend`]s
 /// as monolithic backends (e.g [`Win32Gl2Backend`]) have
 /// windowing logic implemented directly in C++.
 ///
-/// The three frame methods are called in order each tick:
-/// 1. [`process_events`]: deliver OS events to the RmlUi context
-/// 2. [`begin_frame`]: set up the frame ready for rendering
-/// 3. [`present_frame`]: show the frame to the screen
+// /// The three frame methods are called in order each tick:
+// /// 1. [`process_events`]: deliver OS events to the RmlUi context
+// /// 2. [`begin_frame`]: set up the frame ready for rendering
+// /// 3. [`present_frame`]: show the frame to the screen
 ///
 /// # Example
 ///
@@ -26,13 +33,17 @@ use rsmlui_core::math::IVec2;
 pub trait WindowDriver {
     type Error: StdError;
 
-    fn process_events(&mut self, context: &Context) -> Result<bool, Self::Error>;
+    /// Polls and processes events from the current platform, and applies any relevant events to the provided RmlUi context and the key down callback.
+    #[allow(unused)]
+    fn process_events(&mut self, context: &Context) -> Result<WindowControlFlow, Self::Error> {
+        Ok(WindowControlFlow::Continue)
+    }
 
-    /// Prepare for rendering (e.g. clear the framebuffer).
-    fn begin_frame(&mut self) -> Result<(), Self::Error>;
+    // /// Prepare for rendering (e.g. clear the framebuffer).
+    // fn begin_frame(&mut self) -> Result<(), Self::Error>;
 
-    /// Present the rendered frame (e.g. swap GL buffers).
-    fn present_frame(&mut self) -> Result<(), Self::Error>;
+    // /// Present the rendered frame (e.g. swap GL buffers).
+    // fn present_frame(&mut self) -> Result<(), Self::Error>;
 
     /// Current window dimensions in physical pixels.
     fn dimensions(&self) -> impl Into<IVec2>;

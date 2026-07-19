@@ -6,6 +6,7 @@ use rsmlui_core::interfaces::file::FileInterfaceSource;
 use rsmlui_core::interfaces::renderer::RenderInterfaceSource;
 use rsmlui_core::interfaces::system::SystemInterfaceSource;
 use rsmlui_core::interfaces::{OwnedFileInterface, OwnedRenderInterface, OwnedSystemInterface};
+use sealed::sealed;
 
 use crate::error::BackendError;
 use crate::window::WindowDriver;
@@ -43,8 +44,8 @@ where
 /// impl WindowDriver for MyWin {
 ///     type Error = Infallible;
 ///     fn process_events(&mut self, _: &Context) -> Result<bool, Self::Error> { Ok(false) }
-///     fn begin_frame(&mut self) -> Result<(), Self::Error> { Ok(()) }
-///     fn present_frame(&mut self) -> Result<(), Self::Error> { Ok(()) }
+// ///     fn begin_frame(&mut self) -> Result<(), Self::Error> { Ok(()) }
+// ///     fn present_frame(&mut self) -> Result<(), Self::Error> { Ok(()) }
 ///     fn dimensions(&self) -> IVec2 { IVec2::ZERO }
 /// }
 ///
@@ -120,38 +121,6 @@ where
     pub fn backend_handle(&self) -> BackendHandle {
         self.handle.clone()
     }
-
-    /// Run a single tick (process events, update the context, render, present).
-    ///
-    /// Returns `Ok(true)` to continue, `Ok(false)` when the window signals exit.
-    pub fn tick(&mut self, context: &Context) -> Result<bool, BackendError<W::Error>> {
-        let running = self
-            .window
-            .process_events(context)
-            .map_err(BackendError::Window)?;
-
-        if !running {
-            return Ok(false);
-        }
-
-        context.update()?;
-        self.window.begin_frame().map_err(BackendError::Window)?;
-        context.render()?;
-        self.window.present_frame().map_err(BackendError::Window)?;
-
-        Ok(true)
-    }
-
-    /// Run the event loop until the window signals exit.
-    ///
-    /// Interfaces must already be registered and [`Rml::initialise`] must already have
-    /// been called before this.
-    ///
-    /// [`Rml::initialise`]: rsmlui_core::core::core::Rml::initialise
-    pub fn run(&mut self, context: &Context) -> Result<(), BackendError<W::Error>> {
-        while self.tick(context)? {}
-        Ok(())
-    }
 }
 
 impl<S, R, F, W> Deref for Backend<S, R, F, W>
@@ -183,4 +152,18 @@ where
         // Safety: same as `Deref`. Exclusive access guaranteed by `&mut self`.
         unsafe { &mut *self.inner }
     }
+}
+
+/// Trait marking a valid [`Backend`] type.
+#[sealed]
+pub trait BackendMarker {}
+
+#[sealed]
+impl<S, R, F, W> BackendMarker for Backend<S, R, F, W>
+where
+    S: SystemInterfaceSource,
+    R: RenderInterfaceSource,
+    F: FileInterfaceSource,
+    W: WindowDriver,
+{
 }

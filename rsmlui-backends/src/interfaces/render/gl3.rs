@@ -10,6 +10,8 @@ use rsmlui_sys::render_interface::{
 };
 use rsmlui_sys::{Rml_Vector2i, core};
 
+use crate::interfaces::RenderDriver;
+
 /// Token for constructing a [`RendererGl3`]. Holds no resources.
 pub struct UninitRendererGl3 {
     _private: (),
@@ -103,6 +105,24 @@ impl RendererGl3 {
         // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
         unsafe { gl3_render_interface_clear(self.interface.as_ptr()) }
+    }
+}
+
+impl RenderDriver for RendererGl3 {
+    fn set_viewport(&mut self, dimensions: impl Into<UVec2>) {
+        RendererGl3::set_viewport(self, dimensions);
+    }
+
+    fn clear(&mut self) {
+        RendererGl3::clear(&self);
+    }
+
+    fn begin_frame(&mut self) {
+        RendererGl3::begin_frame(&self);
+    }
+
+    fn end_frame(&mut self) {
+        RendererGl3::end_frame(&self);
     }
 }
 

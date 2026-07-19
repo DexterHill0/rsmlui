@@ -10,5 +10,6 @@ members = [
     "drop-tree",
     "drop-tree-derive",
     "rsmlui-macros",
+    "rsmlui-winit",
 ]
 resolver = "3"
