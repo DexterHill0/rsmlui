@@ -1,0 +1,7 @@
+[package]
+name = "non-native"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rsmlui = { path = "../../rsmlui", features = ["renderer-gl2", "system-glfw"] }

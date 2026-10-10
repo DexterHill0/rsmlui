@@ -3,6 +3,7 @@ members = [
     "examples/basic",
     "examples/raw",
     "examples/custom-backend-advanced",
+    "examples/non-native",
     "rsmlui-core",
     "rsmlui-sys",
     "rsmlui-backends",

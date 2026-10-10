@@ -1,12 +1,5 @@
 include(cmake/CPM.cmake)
 
-set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-
 CPMAddPackage(
     NAME zlib
     GITHUB_REPOSITORY madler/zlib
@@ -16,6 +9,14 @@ CPMAddPackage(
 
 add_library(ZLIB::ZLIB ALIAS zlibstatic)
 target_include_directories(zlibstatic PUBLIC ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+
+# libpng and freetype both call `find_package(ZLIB REQUIRED)` which searches the
+# system which could mean it finds the wrong version of zlib somewhere else.
+# This seeds the cache so when zlib is requested it uses ZLIB::ZLIB insteas of
+# whatever version may be elsewhere on the system 
+set(ZLIB_INCLUDE_DIR "${zlib_SOURCE_DIR}" CACHE PATH "" FORCE)
+set(ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR}" "${zlib_BINARY_DIR}" CACHE STRING "" FORCE)
+set(ZLIB_LIBRARY zlibstatic CACHE STRING "" FORCE)
 
 CPMAddPackage(
     NAME libpng

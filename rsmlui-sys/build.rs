@@ -11,6 +11,16 @@ use cxx_build::CFG;
 const RSMLUI_SYS_LIB_NAME: &str = "rsmlui_dummy";
 const RMLUI_OUTPUT_NAME: &str = "rmlui";
 
+#[cfg(target_os = "windows")]
+const ZLIB_LIB_NAME: &str = "zlibstatic";
+#[cfg(not(target_os = "windows"))]
+const ZLIB_LIB_NAME: &str = "z";
+
+#[cfg(target_os = "windows")]
+const LIBPNG_LIB_NAME: &str = "libpng16_static";
+#[cfg(not(target_os = "windows"))]
+const LIBPNG_LIB_NAME: &str = "png16";
+
 #[rustfmt::skip]
 const DEFINTIONS: &[(&str, &str)] = &[
     #[cfg(feature = "freetype")]
@@ -26,6 +36,8 @@ const DEFINTIONS: &[(&str, &str)] = &[
     ("RSMLUI_RENDERER_GL2", "ON"),
     #[cfg(feature = "renderer-gl3")]
     ("RSMLUI_RENDERER_GL3", "ON"),
+    #[cfg(feature = "system-glfw")]
+    ("RSMLUI_SYSTEM_GLFW", "ON"),
 
     ("BUILD_SHARED_LIBS", "OFF"),
     ("RMLUI_STATIC_LIB", "ON"),
@@ -38,10 +50,17 @@ const DEFINTIONS: &[(&str, &str)] = &[
 ];
 
 fn build_rmlui_renderer(bridge: &mut cc::Build) {
+    // platform includes
     #[cfg(target_os = "windows")]
     {
         bridge.file("RmlUi/Backends/RmlUi_Platform_Win32.cpp");
     };
+    #[cfg(feature = "system-glfw")]
+    {
+        bridge.file("RmlUi/Backends/RmlUi_Platform_GLFW.cpp");
+    };
+
+    // renderer includes
     #[cfg(feature = "renderer-gl2")]
     {
         bridge.file("RmlUi/Backends/RmlUi_Renderer_GL2.cpp");
@@ -51,20 +70,27 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
         bridge.file("RmlUi/Backends/RmlUi_Renderer_GL3.cpp");
     };
 
+    // backend includes (renderer + platform)
     #[cfg(all(target_os = "windows", feature = "renderer-gl2"))]
     {
-        bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_Gl2.cpp");
+        bridge.file("RmlUi/Backends/RmlUi_Backend_Win32_GL2.cpp");
     };
+    #[cfg(all(feature = "system-glfw", feature = "renderer-gl2"))]
+    {
+        bridge.file("RmlUi/Backends/RmlUi_Backend_GLFW_GL2.cpp");
+    };
+    #[cfg(all(feature = "system-glfw", feature = "renderer-gl3"))]
+    {
+        bridge.file("RmlUi/Backends/RmlUi_Backend_GLFW_GL3.cpp");
+    };
+
+    // required for vfuncs
 
     bridge.file("RmlUi/Source/Core/FileInterfaceDefault.cpp");
 
-    // required for vfuncs
     bridge.file("RmlUi/Source/Core/RenderInterface.cpp");
     bridge.file("RmlUi/Source/Core/SystemInterface.cpp");
     bridge.file("RmlUi/Source/Core/FileInterface.cpp");
-
-    // TODO: custom backend
-    // #[cfg(not(feature = "backend_glfw_gl3"))]
 }
 
 // globs the include headers and creates a dummy cpp source file
@@ -120,6 +146,49 @@ fn create_dummy_sources_from_headers(dummy_dir: &Path, ignore: &[&str]) -> Vec<S
     cpp_files
 }
 
+// FIXME: https://github.com/rust-lang/rust-bindgen/issues/3397
+// An update in the `<type_traits>` header causes bindgen to panic due to a recursive union
+// Even though bindgen is set to ignore the stl and not emit any types, it still crashes
+// on this, so the best option is to make it use a version of libc++ that doesn't cause
+// the crash
+fn macos_libcxx_clang_args() -> Vec<String> {
+    if !cfg!(target_os = "macos") {
+        return Vec::new();
+    }
+
+    let sdk_path = std::process::Command::new("xcrun")
+        .arg("--show-sdk-path")
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_owned())
+        .filter(|path| !path.is_empty())
+        .expect("failed to run `xcrun --show-sdk-path`");
+
+    let libcxx_include_dir = PathBuf::from(sdk_path).join("usr/include/c++/v1");
+
+    vec![
+        "-nostdinc++".to_owned(),
+        format!("-isystem{}", libcxx_include_dir.display()),
+    ]
+}
+
+// Finds GLFW for the `system-glfw` features. We use `pkg_config` because:
+// 1. it lets the user control their own GLFW install and doesn't force any version or config on them
+// 2. we need the include paths before `cmake` runs, as `cc` requires them. If cmake were to fetch
+//    GLFW, `cc` would error before anyway
+#[cfg(feature = "system-glfw")]
+fn probe_glfw() -> Vec<PathBuf> {
+    match pkg_config::Config::new().probe("glfw3") {
+        Ok(glfw) => glfw.include_paths,
+        Err(error) => panic!(
+            "the `system-glfw` feature is enabled but GLFW could not be located: {error}\n\
+             install it (`brew install glfw`, `apt install libglfw3-dev`, `vcpkg install glfw3`, ...) \
+             or point `PKG_CONFIG_PATH` at its `glfw3.pc`"
+        ),
+    }
+}
+
 fn main() {
     // we already sorta have a prefix because of the `include/rsmlui` folder structure, so no need for another
     CFG.include_prefix = "";
@@ -127,6 +196,11 @@ fn main() {
     let rust_out_dir: PathBuf = std::env::var("OUT_DIR").unwrap().into();
 
     let cxx_include_dir = rust_out_dir.join("cxxbridge/include");
+
+    #[cfg(feature = "system-glfw")]
+    let glfw_include_paths = probe_glfw();
+    #[cfg(not(feature = "system-glfw"))]
+    let glfw_include_paths: Vec<PathBuf> = Vec::new();
 
     let bindings = bindgen::Builder::default()
         .header("src/include/rsmlui/Bindings.h")
@@ -137,6 +211,12 @@ fn main() {
         .clang_arg("-I./src/include")
         .clang_arg("-I./RmlUi/Include")
         .clang_arg("-I./RmlUi/Backends")
+        .clang_args(macos_libcxx_clang_args())
+        .clang_args(
+            glfw_include_paths
+                .iter()
+                .map(|path| format!("-I{}", path.display())),
+        )
         .blocklist_item("std::.*")
         .blocklist_item("__.*")
         .blocklist_item("_[A-Z].*")
@@ -232,8 +312,6 @@ fn main() {
     let cpp_files_dir: PathBuf = "dummy_sources".into();
     let cpp_files = create_dummy_sources_from_headers(&cpp_files_dir, &["Bindings.h"]);
 
-    // cpp_files.push("src/cxx/SystemInterface.cpp".into());
-
     // cxx MUST come before cmake so the codegenned headers exist
     // when cmake does the build, as these headers are part of the `compile_commands.json`
     // used for intellisense
@@ -256,8 +334,14 @@ fn main() {
 
     #[cfg(target_os = "windows")]
     bridge_files.push("src/ffi/interfaces/system_win32.rs");
+    #[cfg(feature = "system-glfw")]
+    bridge_files.push("src/ffi/interfaces/system_glfw.rs");
 
-    #[cfg(any(all(target_os = "windows", feature = "renderer-gl2")))]
+    #[cfg(any(
+        all(target_os = "windows", feature = "renderer-gl2"),
+        all(feature = "system-glfw", feature = "renderer-gl2"),
+        all(feature = "system-glfw", feature = "renderer-gl3"),
+    ))]
     bridge_files.push("src/ffi/backend.rs");
 
     let mut bridge = cxx_build::bridges(bridge_files);
@@ -269,12 +353,16 @@ fn main() {
     }
 
     bridge
-        .flag_if_supported("/std:c++20")
+        .std("c++20")
         .include(&cxx_include_dir)
         .include("./src/include")
         .include("./RmlUi/Include")
         .include("./RmlUi/Backends")
         .include("./RmlUi/Source/Core");
+
+    for path in &glfw_include_paths {
+        bridge.include(path);
+    }
 
     for (key, value) in DEFINTIONS {
         bridge.define(key, *value);
@@ -305,6 +393,17 @@ fn main() {
         .define("CMAKE_EXPORT_COMPILE_COMMANDS", "ON")
         .define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
 
+    if !glfw_include_paths.is_empty() {
+        // cmake lists are `;` separated
+        let glfw_include_dirs = glfw_include_paths
+            .iter()
+            .map(|path| path.display().to_string())
+            .collect::<Vec<_>>()
+            .join(";");
+
+        cmake_cfg.define("RSMLUI_GLFW_INCLUDE_DIRS", glfw_include_dirs);
+    }
+
     for (key, value) in DEFINTIONS {
         cmake_cfg.define(key, *value);
     }
@@ -330,6 +429,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=CMakeLists.txt");
     println!("cargo:rerun-if-changed=src/include/rsmlui");
+    println!("cargo:rerun-if-changed=cmake/");
 
     println!("cargo:rustc-link-lib=static={}", RSMLUI_SYS_LIB_NAME);
     println!("cargo:rustc-link-lib=static={}", RMLUI_OUTPUT_NAME);
@@ -342,9 +442,22 @@ fn main() {
         println!("cargo:rustc-link-lib=static=brotlienc");
         println!("cargo:rustc-link-lib=static=brotlidec");
         println!("cargo:rustc-link-lib=static=harfbuzz");
-        println!("cargo:rustc-link-lib=static=zlibstatic");
-        println!("cargo:rustc-link-lib=static=libpng16_static");
+        println!("cargo:rustc-link-lib=static={ZLIB_LIB_NAME}");
+        println!("cargo:rustc-link-lib=static={LIBPNG_LIB_NAME}");
         println!("cargo:rustc-link-lib=static=freetype");
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        #[cfg(feature = "freetype")]
+        {
+            println!("cargo:rustc-link-lib=framework=CoreFoundation");
+            println!("cargo:rustc-link-lib=framework=CoreGraphics");
+            println!("cargo:rustc-link-lib=framework=CoreText");
+        }
+
+        #[cfg(any(feature = "renderer-gl2", feature = "renderer-gl3"))]
+        println!("cargo:rustc-link-lib=framework=OpenGL");
     }
 
     #[cfg(target_os = "windows")]

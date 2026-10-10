@@ -1,7 +1,10 @@
 use rsmlui::core::core::{FontFaceSource, Rml};
+use rsmlui::interfaces::default::FileDefault;
 use rsmlui::monolithic::{Win32Gl2Backend, Win32Gl2BackendOptions};
 
 fn main() {
+    let file_interface = FileDefault::new();
+
     let mut backend =
         Win32Gl2Backend::initialize("Demo", (800, 600), Win32Gl2BackendOptions::default()).unwrap();
 
@@ -15,6 +18,7 @@ fn main() {
 
     rml.set_system_interface(Some(backend.get_system_interface().unwrap()));
     rml.set_render_interface(Some(backend.get_render_interface().unwrap()));
+    rml.set_file_interface(Some(&file_interface));
 
     rml.initialise().unwrap();
 

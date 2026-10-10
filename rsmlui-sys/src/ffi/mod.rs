@@ -1,4 +1,7 @@
-#[cfg(any(all(target_os = "windows", feature = "renderer-gl2")))]
+#[cfg(any(
+    all(target_os = "windows", feature = "renderer-gl2"),
+    all(target_os = "macos", feature = "renderer-gl2")
+))]
 pub mod backend;
 pub mod context;
 pub mod core;

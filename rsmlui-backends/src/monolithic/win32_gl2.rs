@@ -13,22 +13,7 @@ use rsmlui_sys::system_interface::RmlSystemInterface;
 use rsmlui_sys::{Rml_Input_KeyIdentifier, Rml_Input_KeyModifier, backend};
 
 use crate::error::BackendError;
-use crate::monolithic::{KeyDownCallback, KeyDownCallbackDyn};
-
-#[derive(Debug, Clone, Copy)]
-pub struct Win32Gl2BackendOptions {
-    pub allow_resize: bool,
-    pub power_save: bool,
-}
-
-impl Default for Win32Gl2BackendOptions {
-    fn default() -> Self {
-        Self {
-            allow_resize: true,
-            power_save: false,
-        }
-    }
-}
+use crate::monolithic::{BackendOptions, KeyDownCallback, KeyDownCallbackDyn};
 
 /// Wraps RmlUi's built-in Win32 + OpenGL 2 C++ backend.
 ///
@@ -39,7 +24,7 @@ impl Default for Win32Gl2BackendOptions {
 /// Setup and call order is functionally the same as the composable [`Backend`].
 ///
 /// ```no_run
-/// let mut backend = Win32Gl2Backend::initialize("Demo", (800, 600), Win32Gl2BackendOptions::default()).unwrap();
+/// let mut backend = Win32Gl2Backend::initialize("Demo", (800, 600), BackendOptions::default()).unwrap();
 ///
 /// let mut rml = Rml::new();
 ///
@@ -63,7 +48,7 @@ impl Default for Win32Gl2BackendOptions {
 pub struct Win32Gl2Backend {
     handle: BackendHandle,
     key_down_callback: KeyDownCallback,
-    options: Win32Gl2BackendOptions,
+    options: BackendOptions,
 }
 
 not_send_sync!(Win32Gl2Backend);
@@ -74,7 +59,7 @@ impl Win32Gl2Backend {
     pub fn initialize(
         name: impl Into<String>,
         dimensions: impl Into<IVec2>,
-        options: Win32Gl2BackendOptions,
+        options: BackendOptions,
     ) -> Result<Self, BackendError<Infallible>> {
         let success = backend::initialize(
             name.into(),
@@ -145,7 +130,7 @@ impl Win32Gl2Backend {
         backend::request_exit();
     }
 
-    /// Drive a single frame: process events → update → begin → render → present.
+    /// Run a single frame end-to-end.
     ///
     /// Returns `Ok(false)` when the window has been closed.
     /// The interfaces must already be registered with [`Rml`] before calling this.

@@ -218,5 +218,11 @@ pub use ffi::{
     system_interface_default_set_mouse_cursor, system_interface_default_translate_string,
 };
 
+#[cfg(feature = "system-glfw")]
+pub use super::interfaces::system_glfw::{
+    glfw_system_interface_destructor, new_glfw_system_interface,
+};
 #[cfg(target_os = "windows")]
-pub use super::interfaces::system_win32::{new_win32_system_interface, win32_system_interface_destructor};
+pub use super::interfaces::system_win32::{
+    new_win32_system_interface, win32_system_interface_destructor,
+};

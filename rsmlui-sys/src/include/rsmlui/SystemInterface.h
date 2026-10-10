@@ -4,6 +4,9 @@
 #if _WIN32
     #include <RmlUi_Platform_Win32.h>
 #endif
+#ifdef RSMLUI_SYSTEM_GLFW
+    #include <RmlUi_Platform_GLFW.h>
+#endif
 
 #include "./InterfaceDecls.h"
 #include "rust/cxx.h"
@@ -163,9 +166,10 @@ system_interface_default_deactivate_keyboard(RustSystemInterface* interface) {
 
 } // namespace rsmlui::system_interface
 
-namespace rsmlui::system_interface {
 
 #if _WIN32
+namespace rsmlui::system_interface {
+
 inline auto new_win32_system_interface() -> Rml::SystemInterface* {
     return new SystemInterface_Win32();
 }
@@ -173,6 +177,21 @@ inline auto new_win32_system_interface() -> Rml::SystemInterface* {
 inline void win32_system_interface_destructor(Rml::SystemInterface* interface) {
     delete interface;
 }
-#endif
 
 } // namespace rsmlui::system_interface
+#endif
+
+#ifdef RSMLUI_SYSTEM_GLFW
+namespace rsmlui::system_interface {
+
+inline auto new_glfw_system_interface(rsmlui::Opaque* glfw_window) -> Rml::SystemInterface* {
+    return new SystemInterface_GLFW((GLFWwindow*)glfw_window);
+}
+
+inline void glfw_system_interface_destructor(Rml::SystemInterface* interface) {
+    delete interface;
+}
+
+} // namespace rsmlui::system_interface
+#endif
+

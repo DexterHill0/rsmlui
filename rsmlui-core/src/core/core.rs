@@ -36,6 +36,7 @@ fn rml_destructor(_ctx: DropCtx<Rml>) {
         unsafe {
             core::set_system_interface(ptr::null_mut());
             core::set_render_interface(ptr::null_mut());
+            core::set_file_interface(ptr::null_mut());
         }
 
         return;
@@ -49,6 +50,7 @@ fn rml_destructor(_ctx: DropCtx<Rml>) {
     unsafe {
         core::set_system_interface(ptr::null_mut());
         core::set_render_interface(ptr::null_mut());
+        core::set_file_interface(ptr::null_mut());
     }
 
     IS_INITIALIZED.store(false, Ordering::SeqCst);

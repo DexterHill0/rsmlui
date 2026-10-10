@@ -9,10 +9,16 @@ rsmlui-core = { path = "../rsmlui-core", default-features = false }
 
 thiserror = "2.0.17"
 
+glfw = { version = "0.63.0", optional = true }
+
 [features]
 default = []
 
 renderer-gl2 = ["rsmlui-sys/renderer-gl2"]
 renderer-gl3 = ["rsmlui-sys/renderer-gl3"]
 
+system-glfw = ["rsmlui-sys/system-glfw"]
+
 freetype = ["rsmlui-sys/freetype"]
+
+glfw-rs = ["dep:glfw"]

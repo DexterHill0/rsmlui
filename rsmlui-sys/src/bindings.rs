@@ -72,7 +72,7 @@ pub type Rml_CompiledGeometryHandle = usize;
 pub type Rml_CompiledFilterHandle = usize;
 pub type Rml_CompiledShaderHandle = usize;
 pub type Rml_LayerHandle = usize;
-#[repr(i32)]
+#[repr(u32)]
 #[non_exhaustive]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum Rml_Log_Type {
@@ -163,10 +163,12 @@ impl Rml_Unit {
     pub const RAD: Rml_Unit = Rml_Unit(524288);
     pub const RATIO: Rml_Unit = Rml_Unit(8);
     pub const REM: Rml_Unit = Rml_Unit(4096);
+    pub const SHORTHAND_PLACEHOLDER: Rml_Unit = Rml_Unit(536870912);
     pub const STRING: Rml_Unit = Rml_Unit(2);
     pub const TRANSFORM: Rml_Unit = Rml_Unit(1048576);
     pub const TRANSITION: Rml_Unit = Rml_Unit(2097152);
     pub const UNKNOWN: Rml_Unit = Rml_Unit(0);
+    pub const VAR_EXPRESSION: Rml_Unit = Rml_Unit(268435456);
     pub const VH: Rml_Unit = Rml_Unit(512);
     pub const VW: Rml_Unit = Rml_Unit(256);
     pub const X: Rml_Unit = Rml_Unit(1024);
