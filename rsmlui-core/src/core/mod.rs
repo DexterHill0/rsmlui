@@ -1,3 +1,4 @@
+pub mod font;
 use rsmlui_macros::rmldoc;
 
 pub mod backend_handle;

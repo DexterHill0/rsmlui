@@ -12,6 +12,7 @@ use rsmlui_sys::system_interface::RmlSystemInterface;
 use crate::_private::not_unwind_safe;
 use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
+use crate::core::font::{FontFaceOptions, FontFaceSource};
 use crate::error::Error;
 use crate::interfaces::{BorrowedInterface, IntoRawInterface};
 use crate::math::UVec2;
@@ -63,32 +64,6 @@ fn rml_destructor(_ctx: DropCtx<Rml>) {
     // drops.
     // `drop-tree` can't really be used here because it goes across crates,
     // although functionally it's the same idea.
-}
-
-#[non_exhaustive]
-#[derive(Copy, Clone, Debug, Hash, PartialEq)]
-pub enum FontFaceSource<'a> {
-    Path(&'a str),
-    Memory(&'a [u8]),
-}
-
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Builder)]
-#[builder(const)]
-pub struct FontFaceOptions {
-    #[builder(default = false)]
-    fallback_face: bool,
-    #[builder(default = FontStyle::Normal)]
-    style: FontStyle,
-    #[builder(default = FontWeight::Auto)]
-    weight: FontWeight,
-    #[builder(default = 0)]
-    face_index: i32,
-}
-
-impl Default for FontFaceOptions {
-    fn default() -> Self {
-        Self::builder().build()
-    }
 }
 
 #[drop_tree(destructor(rml_destructor))]
