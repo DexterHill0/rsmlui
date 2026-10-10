@@ -133,49 +133,48 @@ pub enum Rml_Style_FontWeight {
     Bold = 700,
 }
 impl Rml_Unit {
-    pub const ANGLE: Rml_Unit = Rml_Unit(786432);
-    pub const ANIMATION: Rml_Unit = Rml_Unit(4194304);
-    pub const BOXSHADOWLIST: Rml_Unit = Rml_Unit(134217728);
-    pub const CM: Rml_Unit = Rml_Unit(16384);
-    pub const COLORSTOPLIST: Rml_Unit = Rml_Unit(67108864);
-    pub const COLOUR: Rml_Unit = Rml_Unit(4);
-    pub const DECORATOR: Rml_Unit = Rml_Unit(8388608);
-    pub const DEG: Rml_Unit = Rml_Unit(262144);
-    pub const DP: Rml_Unit = Rml_Unit(128);
-    pub const DP_SCALABLE_LENGTH: Rml_Unit = Rml_Unit(254080);
-    pub const EM: Rml_Unit = Rml_Unit(2048);
-    pub const FILTER: Rml_Unit = Rml_Unit(16777216);
-    pub const FONTEFFECT: Rml_Unit = Rml_Unit(33554432);
-    pub const INCH: Rml_Unit = Rml_Unit(8192);
+    pub const UNKNOWN: Rml_Unit = Rml_Unit(0);
     pub const KEYWORD: Rml_Unit = Rml_Unit(1);
-    pub const LENGTH: Rml_Unit = Rml_Unit(261056);
-    pub const LENGTH_PERCENT: Rml_Unit = Rml_Unit(261088);
-    pub const MM: Rml_Unit = Rml_Unit(32768);
-    pub const NUMBER: Rml_Unit = Rml_Unit(16);
-    pub const NUMBER_LENGTH_PERCENT: Rml_Unit = Rml_Unit(261104);
-    pub const NUMBER_PERCENT: Rml_Unit = Rml_Unit(48);
-    pub const NUMERIC: Rml_Unit = Rml_Unit(1048560);
-    pub const PC: Rml_Unit = Rml_Unit(131072);
-    pub const PERCENT: Rml_Unit = Rml_Unit(32);
-    pub const PPI_UNIT: Rml_Unit = Rml_Unit(253952);
-    pub const PT: Rml_Unit = Rml_Unit(65536);
-    pub const PX: Rml_Unit = Rml_Unit(64);
-    pub const RAD: Rml_Unit = Rml_Unit(524288);
-    pub const RATIO: Rml_Unit = Rml_Unit(8);
-    pub const REM: Rml_Unit = Rml_Unit(4096);
-    pub const SHORTHAND_PLACEHOLDER: Rml_Unit = Rml_Unit(536870912);
     pub const STRING: Rml_Unit = Rml_Unit(2);
+    pub const COLOUR: Rml_Unit = Rml_Unit(4);
+    pub const RATIO: Rml_Unit = Rml_Unit(8);
+    pub const NUMBER: Rml_Unit = Rml_Unit(16);
+    pub const PERCENT: Rml_Unit = Rml_Unit(32);
+    pub const PX: Rml_Unit = Rml_Unit(64);
+    pub const DP: Rml_Unit = Rml_Unit(128);
+    pub const VW: Rml_Unit = Rml_Unit(256);
+    pub const VH: Rml_Unit = Rml_Unit(512);
+    pub const X: Rml_Unit = Rml_Unit(1024);
+    pub const EM: Rml_Unit = Rml_Unit(2048);
+    pub const REM: Rml_Unit = Rml_Unit(4096);
+    pub const INCH: Rml_Unit = Rml_Unit(8192);
+    pub const CM: Rml_Unit = Rml_Unit(16384);
+    pub const MM: Rml_Unit = Rml_Unit(32768);
+    pub const PT: Rml_Unit = Rml_Unit(65536);
+    pub const PC: Rml_Unit = Rml_Unit(131072);
+    pub const PPI_UNIT: Rml_Unit = Rml_Unit(253952);
+    pub const DEG: Rml_Unit = Rml_Unit(262144);
+    pub const RAD: Rml_Unit = Rml_Unit(524288);
     pub const TRANSFORM: Rml_Unit = Rml_Unit(1048576);
     pub const TRANSITION: Rml_Unit = Rml_Unit(2097152);
-    pub const UNKNOWN: Rml_Unit = Rml_Unit(0);
+    pub const ANIMATION: Rml_Unit = Rml_Unit(4194304);
+    pub const DECORATOR: Rml_Unit = Rml_Unit(8388608);
+    pub const FILTER: Rml_Unit = Rml_Unit(16777216);
+    pub const FONTEFFECT: Rml_Unit = Rml_Unit(33554432);
+    pub const COLORSTOPLIST: Rml_Unit = Rml_Unit(67108864);
+    pub const BOXSHADOWLIST: Rml_Unit = Rml_Unit(134217728);
     pub const VAR_EXPRESSION: Rml_Unit = Rml_Unit(268435456);
-    pub const VH: Rml_Unit = Rml_Unit(512);
-    pub const VW: Rml_Unit = Rml_Unit(256);
-    pub const X: Rml_Unit = Rml_Unit(1024);
+    pub const SHORTHAND_PLACEHOLDER: Rml_Unit = Rml_Unit(536870912);
+    pub const LENGTH: Rml_Unit = Rml_Unit(261056);
+    pub const LENGTH_PERCENT: Rml_Unit = Rml_Unit(261088);
+    pub const NUMBER_PERCENT: Rml_Unit = Rml_Unit(48);
+    pub const NUMBER_LENGTH_PERCENT: Rml_Unit = Rml_Unit(261104);
+    pub const DP_SCALABLE_LENGTH: Rml_Unit = Rml_Unit(254080);
+    pub const ANGLE: Rml_Unit = Rml_Unit(786432);
+    pub const NUMERIC: Rml_Unit = Rml_Unit(1048560);
 }
 impl ::std::ops::BitOr<Rml_Unit> for Rml_Unit {
     type Output = Self;
-
     #[inline]
     fn bitor(self, other: Self) -> Self {
         Rml_Unit(self.0 | other.0)
@@ -189,7 +188,6 @@ impl ::std::ops::BitOrAssign for Rml_Unit {
 }
 impl ::std::ops::BitAnd<Rml_Unit> for Rml_Unit {
     type Output = Self;
-
     #[inline]
     fn bitand(self, other: Self) -> Self {
         Rml_Unit(self.0 & other.0)
@@ -405,17 +403,16 @@ pub enum Rml_Input_KeyIdentifier {
     KI_LAST_CUSTOM_KEY = 250,
 }
 impl Rml_Input_KeyModifier {
-    pub const KM_ALT: Rml_Input_KeyModifier = Rml_Input_KeyModifier(4);
-    pub const KM_CAPSLOCK: Rml_Input_KeyModifier = Rml_Input_KeyModifier(16);
     pub const KM_CTRL: Rml_Input_KeyModifier = Rml_Input_KeyModifier(1);
+    pub const KM_SHIFT: Rml_Input_KeyModifier = Rml_Input_KeyModifier(2);
+    pub const KM_ALT: Rml_Input_KeyModifier = Rml_Input_KeyModifier(4);
     pub const KM_META: Rml_Input_KeyModifier = Rml_Input_KeyModifier(8);
+    pub const KM_CAPSLOCK: Rml_Input_KeyModifier = Rml_Input_KeyModifier(16);
     pub const KM_NUMLOCK: Rml_Input_KeyModifier = Rml_Input_KeyModifier(32);
     pub const KM_SCROLLLOCK: Rml_Input_KeyModifier = Rml_Input_KeyModifier(64);
-    pub const KM_SHIFT: Rml_Input_KeyModifier = Rml_Input_KeyModifier(2);
 }
 impl ::std::ops::BitOr<Rml_Input_KeyModifier> for Rml_Input_KeyModifier {
     type Output = Self;
-
     #[inline]
     fn bitor(self, other: Self) -> Self {
         Rml_Input_KeyModifier(self.0 | other.0)
@@ -429,7 +426,6 @@ impl ::std::ops::BitOrAssign for Rml_Input_KeyModifier {
 }
 impl ::std::ops::BitAnd<Rml_Input_KeyModifier> for Rml_Input_KeyModifier {
     type Output = Self;
-
     #[inline]
     fn bitand(self, other: Self) -> Self {
         Rml_Input_KeyModifier(self.0 & other.0)
