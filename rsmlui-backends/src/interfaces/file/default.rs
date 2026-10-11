@@ -1,23 +1,55 @@
-use rsmlui_core::_private::{HasOwnedInterface, not_send_sync};
-use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
+use rsmlui_core::_private::{FILE_INTERFACE_N, HasOwnedInterface};
+use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
+use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
+use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::core;
 use rsmlui_sys::file_interface::{
     RmlFileInterface, default_file_interface_destructor, new_default_file_interface,
 };
 
+pub mod tags {
+    pub enum TagFileDefault {}
+}
+
+impl ForeignObject for tags::TagFileDefault {
+    type Object = RmlFileInterface;
+}
+
+unsafe impl ForeignDestroy for tags::TagFileDefault {
+    unsafe fn destroy(raw: *mut Self::Object) {
+        unsafe { default_file_interface_destructor(raw) }
+    }
+
+    fn assert_droppable(raw: *mut Self::Object) {
+        assert_ne!(
+            core::get_file_interface(),
+            raw,
+            "FileDefault dropped while still registered as RmlUI's file interface"
+        );
+    }
+}
+
+/// Shared handle newtype for both [`FileDefault`] and [`FileDefaultRef`].
+#[repr(transparent)]
+pub struct FileDefaultHandle<'a, M: ObjectOwnership<tags::TagFileDefault>>(
+    ForeignHandle<'a, tags::TagFileDefault, M, Mut>,
+);
+
 /// Owns a C++-allocated `DefaultFileInterface` instance.
 ///
 /// Dropping while the interface is still registered with RmlUI will panic.
-pub struct FileDefault(pub(crate) BorrowedInterface<'static, RmlFileInterface>);
+pub type FileDefault = FileDefaultHandle<'static, Native>;
 
-not_send_sync!(FileDefault);
+/// A borrowed version of [`FileDefault`]. Identical in implementation and mutability,
+/// except it does not destroy the interface on [`Drop`].
+pub type FileDefaultRef<'a> = FileDefaultHandle<'a, Foreign>;
 
 impl FileDefault {
     pub fn new() -> Self {
         // Safety: `new_default_file_interface` returns a valid, non-null pointer allocated
-        // with `new`. The `'static` lifetime is correct because the allocation has no
-        // lifetime tied to any other resource.
-        Self(unsafe { BorrowedInterface::new(new_default_file_interface()) })
+        // with `new`.
+        Self(unsafe { ForeignHandle::<_, Native, Mut>::from_raw(new_default_file_interface()) })
     }
 }
 
@@ -27,29 +59,16 @@ impl Default for FileDefault {
     }
 }
 
-// Implemented on a shared borrow so the value and C++ object outlives the pointer.
-impl IntoRawInterface<RmlFileInterface> for &FileDefault {
+impl<'a, M: ObjectOwnership<tags::TagFileDefault>> IntoRawInterface<RmlFileInterface>
+    for &mut FileDefaultHandle<'a, M>
+{
     fn into_raw(self) -> RawInterface<RmlFileInterface> {
-        RawInterface::new(unsafe { self.0.as_ptr() })
+        RawInterface::new(unsafe { self.0.as_mut_ptr() })
     }
 }
 
-impl Drop for FileDefault {
-    fn drop(&mut self) {
-        let current = core::get_file_interface();
-
-        let self_ptr = unsafe { self.0.as_ptr() };
-
-        assert_ne!(
-            current, self_ptr,
-            "FileDefault dropped while still registered as RmlUI's fil interface"
-        );
-
-        // Safety: pointer is valid and confirmed not currently registered above.
-        unsafe { default_file_interface_destructor(self_ptr) }
-    }
-}
-
-impl HasOwnedInterface<2> for FileDefault {
+impl<'a, M: ObjectOwnership<tags::TagFileDefault>> HasOwnedInterface<{ FILE_INTERFACE_N }>
+    for FileDefaultHandle<'a, M>
+{
     type Owned = Self;
 }

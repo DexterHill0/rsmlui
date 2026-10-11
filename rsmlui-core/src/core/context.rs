@@ -4,7 +4,7 @@ use rsmlui_macros::rmldoc;
 use crate::_private::{IntoSys, not_send_sync};
 use crate::core::element_document::ElementDocument;
 use crate::error::Error;
-use crate::math::{IVec2, UVec2};
+use crate::math::UVec2;
 use crate::utils::raw::{PtrMut, Raw, RawMut};
 
 #[rmldoc(file = "api_Rml-Context.md", name = "Rml::Context")]

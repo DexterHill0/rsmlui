@@ -13,7 +13,7 @@ use crate::core::backend_handle::BackendHandle;
 use crate::core::context::Context;
 use crate::core::font::{FontFaceOptions, FontFaceSource};
 use crate::error::Error;
-use crate::interfaces::{BorrowedInterface, IntoRawInterface};
+use crate::interfaces::IntoRawInterface;
 use crate::math::UVec2;
 use crate::utils::conversions::IntoSys;
 
@@ -94,22 +94,6 @@ impl Rml {
         unsafe { core::set_system_interface(raw) }
     }
 
-    /// The returned `BorrowedInterface` borrows from `&self`, so it cannot outlive this `Rml`
-    /// instance. Once the interface is set, the concrete type is erased and it becomes just a
-    /// pointer to whatever C++ object was registered, and cannot be safely cast back to a
-    /// Rust type.
-    #[rmldoc(name = "Rml::GetSystemInterface")]
-    pub fn get_system_interface(&self) -> Option<BorrowedInterface<'_, RmlSystemInterface>> {
-        let ptr = core::get_system_interface();
-
-        if ptr.is_null() {
-            None
-        } else {
-            // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
-            Some(unsafe { BorrowedInterface::new(ptr) })
-        }
-    }
-
     #[rmldoc(name = "Rml::SetRenderInterface")]
     pub fn set_render_interface(
         &self,
@@ -120,37 +104,11 @@ impl Rml {
         unsafe { core::set_render_interface(raw) }
     }
 
-    /// See [`get_system_interface`](Rml::get_system_interface) for lifetime semantics.
-    #[rmldoc(name = "Rml::GetRenderInterface")]
-    pub fn get_render_interface(&self) -> Option<BorrowedInterface<'_, RmlRenderInterface>> {
-        let ptr = core::get_render_interface();
-
-        if ptr.is_null() {
-            None
-        } else {
-            // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
-            Some(unsafe { BorrowedInterface::new(ptr) })
-        }
-    }
-
     #[rmldoc(name = "Rml::SetFileInterface")]
     pub fn set_file_interface(&self, interface: Option<impl IntoRawInterface<RmlFileInterface>>) {
         let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw().0);
 
         unsafe { core::set_file_interface(raw) }
-    }
-
-    /// See [`get_file_interface`](Rml::get_file_interface) for lifetime semantics.
-    #[rmldoc(name = "Rml::GetFileInterface")]
-    pub fn get_file_interface(&self) -> Option<BorrowedInterface<'_, RmlFileInterface>> {
-        let ptr = core::get_file_interface();
-
-        if ptr.is_null() {
-            None
-        } else {
-            // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
-            Some(unsafe { BorrowedInterface::new(ptr) })
-        }
     }
 
     #[rmldoc(name = "Rml::Initialise")]
@@ -159,17 +117,17 @@ impl Rml {
             return Err(Error::AlreadyInitialized);
         }
 
-        if self.get_render_interface().is_none() {
+        if !self.render_interface_installed() {
             return Err(Error::NoRenderInterface);
         }
-        if self.get_system_interface().is_none() {
+        if !self.system_interface_installed() {
             return Err(Error::NoSystemInterface);
         }
-        if self.get_file_interface().is_none() {
+        if !self.file_interface_installed() {
             return Err(Error::NoFileInterface);
         }
         // TODO: add the following
-        // if self.get_font_interface().is_none() {}
+        // if !self.font_interface_installed() {}
 
         if !core::initialise() {
             return Err(Error::InitializationFailed);
@@ -262,6 +220,18 @@ impl Rml {
         }
 
         Ok(Context::new_with_borrow(context, self))
+    }
+
+    fn render_interface_installed(&self) -> bool {
+        !core::get_render_interface().is_null()
+    }
+
+    fn system_interface_installed(&self) -> bool {
+        !core::get_system_interface().is_null()
+    }
+
+    fn file_interface_installed(&self) -> bool {
+        !core::get_file_interface().is_null()
     }
 }
 

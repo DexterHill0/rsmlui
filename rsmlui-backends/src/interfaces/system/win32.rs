@@ -1,23 +1,55 @@
-use rsmlui_core::_private::{HasOwnedInterface, not_send_sync};
-use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
+use rsmlui_core::_private::{HasOwnedInterface, SYSTEM_INTERFACE_N};
+use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
+use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
+use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::core;
 use rsmlui_sys::system_interface::{
     RmlSystemInterface, new_win32_system_interface, win32_system_interface_destructor,
 };
 
+pub mod tags {
+    pub enum TagWin32 {}
+}
+
+impl ForeignObject for tags::TagWin32 {
+    type Object = RmlSystemInterface;
+}
+
+unsafe impl ForeignDestroy for tags::TagWin32 {
+    unsafe fn destroy(raw: *mut Self::Object) {
+        unsafe { win32_system_interface_destructor(raw) }
+    }
+
+    fn assert_droppable(raw: *mut Self::Object) {
+        assert_ne!(
+            core::get_system_interface(),
+            raw,
+            "SystemWin32 dropped while still registered as RmlUI's system interface"
+        );
+    }
+}
+
+/// Shared handle newtype for both [`SystemWin32`] and [`SystemWin32Ref`].
+#[repr(transparent)]
+pub struct Win32Handle<'a, M: ObjectOwnership<tags::TagWin32>>(
+    ForeignHandle<'a, tags::TagWin32, M, Mut>,
+);
+
 /// Owns a C++-allocated `SystemInterface_Win32` instance.
 ///
 /// Dropping while the interface is still registered with RmlUI will panic.
-pub struct SystemWin32(pub(crate) BorrowedInterface<'static, RmlSystemInterface>);
+pub type SystemWin32 = Win32Handle<'static, Native>;
 
-not_send_sync!(SystemWin32);
+/// A borrowed version of [`SystemWin32`]. Identical in implementation and mutability,
+/// except it does not destroy the interface on [`Drop`].
+pub type SystemWin32Ref<'a> = Win32Handle<'a, Foreign>;
 
 impl SystemWin32 {
     pub fn new() -> Self {
         // Safety: `new_win32_system_interface` returns a valid, non-null pointer allocated
-        // with `new`. The `'static` lifetime is correct because the allocation has no
-        // lifetime tied to any other resource.
-        Self(unsafe { BorrowedInterface::new(new_win32_system_interface()) })
+        // with `new`.
+        Self(unsafe { ForeignHandle::<_, Native, Mut>::from_raw(new_win32_system_interface()) })
     }
 }
 
@@ -27,29 +59,16 @@ impl Default for SystemWin32 {
     }
 }
 
-// Implemented on a shared borrow so the value and C++ object outlives the pointer.
-impl IntoRawInterface<RmlSystemInterface> for &SystemWin32 {
+impl<'a, M: ObjectOwnership<tags::TagWin32>> IntoRawInterface<RmlSystemInterface>
+    for &mut Win32Handle<'a, M>
+{
     fn into_raw(self) -> RawInterface<RmlSystemInterface> {
-        RawInterface::new(unsafe { self.0.as_ptr() })
+        RawInterface::new(unsafe { self.0.as_mut_ptr() })
     }
 }
 
-impl Drop for SystemWin32 {
-    fn drop(&mut self) {
-        let current = core::get_system_interface();
-
-        let self_ptr = unsafe { self.0.as_ptr() };
-
-        assert_ne!(
-            current, self_ptr,
-            "SystemWin32 dropped while still registered as RmlUI's system interface"
-        );
-
-        // Safety: pointer is valid and confirmed not currently registered above.
-        unsafe { win32_system_interface_destructor(self_ptr) }
-    }
-}
-
-impl HasOwnedInterface<0> for SystemWin32 {
+impl<'a, M: ObjectOwnership<tags::TagWin32>> HasOwnedInterface<{ SYSTEM_INTERFACE_N }>
+    for Win32Handle<'a, M>
+{
     type Owned = Self;
 }

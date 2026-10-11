@@ -5,7 +5,6 @@ use rsmlui_core::_private::{FromSys, IntoSys, not_send_sync, not_unwind_safe};
 use rsmlui_core::BackendHandle;
 use rsmlui_core::core::context::Context;
 use rsmlui_core::error::Error as CoreError;
-use rsmlui_core::interfaces::BorrowedInterface;
 use rsmlui_core::math::IVec2;
 use rsmlui_core::types::input::{KeyCode, KeyModifier};
 use rsmlui_sys::render_interface::RmlRenderInterface;
@@ -13,6 +12,8 @@ use rsmlui_sys::system_interface::RmlSystemInterface;
 use rsmlui_sys::{Rml_Input_KeyIdentifier, Rml_Input_KeyModifier, backend};
 
 use crate::error::BackendError;
+use crate::interfaces::gl2::RendererGl2Ref;
+use crate::interfaces::win32::SystemWin32Ref;
 use crate::monolithic::{BackendOptions, KeyDownCallback, KeyDownCallbackDyn};
 
 /// Wraps RmlUi's built-in Win32 + OpenGL 2 C++ backend.
@@ -80,12 +81,12 @@ impl Win32Gl2Backend {
 
     /// Pass this to [`Rml::set_system_interface`](rsmlui_core::core::core::Rml::set_system_interface).
     ///
-    /// The returned `BorrowedInterface` borrows from `&self`, so the borrow checker prevents
-    /// holding it past this backend's lifetime. Once passed to `set_system_interface` the
-    /// `BorrowedInterface` is consumed, and the [`BackendHandle`] mechanism ensures the C++
-    /// memory backing that pointer is not freed before [`Rml`](rsmlui_core::core::core::Rml)
-    /// shuts down.
-    pub fn get_system_interface(&self) -> Option<BorrowedInterface<'_, RmlSystemInterface>> {
+    /// The returned interface Borrows from `&self`, so the borrow checker prevents holding
+    /// it past this backend's lifetime.
+    ///
+    /// The object returned by this function is a mutable reference to the interface, so
+    /// dropping this value does not free the underlying object, as we do not own that value.
+    pub fn get_system_interface(&self) -> Option<SystemWin32Ref<'_>> {
         let itf = backend::get_system_interface();
 
         if itf.is_null() {
@@ -93,21 +94,21 @@ impl Win32Gl2Backend {
         }
 
         // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
-        Some(unsafe { BorrowedInterface::new(itf) })
+        Some(unsafe { SystemWin32Ref::from_raw(itf) })
     }
 
     /// Pass this to [`Rml::set_render_interface`](rsmlui_core::core::core::Rml::set_render_interface).
     ///
     /// See [`get_system_interface`](Win32Gl2Backend::get_system_interface) for lifetime semantics.
-    pub fn get_render_interface(&self) -> Option<BorrowedInterface<'_, RmlRenderInterface>> {
+    pub fn get_render_interface(&self) -> Option<RendererGl2Ref<'_>> {
         let itf = backend::get_render_interface();
 
         if itf.is_null() {
             return None;
         }
 
-        // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
-        Some(unsafe { BorrowedInterface::new(itf) })
+        // Safety: [`Self::initialize`] will initialize an OpenGL context.
+        Some(unsafe { RendererGl2Ref::from_raw(itf) })
     }
 
     /// Override the key-down callback used during [`process_events`].

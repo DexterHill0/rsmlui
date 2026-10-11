@@ -1,5 +1,8 @@
-use rsmlui_core::_private::{HasOwnedInterface, not_send_sync};
-use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
+use rsmlui_core::_private::{HasOwnedInterface, SYSTEM_INTERFACE_N};
+use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
+use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectMutPtr};
+use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::core;
 use rsmlui_sys::interfaces::Opaque;
 use rsmlui_sys::system_interface::{
@@ -20,45 +23,75 @@ unsafe impl HasGlfwWindow for glfw::Window {
     }
 }
 
+pub mod tags {
+    pub enum TagGlfw {}
+}
+
+impl ForeignObject for tags::TagGlfw {
+    type Object = RmlSystemInterface;
+}
+
+unsafe impl ForeignDestroy for tags::TagGlfw {
+    unsafe fn destroy(raw: *mut Self::Object) {
+        unsafe { glfw_system_interface_destructor(raw) }
+    }
+
+    fn assert_droppable(raw: *mut Self::Object) {
+        assert_ne!(
+            core::get_system_interface(),
+            raw,
+            "SystemGlfw dropped while still registered as RmlUI's system interface"
+        );
+    }
+}
+
+/// Shared handle newtype for both [`SystemGlfw`] and [`SystemGlfwRef`].
+#[repr(transparent)]
+pub struct GlfwHandle<'a, M: ObjectOwnership<tags::TagGlfw>>(
+    ForeignHandle<'a, tags::TagGlfw, M, Mut>,
+);
+
 /// Owns a C++-allocated `SystemInterface_GLFW` instance.
 ///
 /// Dropping while the interface is still registered with RmlUI will panic.
-pub struct SystemGlfw(pub(crate) BorrowedInterface<'static, RmlSystemInterface>);
+pub type SystemGlfw = GlfwHandle<'static, Native>;
 
-not_send_sync!(SystemGlfw);
+/// A borrowed version of [`SystemGlfw`]. Identical in implementation and mutability,
+/// except it does not destroy the interface on [`Drop`].
+pub type SystemGlfwRef<'a> = GlfwHandle<'a, Foreign>;
 
 impl SystemGlfw {
     pub fn new(glfw_window: &mut impl HasGlfwWindow) -> Self {
-        // Safety: `new_gflw_system_interface` returns a valid, non-null pointer allocated
-        // with `new`. The `'static` lifetime is correct because the allocation has no
-        // lifetime tied to any other resource.
-        Self(unsafe { BorrowedInterface::new(new_glfw_system_interface(glfw_window.window_ptr())) })
+        // Safety: `new_glfw_system_interface` returns a valid, non-null pointer allocated
+        // with `new`.
+        Self(unsafe {
+            ForeignHandle::<_, Native, Mut>::from_raw(new_glfw_system_interface(
+                glfw_window.window_ptr(),
+            ))
+        })
     }
 }
 
-// Implemented on a shared borrow so the value and C++ object outlives the pointer.
-impl IntoRawInterface<RmlSystemInterface> for &SystemGlfw {
+impl<'a> SystemGlfwRef<'a> {
+    /// # Safety
+    ///
+    /// - `raw` must be a valid, non-null pointer to a `RenderInterface_GL2` that
+    ///   outlives `'a`.
+    pub(crate) unsafe fn from_raw(raw: ObjectMutPtr<tags::TagGlfw>) -> Self {
+        Self(unsafe { ForeignHandle::<_, Foreign, Mut>::from_raw(raw) })
+    }
+}
+
+impl<'a, M: ObjectOwnership<tags::TagGlfw>> IntoRawInterface<RmlSystemInterface>
+    for &mut GlfwHandle<'a, M>
+{
     fn into_raw(self) -> RawInterface<RmlSystemInterface> {
-        RawInterface::new(unsafe { self.0.as_ptr() })
+        RawInterface::new(unsafe { self.0.as_mut_ptr() })
     }
 }
 
-impl Drop for SystemGlfw {
-    fn drop(&mut self) {
-        let current = core::get_system_interface();
-
-        let self_ptr = unsafe { self.0.as_ptr() };
-
-        assert_ne!(
-            current, self_ptr,
-            "SystemGlfw dropped while still registered as RmlUI's system interface"
-        );
-
-        // Safety: pointer is valid and confirmed not currently registered above.
-        unsafe { glfw_system_interface_destructor(self_ptr) }
-    }
-}
-
-impl HasOwnedInterface<0> for SystemGlfw {
+impl<'a, M: ObjectOwnership<tags::TagGlfw>> HasOwnedInterface<{ SYSTEM_INTERFACE_N }>
+    for GlfwHandle<'a, M>
+{
     type Owned = Self;
 }

@@ -7,6 +7,7 @@ MACOSX_DEPLOYMENT_TARGET = "{% if os() == 'macos' %}{{ exec(command='sw_vers -pr
 
 [tasks.build]
 run = "cargo build --workspace --exclude basic --exclude raw"
+run_windows = "cargo build --workspace --exclude non-native"
 
 [tasks.fmt]
 run = [

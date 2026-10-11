@@ -26,50 +26,8 @@ impl<T> RawInterface<T> {
     }
 }
 
-#[repr(transparent)]
-/// A non-owning view of a C++ interface pointer.
-///
-/// Constructible from a raw pointer via [`BorrowedInterface::new`]. The pointer
-/// is not freed on drop as this is just a small, transparent wrapper around the
-/// pointer C++ gives us.
-///
-/// The lifetime is used to prevent the pointer outliving the value it was
-/// borrowed from (I.E, the interface can't outlive the backend).
-#[derive(Copy, Clone)]
-pub struct BorrowedInterface<'a, T> {
-    pub(crate) raw: *mut T,
-    _phantom: PhantomData<&'a ()>,
-}
-
-not_send_sync!(['a, T] BorrowedInterface['a, T]);
-
-impl<'a, T> BorrowedInterface<'a, T> {
-    /// Unsafe because it should not be used outside of rsmlui crates.
-    /// It could change at any time.
-    #[doc(hidden)]
-    pub unsafe fn new(ptr: *mut T) -> Self {
-        Self {
-            raw: ptr,
-            _phantom: PhantomData,
-        }
-    }
-
-    /// Unsafe because it should not be used outside of rsmlui crates.
-    /// It could change at any time.
-    #[doc(hidden)]
-    pub unsafe fn as_ptr(&self) -> *mut T {
-        self.raw
-    }
-}
-
 pub trait IntoRawInterface<T> {
     fn into_raw(self) -> RawInterface<T>;
-}
-
-impl<'a, T> IntoRawInterface<T> for BorrowedInterface<'a, T> {
-    fn into_raw(self) -> RawInterface<T> {
-        RawInterface::new(self.raw)
-    }
 }
 
 /// Heap-allocated data for an interface handle.
@@ -266,4 +224,11 @@ pub(crate) mod _private {
     pub trait HasOwnedInterface<const _N: usize> {
         type Owned;
     }
+
+    #[doc(hidden)]
+    pub const SYSTEM_INTERFACE_N: usize = 0;
+    #[doc(hidden)]
+    pub const RENDER_INTERFACE_N: usize = 1;
+    #[doc(hidden)]
+    pub const FILE_INTERFACE_N: usize = 2;
 }

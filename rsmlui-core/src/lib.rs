@@ -12,6 +12,7 @@ pub mod containers;
 pub mod core;
 pub mod error;
 pub mod interfaces;
+pub mod object;
 pub mod types;
 mod utils;
 
@@ -27,7 +28,9 @@ pub use types::math;
 
 #[doc(hidden)]
 pub mod _private {
-    pub use crate::interfaces::_private::HasOwnedInterface;
+    pub use crate::interfaces::_private::{
+        FILE_INTERFACE_N, HasOwnedInterface, RENDER_INTERFACE_N, SYSTEM_INTERFACE_N,
+    };
     pub use crate::utils::conversions::{FromSys, IntoSys};
     pub use crate::utils::macros::{not_send_sync, not_unwind_safe};
 }

@@ -1,6 +1,11 @@
-use rsmlui_core::_private::{HasOwnedInterface, IntoSys, not_send_sync, not_unwind_safe};
-use rsmlui_core::interfaces::{BorrowedInterface, IntoRawInterface, RawInterface};
+use rsmlui_core::_private::{
+    HasOwnedInterface, IntoSys, RENDER_INTERFACE_N, not_send_sync, not_unwind_safe,
+};
+use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
 use rsmlui_core::math::UVec2;
+use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
+use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::interfaces::render_interface_gl3::{
     gl3_initialize, gl3_render_interface_begin_frame, gl3_render_interface_clear,
     gl3_render_interface_end_frame, gl3_render_interface_set_viewport, gl3_shutdown,
@@ -10,16 +15,69 @@ use rsmlui_sys::render_interface::{
 };
 use rsmlui_sys::{Rml_Vector2i, core};
 
+pub mod tags {
+    pub enum TagGl3 {}
+}
+
+impl ForeignObject for tags::TagGl3 {
+    type Object = RmlRenderInterface;
+}
+
+unsafe impl ForeignDestroy for tags::TagGl3 {
+    unsafe fn destroy(raw: *mut Self::Object) {
+        // Safety: the pointer is valid and non-null
+        unsafe { gl3_render_interface_destructor(raw) };
+
+        // the glad function pointers loaded by `assume_init` are no longer needed
+        // once the renderer that uses them is gone
+        gl3_shutdown();
+    }
+
+    fn assert_droppable(raw: *mut Self::Object) {
+        assert_ne!(
+            core::get_render_interface(),
+            raw,
+            "RendererGl3 dropped while still registered as RmlUI's render interface"
+        );
+    }
+}
+
 /// Token for constructing a [`RendererGl3`]. Holds no resources.
+#[derive(Default)]
 pub struct UninitRendererGl3 {
     _private: (),
 }
 
 not_send_sync!(UninitRendererGl3);
 
+/// Shared handle newtype for both [`RendererGl3`] and [`RendererGl3Ref`].
+#[repr(transparent)]
+pub struct Gl3Handle<'a, M: ObjectOwnership<tags::TagGl3>>(ForeignHandle<'a, tags::TagGl3, M, Mut>);
+
+/// Owns a C++-allocated `RenderInterface_GL3` instance.
+///
+/// Dropping while the interface is still registered with RmlUI will panic.
+///
+/// # Safety
+///
+/// A valid OpenGL 3.x context must be current on this thread for the entire lifetime
+/// that this renderer is registered with RmlUI.
+///
+/// To create a [`RendererGl3`], you must use [`UninitRendererGl3::assume_init`] which
+/// forces the user to be aware of the safety invariant.
+pub type RendererGl3 = Gl3Handle<'static, Native>;
+
+/// A borrowed version of [`RendererGl3`]. Identical in implementation and mutability,
+/// except it does not destroy the renderer on [`Drop`].
+pub type RendererGl3Ref<'a> = Gl3Handle<'a, Foreign>;
+
+not_unwind_safe!(['a, M: ObjectOwnership<tags::TagGl3>] Gl3Handle['a, M]);
+
 impl UninitRendererGl3 {
+    /// Creates a new `UninitRendererGl3`. Does not invoke any foreign code until
+    /// [`UninitRendererGl3::assume_init`] is called.
     pub fn new() -> Self {
-        UninitRendererGl3 { _private: () }
+        Self::default()
     }
 
     /// Loads OpenGL 3.x function pointers and constructs the renderer.
@@ -40,33 +98,15 @@ impl UninitRendererGl3 {
             return None;
         }
 
-        Some(RendererGl3 {
-            // Safety: gl3_initialize() succeeded above, so glad function pointers are loaded
-            // and the C++ constructor (which creates shaders) can execute safely.
-            interface: unsafe { BorrowedInterface::new(new_gl3_render_interface()) },
-        })
+        // Safety: gl3_initialize() succeeded above, so glad function pointers are loaded
+        // and the C++ constructor (which creates shaders) can execute safely.
+        Some(Gl3Handle(unsafe {
+            ForeignHandle::<_, Native, Mut>::from_raw(new_gl3_render_interface())
+        }))
     }
 }
 
-/// Owns a C++-allocated `RenderInterface_GL3` instance.
-///
-/// Dropping while the interface is still registered with RmlUI will panic.
-///
-/// # Safety
-///
-/// A valid OpenGL 3.x context must be current on this thread for the entire lifetime
-/// that this renderer is registered with RmlUI.
-///
-/// To create a [`RendererGl3`], you must use [`UninitRendererGl3::assume_init`] which
-/// forces the user to be aware of the safety invariant.
-pub struct RendererGl3 {
-    pub(crate) interface: BorrowedInterface<'static, RmlRenderInterface>,
-}
-
-not_send_sync!(RendererGl3);
-not_unwind_safe!(RendererGl3);
-
-impl RendererGl3 {
+impl<'a, M: ObjectOwnership<tags::TagGl3>> Gl3Handle<'a, M> {
     /// Must be called before [`begin_frame`] whenever the window size changes.
     ///
     /// [`begin_frame`]: RendererGl3::begin_frame
@@ -76,7 +116,7 @@ impl RendererGl3 {
         // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
         unsafe {
-            gl3_render_interface_set_viewport(self.interface.as_ptr(), dimensions.x, dimensions.y)
+            gl3_render_interface_set_viewport(self.0.as_mut_ptr(), dimensions.x, dimensions.y)
         }
     }
 
@@ -84,52 +124,38 @@ impl RendererGl3 {
     ///
     /// [`set_viewport`]: RendererGl3::set_viewport
     /// [`clear`]: RendererGl3::clear
-    pub fn begin_frame(&self) {
+    pub fn begin_frame(&mut self) {
         // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
-        unsafe { gl3_render_interface_begin_frame(self.interface.as_ptr()) }
+        unsafe { gl3_render_interface_begin_frame(self.0.as_mut_ptr()) }
     }
 
-    pub fn end_frame(&self) {
+    pub fn end_frame(&mut self) {
         // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
-        unsafe { gl3_render_interface_end_frame(self.interface.as_ptr()) }
+        unsafe { gl3_render_interface_end_frame(self.0.as_mut_ptr()) }
     }
 
     /// Clears the framebuffer. Call before [`begin_frame`].
     ///
     /// [`begin_frame`]: RendererGl3::begin_frame
-    pub fn clear(&self) {
+    pub fn clear(&mut self) {
         // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
-        unsafe { gl3_render_interface_clear(self.interface.as_ptr()) }
+        unsafe { gl3_render_interface_clear(self.0.as_mut_ptr()) }
     }
 }
 
-impl IntoRawInterface<RmlRenderInterface> for &RendererGl3 {
+impl<'a, M: ObjectOwnership<tags::TagGl3>> IntoRawInterface<RmlRenderInterface>
+    for &mut Gl3Handle<'a, M>
+{
     fn into_raw(self) -> RawInterface<RmlRenderInterface> {
-        RawInterface::new(unsafe { self.interface.as_ptr() })
+        RawInterface::new(unsafe { self.0.as_mut_ptr() })
     }
 }
 
-impl Drop for RendererGl3 {
-    fn drop(&mut self) {
-        let current = core::get_render_interface();
-
-        let self_ptr = unsafe { self.interface.as_ptr() };
-
-        assert_ne!(
-            current, self_ptr,
-            "RenderInterfaceGl3 dropped while still registered as RmlUI's render interface"
-        );
-
-        // Safety: pointer is valid and confirmed not currently registered above.
-        unsafe { gl3_render_interface_destructor(self_ptr) };
-
-        gl3_shutdown();
-    }
-}
-
-impl HasOwnedInterface<1> for RendererGl3 {
+impl<'a, M: ObjectOwnership<tags::TagGl3>> HasOwnedInterface<{ RENDER_INTERFACE_N }>
+    for Gl3Handle<'a, M>
+{
     type Owned = Self;
 }
