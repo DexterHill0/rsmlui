@@ -335,4 +335,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::XMLNodeHandler \
   Rml::XMLNodeHandler::* \
   Rml::XMLParser \
-  Rml::XMLParser::*
+  Rml::XMLParser::* \
+  RmlUiAssertNonrecursive \
+  RmlUiAssertNonrecursive::*

@@ -14,20 +14,19 @@ C++ include:
 <!-- rsmlui:block["Rml::Variant::Get"] refid="class_rml_1_1_variant_1a404bcc4196ba93c881615180502c4f59" -->
 
 Templatised data accessor. TypeConverters will be used to attempt to convert from the internal representation to the requested representation. 
-#### Parameters
-* `default_value` The value returned if the conversion failed. 
-
 #### Returns
 Data in the requested type.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `default_value` | `T` | The value returned if the conversion failed. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Variant::GetInto"] refid="class_rml_1_1_variant_1aad8ff6dadf153eacda5edcb333930480" -->
 
 Templatised data accessor. TypeConverters will be used to attempt to convert from the internal representation to the requested representation. 
-#### Parameters
-* `value` Data in the requested type. 
-
 #### Returns
 True if the value was converted and returned, false if no data was stored in the variant. 
 
@@ -38,6 +37,11 @@ Can be used with enum types, will convert from stored integral value.
 </div>
 
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `value` | `T &` | Data in the requested type. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Variant::GetReference"] refid="class_rml_1_1_variant_1a69205cf53cb4a9f39148547d738e0476" -->

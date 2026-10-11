@@ -13,14 +13,15 @@ C++ inheritance: `Rml::ScriptInterface`
 
 <!-- rsmlui:block["Rml::Context::Context"] refid="class_rml_1_1_context_1a75321568adaff69b9a3c5190cc471fa9" -->
 
-Constructs a new, uninitialised context. This should not be called directly, use CreateContext() instead. 
-#### Parameters
-* `name` The name of the context. 
+Constructs a new, uninitialised context. This should not be called directly, use CreateContext() instead.
 
-* `render_manager` The render manager used for this context. 
+Parameters:
 
-* `text_input_handler` The text input handler used for this context.
-
+| Name | Type | Description |
+|------|------|-------------|
+| `name` | `const String &` | The name of the context. |
+| `render_manager` | `RenderManager *` | The render manager used for this context. |
+| `text_input_handler` | `TextInputHandler *` | The text input handler used for this context. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::~Context"] refid="class_rml_1_1_context_1a2ee8ff31e91997190866985e08bfcfbd" -->
@@ -38,10 +39,13 @@ The context's name.
 
 <!-- rsmlui:block["Rml::Context::SetDimensions"] refid="class_rml_1_1_context_1ac399e689925b56f1afdc646b629052eb" -->
 
-Changes the dimensions of the context. 
-#### Parameters
-* `dimensions` The new dimensions of the context.
+Changes the dimensions of the context.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `dimensions` | `Vector2i` | The new dimensions of the context. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetDimensions"] refid="class_rml_1_1_context_1a6c54b0786a61ed58bf0508224e15d804" -->
@@ -54,10 +58,13 @@ The current dimensions of the context.
 
 <!-- rsmlui:block["Rml::Context::SetDensityIndependentPixelRatio"] refid="class_rml_1_1_context_1a7455d26627bc2ff5c75113c32f6adb76" -->
 
-Changes the ratio of the 'dp' unit to the 'px' unit. 
-#### Parameters
-* `dp_ratio` The new density-independent pixel ratio of the context.
+Changes the ratio of the 'dp' unit to the 'px' unit.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `dp_ratio` | `float` | The new density-independent pixel ratio of the context. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetDensityIndependentPixelRatio"] refid="class_rml_1_1_context_1a5160b914e9f22268c9d3a92cebb5825b" -->
@@ -82,55 +89,59 @@ Renders all visible elements in the context's documents.
 <!-- rsmlui:block["Rml::Context::CreateDocument"] refid="class_rml_1_1_context_1a9d6188808d3bef3dd66c56a222eb4d11" -->
 
 Creates a new, empty document and places it into this context. 
-#### Parameters
-* `instancer_name` The name of the instancer used to create the document. 
-
 #### Returns
 The new document, or nullptr if no document could be created.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `instancer_name` | `const String &` | The name of the instancer used to create the document. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::LoadDocument"] refid="class_rml_1_1_context_1a2ba6bc9ce08f1ba834de53a207af79a3" -->
 
 Load a document into the context. 
-#### Parameters
-* `document_path` The path to the document to load. The path is passed directly to the file interface which is used to load the file. The default file interface accepts both absolute paths and paths relative to the working directory. 
-
 #### Returns
 The loaded document, or nullptr if no document was loaded.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `document_path` | `const String &` | The path to the document to load. The path is passed directly to the file interface which is used to load the file. The default file interface accepts both absolute paths and paths relative to the working directory. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::LoadDocument"] refid="class_rml_1_1_context_1ada94807c223fb9fc11e0990a9ad17c6e" -->
 
 Load a document into the context. 
-#### Parameters
-* `document_stream` The opened stream, ready to read. 
-
 #### Returns
 The loaded document, or nullptr if no document was loaded.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `document_stream` | `Stream *` | The opened stream, ready to read. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::LoadDocumentFromMemory"] refid="class_rml_1_1_context_1a96da560e1b409141b1a47014a868360a" -->
 
 Load a document into the context. 
-#### Parameters
-* `document_rml` The string containing the document RML. 
-
-* `source_url` Optional string used to set the document's source URL, or naming the document for log messages. 
-
 #### Returns
 The loaded document, or nullptr if no document was loaded.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `document_rml` | `const String &` | The string containing the document RML. |
+| `source_url` | `const String &` | Optional string used to set the document's source URL, or naming the document for log messages. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::UnloadDocument"] refid="class_rml_1_1_context_1a029cdee43160f28bbd17dbe06b2faea1" -->
 
 Unload the given document. 
-#### Parameters
-* `document` The document to unload. 
-
 <div class="warning">
 
 The destruction of the document is deferred until the next call to [Context::Update()](#update). 
@@ -138,6 +149,11 @@ The destruction of the document is deferred until the next call to [Context::Upd
 </div>
 
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `document` | `[ElementDocument](api_Rml-ElementDocument.md#elementdocument) *` | The document to unload. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::UnloadAllDocuments"] refid="class_rml_1_1_context_1a6713747bac32bed6d64cfdd5f07e0527" -->
@@ -154,53 +170,63 @@ The destruction of the documents is deferred until the next call to [Context::Up
 
 <!-- rsmlui:block["Rml::Context::EnableMouseCursor"] refid="class_rml_1_1_context_1a527177c0a51be83e1858bb2e9a9f5e9e" -->
 
-Enable or disable handling of the mouse cursor from this context. When enabled, changes to the cursor name are passed to the system interface. 
-#### Parameters
-* `enable` True to enable mouse cursor handling, false to disable.
+Enable or disable handling of the mouse cursor from this context. When enabled, changes to the cursor name are passed to the system interface.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `enable` | `bool` | True to enable mouse cursor handling, false to disable. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ActivateTheme"] refid="class_rml_1_1_context_1a2bb2a908875f6753a15f75dc4a3da35c" -->
 
-Activate or deactivate a media theme. Themes can be used in RCSS media queries. 
-#### Parameters
-* `theme_name[in]` The name of the theme to (de)activate. 
+Activate or deactivate a media theme. Themes can be used in RCSS media queries.
 
-* `activate` True to activate the given theme, false to deactivate.
+Parameters:
 
+| Name | Type | Description |
+|------|------|-------------|
+| `activate` | `bool` | True to activate the given theme, false to deactivate. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::IsThemeActive"] refid="class_rml_1_1_context_1a6c9c8644470f72646d4badb631474db6" -->
 
 Check if a given media theme has been activated. 
-#### Parameters
-* `theme_name` The name of the theme. 
-
 #### Returns
 True if the theme is activated.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `theme_name` | `const String &` | The name of the theme. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetDocument"] refid="class_rml_1_1_context_1a7d6b32bdc34572c408afeaa277eaaed2" -->
 
 Returns the first document in the context with the given id. 
-#### Parameters
-* `id` The id of the desired document. 
-
 #### Returns
 The document (if it was found), or nullptr if no document exists with the ID.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `id` | `const String &` | The id of the desired document. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetDocument"] refid="class_rml_1_1_context_1a4bec1a25aab0c728de17bbbe966c14e0" -->
 
 Returns a document in the context by index. 
-#### Parameters
-* `index` The index of the desired document. 
-
 #### Returns
 The document (if one exists with this index), or nullptr if the index was invalid.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `index` | `int` | The index of the desired document. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetNumDocuments"] refid="class_rml_1_1_context_1af171c25c2d4b18135b790ab353aa319a" -->
@@ -235,101 +261,116 @@ The root element.
 <!-- rsmlui:block["Rml::Context::GetElementAtPoint"] refid="class_rml_1_1_context_1ab08d74bd72b1434a2faafdb714fd7685" -->
 
 Returns the youngest descendent of the given element which is under the given point in screen coordinates. 
-#### Parameters
-* `point` The point to test. 
-
-* `ignore_element` If set, this element and its descendents will be ignored. 
-
-* `element` Used internally. 
-
 #### Returns
 The element under the point, or nullptr if nothing is.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `point` | `Vector2f` | The point to test. |
+| `ignore_element` | `const Element *` | If set, this element and its descendents will be ignored. |
+| `element` | `Element *` | Used internally. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::PullDocumentToFront"] refid="class_rml_1_1_context_1a7d0a98813383582ce526bb3111ef8cc4" -->
 
-Brings the document to the front of the document stack. 
-#### Parameters
-* `document` The document to pull to the front of the stack.
+Brings the document to the front of the document stack.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `document` | `[ElementDocument](api_Rml-ElementDocument.md#elementdocument) *` | The document to pull to the front of the stack. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::PushDocumentToBack"] refid="class_rml_1_1_context_1ae3ed2978969201c731913ad6de1a9b2d" -->
 
-Sends the document to the back of the document stack. 
-#### Parameters
-* `document` The document to push to the bottom of the stack.
+Sends the document to the back of the document stack.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `document` | `[ElementDocument](api_Rml-ElementDocument.md#elementdocument) *` | The document to push to the bottom of the stack. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::UnfocusDocument"] refid="class_rml_1_1_context_1ae0a322f4341dc8e06ad2e0e60d0b21b6" -->
 
-Remove the document from the focus history and focus the previous document. 
-#### Parameters
-* `document` The document to unfocus.
+Remove the document from the focus history and focus the previous document.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `document` | `[ElementDocument](api_Rml-ElementDocument.md#elementdocument) *` | The document to unfocus. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::AddEventListener"] refid="class_rml_1_1_context_1a565e031a43e97c209d2f796994e6eefa" -->
 
-Adds an event listener to the context's root element. 
-#### Parameters
-* `event` The name of the event to attach to. 
+Adds an event listener to the context's root element.
 
-* `listener` Listener object to be attached. 
+Parameters:
 
-* `in_capture_phase` True if the listener is to be attached to the capture phase, false for the bubble phase.
-
+| Name | Type | Description |
+|------|------|-------------|
+| `event` | `const String &` | The name of the event to attach to. |
+| `listener` | `EventListener *` | Listener object to be attached. |
+| `in_capture_phase` | `bool` | True if the listener is to be attached to the capture phase, false for the bubble phase. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::RemoveEventListener"] refid="class_rml_1_1_context_1a596e8d8586b9dd11d1b6e11fbc062d35" -->
 
-Removes an event listener from the context's root element. 
-#### Parameters
-* `event` The name of the event to detach from. 
+Removes an event listener from the context's root element.
 
-* `listener` Listener object to be detached. 
+Parameters:
 
-* `in_capture_phase` True to detach from the capture phase, false from the bubble phase.
-
+| Name | Type | Description |
+|------|------|-------------|
+| `event` | `const String &` | The name of the event to detach from. |
+| `listener` | `EventListener *` | Listener object to be detached. |
+| `in_capture_phase` | `bool` | True to detach from the capture phase, false from the bubble phase. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessKeyDown"] refid="class_rml_1_1_context_1ae1224bf04ab04c48ba04faa0b3e80c67" -->
 
 Sends a key down event into this context. 
-#### Parameters
-* `key_identifier` The key pressed. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `key_identifier` | `Input::KeyIdentifier` | The key pressed. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessKeyUp"] refid="class_rml_1_1_context_1ac46b9506c73212a3ac20387f2653f276" -->
 
 Sends a key up event into this context. 
-#### Parameters
-* `key_identifier` The key released. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `key_identifier` | `Input::KeyIdentifier` | The key released. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessTextInput"] refid="class_rml_1_1_context_1a8ebc3af157caeff7de77165716393171" -->
 
 Sends a single Unicode character as text input into this context. 
-#### Parameters
-* `character` The Unicode code point to send into this context. 
-
 #### Returns
 True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `character` | `Character` | The Unicode code point to send into this context. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessTextInput"] refid="class_rml_1_1_context_1a1eb37c3339a44947644ed8f57ee5bb3e" -->
@@ -340,53 +381,57 @@ Sends a single ascii character as text input into this context.
 <!-- rsmlui:block["Rml::Context::ProcessTextInput"] refid="class_rml_1_1_context_1a2f34194ca96c72923accbc4c28c6cbb7" -->
 
 Sends a string of text as text input into this context. 
-#### Parameters
-* `string` The UTF-8 string to send into this context. 
-
 #### Returns
 True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `string` | `const String &` | The UTF-8 string to send into this context. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessMouseMove"] refid="class_rml_1_1_context_1a01020500dd688677cdf739d8637ec912" -->
 
 Sends a mouse movement event into this context. 
-#### Parameters
-* `x` The x-coordinate of the mouse cursor, in window-coordinates (ie, 0 should be the left of the client area). 
-
-* `y` The y-coordinate of the mouse cursor, in window-coordinates (ie, 0 should be the top of the client area). 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if the mouse is not interacting with any elements in the context (see 'IsMouseInteracting'), otherwise false.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `x` | `int` | The x-coordinate of the mouse cursor, in window-coordinates (ie, 0 should be the left of the client area). |
+| `y` | `int` | The y-coordinate of the mouse cursor, in window-coordinates (ie, 0 should be the top of the client area). |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessMouseButtonDown"] refid="class_rml_1_1_context_1afa1d18d8561a9cfb09ead898ab67dbe3" -->
 
 Sends a mouse-button down event into this context. 
-#### Parameters
-* `button_index` The index of the button that was pressed. Left: 0, Right: 1, Middle: 2. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if the mouse is not interacting with any elements in the context (see 'IsMouseInteracting'), otherwise false.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `button_index` | `int` | The index of the button that was pressed. Left: 0, Right: 1, Middle: 2. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessMouseButtonUp"] refid="class_rml_1_1_context_1ac371ccafa6fbd233d43962bd94e1c465" -->
 
 Sends a mouse-button up event into this context. 
-#### Parameters
-* `button_index` The index of the button that was release. Left: 0, Right: 1, Middle: 2. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if the mouse is not interacting with any elements in the context (see 'IsMouseInteracting'), otherwise false.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `button_index` | `int` | The index of the button that was release. Left: 0, Right: 1, Middle: 2. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessMouseWheel"] refid="class_rml_1_1_context_1a6ea62f6c76c0598c7dc0ae25b68df0d1" -->
@@ -400,14 +445,15 @@ Sends a mousescroll event into this context.
 <!-- rsmlui:block["Rml::Context::ProcessMouseWheel"] refid="class_rml_1_1_context_1a3e3f4b6b4fa42e8a069f886849b14ac8" -->
 
 Sends a mousescroll event into this context, and scrolls the document unless the event was stopped from propagating. 
-#### Parameters
-* `wheel_delta` The mouse-wheel movement this frame, with positive values being directed right and down. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if the event was not consumed (ie, was prevented from propagating by an element), false if it was.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `wheel_delta` | `Vector2f` | The mouse-wheel movement this frame, with positive values being directed right and down. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessMouseLeave"] refid="class_rml_1_1_context_1a7a238de49ca01f4ddeab3382f58f9a37" -->
@@ -428,51 +474,56 @@ The mouse is considered activated again after the next call to '[ProcessMouseMov
 <!-- rsmlui:block["Rml::Context::ProcessTouchMove"] refid="class_rml_1_1_context_1a601d814c3cff4864dd91108ba50cbc90" -->
 
 Process touch movements for this context. 
-#### Parameters
-* `touches` List of touches. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if no touch points are interacting with any elements in the context, otherwise false.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `touches` | `const TouchList &` | List of touches. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessTouchStart"] refid="class_rml_1_1_context_1a2077cdb9e5cedd5ed609d144c191ce43" -->
 
 Process touch start (press) for this context. 
-#### Parameters
-* `touches` List of touches. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if no touch points are interacting with any elements in the context, otherwise false.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `touches` | `const TouchList &` | List of touches. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessTouchEnd"] refid="class_rml_1_1_context_1afbaab5aeaf635112840b470371fd5dfb" -->
 
 Process touch end (release) for this context. 
-#### Parameters
-* `touches` List of touches. 
-
-* `key_modifier_state` The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. 
-
 #### Returns
 True if no touch points are interacting with any elements in the context, otherwise false.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `touches` | `const TouchList &` | List of touches. |
+| `key_modifier_state` | `int` | The state of key modifiers (shift, control, caps-lock, etc.) keys; this should be generated by ORing together members of the Input::KeyModifier enumeration. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::ProcessTouchCancel"] refid="class_rml_1_1_context_1a0f72e5ad89fe17b605b08db4b4a8b73c" -->
 
 Process touch cancel for this context. 
-#### Parameters
-* `touches` List of touches. 
-
 #### Returns
 True if no touch points are interacting with any elements in the context, otherwise false.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `touches` | `const TouchList &` | List of touches. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::IsMouseInteracting"] refid="class_rml_1_1_context_1a8db4a9a220d477420f2b429b1ba9601d" -->
@@ -492,12 +543,14 @@ True if the mouse hovers over or has activated an element in this context, other
 
 <!-- rsmlui:block["Rml::Context::SetDefaultScrollBehavior"] refid="class_rml_1_1_context_1a729f538d3013a2c438ca2298c0897a1b" -->
 
-Sets the default scroll behavior, such as for mouse wheel processing and scrollbar interaction. 
-#### Parameters
-* `scroll_behavior` The default smooth scroll behavior, set to instant to disable smooth scrolling. 
+Sets the default scroll behavior, such as for mouse wheel processing and scrollbar interaction.
 
-* `speed_factor` A factor for adjusting the final smooth scrolling speed, must be strictly positive, defaults to 1.0.
+Parameters:
 
+| Name | Type | Description |
+|------|------|-------------|
+| `scroll_behavior` | `ScrollBehavior` | The default smooth scroll behavior, set to instant to disable smooth scrolling. |
+| `speed_factor` | `float` | A factor for adjusting the final smooth scrolling speed, must be strictly positive, defaults to 1.0. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetRenderManager"] refid="class_rml_1_1_context_1ad40f449209fb5af359298eefbc84e44d" -->
@@ -512,36 +565,41 @@ Retrieves the text input handler.
 
 <!-- rsmlui:block["Rml::Context::SetInstancer"] refid="class_rml_1_1_context_1ab68305c8a6e502ff4db0bfc99c4abf1a" -->
 
-Sets the instancer to use for releasing this object. 
-#### Parameters
-* `instancer` The context's instancer.
+Sets the instancer to use for releasing this object.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `instancer` | `ContextInstancer *` | The context's instancer. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::CreateDataModel"] refid="class_rml_1_1_context_1aaced3d1a5358f6e9ad90e37e6a91b1ad" -->
 
 Creates a data model. The returned constructor can be used to bind data variables. Elements can bind to the model using the attribute 'data-model="name"'. 
-#### Parameters
-* `name` The name of the data model. 
-
-* `data_type_register` The data type register to use for the data model, or null to use the default register. 
-
-* `allow_missing_variables` If true, allows variables to be bound after document load. Views referencing not-yet-bound variables will silently produce default values until the variable is bound and dirtied. 
-
 #### Returns
 A constructor for the data model, or empty if it could not be created.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `name` | `const String &` | The name of the data model. |
+| `data_type_register` | `DataTypeRegister *` | The data type register to use for the data model, or null to use the default register. |
+| `allow_missing_variables` | `bool` | If true, allows variables to be bound after document load. Views referencing not-yet-bound variables will silently produce default values until the variable is bound and dirtied. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetDataModel"] refid="class_rml_1_1_context_1aff26ab0a1c49aff815817895d1bcc5dc" -->
 
 Retrieves the constructor for an existing data model. The returned constructor can be used to add additional bindings to an existing model. 
-#### Parameters
-* `name` The name of the data model. 
-
 #### Returns
 A constructor for the data model, or empty if it could not be found.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `name` | `const String &` | The name of the data model. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetDataModels"] refid="class_rml_1_1_context_1a6a07a86692cdd132f8e411a5f73acfaa" -->
@@ -562,20 +620,25 @@ Invalidates all handles and constructors pointing to the data model.
 </div>
 
 
-#### Parameters
-* `name` The name of the data model. 
-
 #### Returns
 True if successfully removed, false if no data model was found.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `name` | `const String &` | The name of the data model. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::SetDocumentsBaseTag"] refid="class_rml_1_1_context_1a4cc644db77df331bb66b3e42bf25c3ff" -->
 
-Sets the base tag name of documents before creation. Default: "body". 
-#### Parameters
-* `tag` The name of the base tag. Example: "html"
+Sets the base tag name of documents before creation. Default: "body".
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `tag` | `const String &` | The name of the base tag. Example: "html" |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetDocumentsBaseTag"] refid="class_rml_1_1_context_1a9ca79833968fc47cb070eb802aadb2e9" -->
@@ -588,10 +651,13 @@ The current base tag name of documents.
 
 <!-- rsmlui:block["Rml::Context::RequestNextUpdate"] refid="class_rml_1_1_context_1ac9d591a2d79ffdb95ae85db8a9ac4bf2" -->
 
-Updates the time until [Update()](#update) should get called again. This can be used by elements and the application to implement on-demand rendering and thus drastically save CPU/GPU and reduce power consumption during inactivity. The context stores the lowest requested timestamp, which can later be retrieved using [GetNextUpdateDelay()](#getnextupdatedelay). 
-#### Parameters
-* `delay` Maximum time until next update.
+Updates the time until [Update()](#update) should get called again. This can be used by elements and the application to implement on-demand rendering and thus drastically save CPU/GPU and reduce power consumption during inactivity. The context stores the lowest requested timestamp, which can later be retrieved using [GetNextUpdateDelay()](#getnextupdatedelay).
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `delay` | `double` | Maximum time until next update. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::Context::GetNextUpdateDelay"] refid="class_rml_1_1_context_1a2b36d77000929802bc5600a65d447125" -->

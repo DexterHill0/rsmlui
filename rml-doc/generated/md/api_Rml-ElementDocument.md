@@ -82,14 +82,15 @@ Sends the document to the back of the document stack.
 
 <!-- rsmlui:block["Rml::ElementDocument::Show"] refid="class_rml_1_1_element_document_1a25d3f4791ed562a75b02ed70c3450a9c" -->
 
-Show the document. 
-#### Parameters
-* `modal_flag` Flag controlling the modal state of the document, see the 'ModalFlag' description for details. 
+Show the document.
 
-* `focus_flag` Flag controlling the focus, see the 'FocusFlag' description for details. 
+Parameters:
 
-* `scroll_flag` Flag controlling scrolling, see the 'ScrollFlag' description for details.
-
+| Name | Type | Description |
+|------|------|-------------|
+| `modal_flag` | `ModalFlag` | Flag controlling the modal state of the document, see the 'ModalFlag' description for details. |
+| `focus_flag` | `FocusFlag` | Flag controlling the focus, see the 'FocusFlag' description for details. |
+| `scroll_flag` | `ScrollFlag` | Flag controlling scrolling, see the 'ScrollFlag' description for details. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::ElementDocument::Hide"] refid="class_rml_1_1_element_document_1a99beeefe68c80ee90e73378d540bf437" -->
@@ -111,18 +112,24 @@ The destruction of the document is deferred until the next call to [Context::Upd
 
 <!-- rsmlui:block["Rml::ElementDocument::CreateElement"] refid="class_rml_1_1_element_document_1a8408ac3afe9cfda9382b56c128b7f9a3" -->
 
-Creates the named element. 
-#### Parameters
-* `name` The tag name of the element.
+Creates the named element.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `name` | `const String &` | The tag name of the element. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::ElementDocument::CreateTextNode"] refid="class_rml_1_1_element_document_1a7072caf2565893c19ea5cfebd3047569" -->
 
-Create a text element with the given text content. 
-#### Parameters
-* `text` The text content of the text element.
+Create a text element with the given text content.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `text` | `const String &` | The text content of the text element. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::ElementDocument::IsModal"] refid="class_rml_1_1_element_document_1ac15fb33f8839be9e5431a3015c06ca6e" -->
@@ -133,37 +140,43 @@ True if the document is hogging focus.
 
 <!-- /rsmlui:block -->
 
-<!-- rsmlui:block["Rml::ElementDocument::FindNextTabElement"] refid="class_rml_1_1_element_document_1ab4aad82180487713239b6e1170f9b57a" -->
+<!-- rsmlui:block["Rml::ElementDocument::FindNextTabElement"] refid="class_rml_1_1_element_document_1a8a54028d9f96df0d9e8efa06bab7000e" -->
 
 Finds the next tabbable element in the document tree, starting at the given element, possibly wrapping around the document. 
-#### Parameters
-* `current_element` The element to start from. 
-
-* `forward` True to search forward, false to search backward. 
-
 #### Returns
 The next tabbable element, or nullptr if none could be found.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `current_element` | `Element *` | The element to start from. |
+| `forward` | `bool` | True to search forward, false to search backward. |
+| `wrap_around` | `bool` | True to continue searching wrapping around the document root. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::ElementDocument::LoadInlineScript"] refid="class_rml_1_1_element_document_1abd97e532cf659539929cc940f7344326" -->
 
-Loads an inline script into the document. Note that the base implementation does nothing, but script plugins can hook into this method. 
-#### Parameters
-* `content` The script content. 
+Loads an inline script into the document. Note that the base implementation does nothing, but script plugins can hook into this method.
 
-* `source_path` Path of the script the source comes from, useful for debug information. 
+Parameters:
 
-* `source_line` Line of the script the source comes from, useful for debug information.
-
+| Name | Type | Description |
+|------|------|-------------|
+| `content` | `const String &` | The script content. |
+| `source_path` | `const String &` | Path of the script the source comes from, useful for debug information. |
+| `source_line` | `int` | Line of the script the source comes from, useful for debug information. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::ElementDocument::LoadExternalScript"] refid="class_rml_1_1_element_document_1aabe77504a64d821917533d5c592cebee" -->
 
-Loads an external script into the document. Note that the base implementation does nothing, but script plugins can hook into this method. 
-#### Parameters
-* `source_path` The script file path.
+Loads an external script into the document. Note that the base implementation does nothing, but script plugins can hook into this method.
 
+Parameters:
+
+| Name | Type | Description |
+|------|------|-------------|
+| `source_path` | `const String &` | The script file path. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::ElementDocument::UpdateDocument"] refid="class_rml_1_1_element_document_1afc405c50331bbd9c67cee8ed434caf36" -->
@@ -199,6 +212,11 @@ Sets whether the document can receive focus when another document is modal.
 
 <!-- rsmlui:block["Rml::ElementDocument::SearchFocusSubtree"] refid="class_rml_1_1_element_document_1a26408f9bdcf09638575e28bfc8346342" -->
 Searches forwards or backwards for a focusable element in the given subtree.
+
+<!-- /rsmlui:block -->
+
+<!-- rsmlui:block["Rml::ElementDocument::SearchFocusSubtreeChildren"] refid="class_rml_1_1_element_document_1a5a39a47100549b6a6c8a0922d3a35b6d" -->
+Searches children of the given subtree for a focusable child.
 
 <!-- /rsmlui:block -->
 
