@@ -17,4 +17,4 @@ regex = { version = "1.12.3", optional = true }
 [features]
 default = ["generate-documentation"]
 
-generate-documentation = ["regex"]
+generate-documentation = ["dep:regex"]
