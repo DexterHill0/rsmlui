@@ -1,7 +1,6 @@
 use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use bon::Builder;
 use drop_tree::{DropCtx, drop_tree};
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
@@ -16,7 +15,6 @@ use crate::core::font::{FontFaceOptions, FontFaceSource};
 use crate::error::Error;
 use crate::interfaces::{BorrowedInterface, IntoRawInterface};
 use crate::math::UVec2;
-use crate::types::style::{FontStyle, FontWeight};
 use crate::utils::conversions::IntoSys;
 
 static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);

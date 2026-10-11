@@ -1,3 +1,7 @@
+use bon::Builder;
+
+use crate::types::style::{FontStyle, FontWeight};
+
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Hash, PartialEq)]
 pub enum FontFaceSource<'a> {
