@@ -5,7 +5,7 @@ use rsmlui_macros::rmldoc;
 use crate::_private::not_send_sync;
 use crate::types::document::{FocusFlag, ModalFlag, ScrollFlag};
 use crate::utils::conversions::IntoSys;
-use crate::utils::raw::{Ptr, Raw};
+use crate::utils::raw::{PtrMut, Raw, RawMut};
 
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Builder)]
 #[builder(const)]
@@ -27,15 +27,21 @@ impl Default for ShowOptions {
 #[rmldoc(file = "api_Rml-ElementDocument.md", name = "Rml::ElementDocument")]
 #[drop_tree(borrows(crate::core::context::Context))]
 pub struct ElementDocument {
-    pub(crate) raw: Ptr<ElementDocument>,
+    pub(crate) raw: PtrMut<ElementDocument>,
 }
 
 not_send_sync!(ElementDocument);
 
 impl Raw for ElementDocument {
-    type Ptr = *mut rsmlui_sys::element_document::ElementDocument;
+    type Target = rsmlui_sys::element_document::ElementDocument;
 
-    fn raw(&self) -> Self::Ptr {
+    fn raw(&self) -> *const Self::Target {
+        self.raw
+    }
+}
+
+impl RawMut for ElementDocument {
+    fn raw_mut(&mut self) -> *mut Self::Target {
         self.raw
     }
 }

@@ -11,9 +11,9 @@ pub struct Dictionary<'a> {
 }
 
 impl<'a> Raw for Dictionary<'a> {
-    type Ptr = *const rsmlui_sys::dictionary::Dictionary;
+    type Target = rsmlui_sys::dictionary::Dictionary;
 
-    fn raw(&self) -> Self::Ptr {
+    fn raw(&self) -> *const Self::Target {
         self.raw
     }
 }

@@ -28,9 +28,9 @@ pub struct Variant<'a> {
 }
 
 impl<'a> Raw for Variant<'a> {
-    type Ptr = *const sys::Variant;
+    type Target = sys::Variant;
 
-    fn raw(&self) -> Self::Ptr {
+    fn raw(&self) -> *const Self::Target {
         self.raw
     }
 }

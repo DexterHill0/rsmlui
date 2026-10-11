@@ -5,21 +5,28 @@ use crate::_private::{IntoSys, not_send_sync};
 use crate::core::element_document::ElementDocument;
 use crate::error::Error;
 use crate::math::{IVec2, UVec2};
-use crate::utils::raw::{Ptr, Raw};
+use crate::utils::raw::{PtrMut, Raw, RawMut};
 
 #[rmldoc(file = "api_Rml-Context.md", name = "Rml::Context")]
 #[drop_tree(borrows(crate::core::core::Rml))]
 pub struct Context {
-    pub(crate) raw: Ptr<Context>,
+    pub(crate) raw: PtrMut<Context>,
 }
 
 not_send_sync!(Context);
 
 impl Raw for Context {
-    type Ptr = *mut rsmlui_sys::context::Context;
+    type Target = rsmlui_sys::context::Context;
 
     #[inline(always)]
-    fn raw(&self) -> Self::Ptr {
+    fn raw(&self) -> *const Self::Target {
+        self.raw
+    }
+}
+
+impl RawMut for Context {
+    #[inline(always)]
+    fn raw_mut(&mut self) -> *mut Self::Target {
         self.raw
     }
 }
@@ -52,7 +59,7 @@ impl Context {
     /// store it beyond that lifetime, and must not use it after `Context` is dropped.
     #[inline(always)]
     pub unsafe fn as_raw_ptr(&self) -> *mut rsmlui_sys::context::Context {
-        self.raw()
+        self.raw
     }
 
     /// The document returned from this context belongs to the context, and it will keep the context alive for as long
