@@ -1,0 +1,35 @@
+[tools]
+cmake = "latest"
+ninja = "latest"
+
+[env]
+MACOSX_DEPLOYMENT_TARGET = "{% if os() == 'macos' %}{{ exec(command='sw_vers -productVersion') | trim }}{% endif %}"
+
+[tasks.build]
+run = "cargo build --workspace --exclude basic --exclude raw"
+
+[tasks.fmt]
+run = [
+    "cargo fmt --all",
+    "clang-format -i --style=file rsmlui-sys/src/include/rsmlui/*.h",
+]
+
+[tasks.docgen]
+dir = "rml-doc"
+env = { RMLUI_INCLUDE_DIR = "../rsmlui-sys/RmlUi/Include" }
+run = """
+doxygen ./Doxyfile
+
+python preprocess.py
+
+cd generated/md
+moxygen ../xml --classes --noindex --source-root ../../..rsmlui-sys/RmlUi/Include --templates ../../moxygen-templates
+
+cd ../..
+
+python postprocess.py
+"""
+
+[tasks.reindex]
+description = "clear the stale clangd index"
+run = "rm -rf rsmlui-sys/.cache"
