@@ -11,14 +11,14 @@ use cxx_build::CFG;
 const RSMLUI_SYS_LIB_NAME: &str = "rsmlui_dummy";
 const RMLUI_OUTPUT_NAME: &str = "rmlui";
 
-#[cfg(target_os = "windows")]
+#[cfg(all(feature = "freetype", target_os = "windows"))]
 const ZLIB_LIB_NAME: &str = "zlibstatic";
-#[cfg(not(target_os = "windows"))]
+#[cfg(all(feature = "freetype", not(target_os = "windows")))]
 const ZLIB_LIB_NAME: &str = "z";
 
-#[cfg(target_os = "windows")]
+#[cfg(all(feature = "freetype", target_os = "windows"))]
 const LIBPNG_LIB_NAME: &str = "libpng16_static";
-#[cfg(not(target_os = "windows"))]
+#[cfg(all(feature = "freetype", not(target_os = "windows")))]
 const LIBPNG_LIB_NAME: &str = "png16";
 
 #[rustfmt::skip]
