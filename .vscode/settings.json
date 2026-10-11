@@ -1,7 +1,8 @@
 {
     "cmake.sourceDirectory": "${workspaceFolder}/rsmlui-sys",
     "clangd.arguments": [
-        "--compile-commands-dir=${workspaceFolder}/rsmlui-sys"
+        "--compile-commands-dir=${workspaceFolder}/rsmlui-sys",
+        "--query-driver=/usr/bin/c++,/usr/bin/cc,/opt/homebrew/opt/llvm/bin/clang++,/usr/bin/clang++,**/clang++*,**/cl.exe"
     ],
     "rust-analyzer.rustfmt.extraArgs": [
         "+nightly"
