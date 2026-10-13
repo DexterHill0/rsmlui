@@ -17,7 +17,7 @@ use rsmlui_sys::render_interface::{
 use sealed::sealed;
 
 use crate::_private::HasOwnedInterface;
-use crate::containers::dictionary::Dictionary;
+use crate::containers::dictionary::DictionaryRef;
 use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
 use crate::math::{IVec2, Mat4, Vec2};
 use crate::types::colour::Colorb;
@@ -520,7 +520,7 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
         parameters: *const rsmlui_sys::render_interface::Dictionary,
     ) -> rsmlui_sys::Rml_CompiledFilterHandle {
         // Safety: `parameters` is a valid non-null pointer
-        let dictionary = unsafe { Dictionary::from_raw(parameters) };
+        let dictionary = unsafe { DictionaryRef::from_raw(parameters) };
 
         let kind = match name {
             "opacity" => {
@@ -621,7 +621,7 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
         parameters: *const rsmlui_sys::render_interface::Dictionary,
     ) -> rsmlui_sys::Rml_CompiledShaderHandle {
         // Safety: `parameters` is a valid non-null pointer
-        let dictionary = unsafe { Dictionary::from_raw(parameters) };
+        let dictionary = unsafe { DictionaryRef::from_raw(parameters) };
 
         let kind = match name {
             "linear-gradient" => {

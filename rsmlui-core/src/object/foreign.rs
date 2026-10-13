@@ -51,6 +51,8 @@ pub unsafe trait ForeignDestroy: ForeignObject {
 /// Represents any handle to a foreign object. This can be any combination of ownership, constness
 /// and provenance. See the trait bounds for more information on these concepts.
 ///
+/// # Provenance
+///
 /// Provenance simply defines what a given object must outlive for it to be valid. This is represented
 /// normally using Rust's lifetimes. Any object where `M = Native` will typically have a `'static`
 /// lifetime as the value does not depend on the lifetime of any other object except the program itself,
@@ -58,7 +60,37 @@ pub unsafe trait ForeignDestroy: ForeignObject {
 /// Any object where `M = Foreign` will typically have a lifetime tied to the object that handed out
 /// the borrow, so it cannot outlive that object.
 ///
-/// A
+/// # Accessor lifetime rules
+///
+/// For any single foreign object, only ever hand out handles of one [`Constness`].
+/// Mixing them means one handle can return `&'a` references into the object while
+/// another mutates or frees it.
+/// Note this is about the object itself, _not_ the ownership. Two handles with
+/// different `M` are equally unsound if they have have a conflicting `C`.
+///
+/// Following on from above:
+/// A handle may return `&'a` references into its object _only_ when `M = Foreign` and
+/// `C = Immut`. The combination means the handle is simply a reference that can't
+/// outlive the foreign object, and nothing accessible through the handle can invalidate
+/// the data, therefore the data can outlive the handle and can be given a lifetime
+/// that of the parent. For example, in [`DictionaryRef`], `try_get_as` can return `T`
+/// with a lifetime beloning to the dictionary object itself, as no methods on
+/// the dictionary can invalidate the data, and the handle reference doesn't determine
+/// the lifetime of the data.
+/// Every other combination must tie references to `&self`, so that  `&mut self`
+/// operations are blocked while any other reference is alive.
+///
+/// # Aliasing rules
+///
+/// By Rust's own rules you can't have multiple `&mut` references to the same data, as `&mut`
+/// cannot be aliased. However, raw pointers don't have this same rule, so having two [`Mut`]
+/// handles to the same object is _not_ UB. The single-threaded nature means that writes
+/// to two handles, pointing to the same object, will happen synchronously. The worst outcome
+/// is that two individual code paths, for example two event callbacks, could both modify
+/// the same object and confuse one about what the values in the data are, but it can never
+/// lead to UB.
+///
+/// [`DictionaryRef`]: crate::containers::dictionary::DictionaryRef
 pub struct ForeignHandle<'a, O: ForeignObject, M: ObjectOwnership<O> = Native, C: Constness = Immut>
 {
     raw: *mut O::Object,

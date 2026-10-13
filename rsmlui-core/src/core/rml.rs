@@ -10,7 +10,7 @@ use rsmlui_sys::system_interface::RmlSystemInterface;
 
 use crate::_private::not_unwind_safe;
 use crate::core::backend_handle::BackendHandle;
-use crate::core::context::Context;
+use crate::core::context::{Context, ContextHandle};
 use crate::core::font::{FontFaceOptions, FontFaceSource};
 use crate::error::Error;
 use crate::interfaces::IntoRawInterface;
@@ -213,13 +213,17 @@ impl Rml {
 
         let dimensions = dimensions.into();
 
-        let context = core::create_context(name.into(), dimensions.into_sys());
+        let raw = core::create_context(name.into(), dimensions.into_sys());
 
-        if context.is_null() {
+        if raw.is_null() {
             return Err(Error::ContextCreateFailed);
         }
 
-        Ok(Context::new_with_borrow(context, self))
+        Ok(Context::new_with_borrow(
+            // Safety: raw is a valid, non-null pointer
+            unsafe { ContextHandle::from_raw(raw) },
+            self,
+        ))
     }
 
     fn render_interface_installed(&self) -> bool {

@@ -1,5 +1,5 @@
-use rsmlui::core::rml::Rml;
 use rsmlui::core::font::FontFaceSource;
+use rsmlui::core::rml::Rml;
 use rsmlui::monolithic::{BackendOptions, GlfwGl2Backend};
 
 fn main() {
@@ -21,11 +21,11 @@ fn main() {
     rml.load_font_face(FontFaceSource::Path("../assets/Roboto.ttf"), "Roboto")
         .unwrap();
 
-    let context = rml.create_context("main", (800, 600)).unwrap();
+    let mut context = rml.create_context("main", (800, 600)).unwrap();
 
-    let document = context.load_document("../assets/basic.rml").unwrap();
+    let mut document = context.load_document("../assets/basic.rml").unwrap();
 
     document.show();
 
-    backend.run(&context).unwrap();
+    backend.run(&mut context).unwrap();
 }

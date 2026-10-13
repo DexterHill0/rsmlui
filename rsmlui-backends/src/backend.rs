@@ -124,7 +124,7 @@ where
     /// Run a single tick (process events, update the context, render, present).
     ///
     /// Returns `Ok(true)` to continue, `Ok(false)` when the window signals exit.
-    pub fn tick(&mut self, context: &Context) -> Result<bool, BackendError<W::Error>> {
+    pub fn tick(&mut self, context: &mut Context) -> Result<bool, BackendError<W::Error>> {
         let running = self
             .window
             .process_events(context)
@@ -148,7 +148,7 @@ where
     /// been called before this.
     ///
     /// [`Rml::initialise`]: rsmlui_core::core::core::Rml::initialise
-    pub fn run(&mut self, context: &Context) -> Result<(), BackendError<W::Error>> {
+    pub fn run(&mut self, context: &mut Context) -> Result<(), BackendError<W::Error>> {
         while self.tick(context)? {}
         Ok(())
     }

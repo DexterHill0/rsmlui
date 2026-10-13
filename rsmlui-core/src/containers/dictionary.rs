@@ -1,43 +1,51 @@
-use std::marker::PhantomData;
-
 use rsmlui_sys::dictionary::dictionary_get_variant;
 
-use crate::containers::variant::{TypeVariant, Variant};
-use crate::utils::raw::{Ptr, Raw};
+use crate::containers::variant::{TypeVariant, VariantRef};
+use crate::object::constness::{Constness, Immut};
+use crate::object::foreign::{ForeignHandle, ForeignObject, ObjectPtr};
+use crate::object::ownership::{Foreign, ObjectOwnership};
 
-pub struct Dictionary<'a> {
-    pub(crate) raw: Ptr<Self>,
-    _phantom: PhantomData<&'a ()>,
+pub mod tags {
+    pub enum TagDictionary {}
 }
 
-impl<'a> Raw for Dictionary<'a> {
-    type Target = rsmlui_sys::dictionary::Dictionary;
+impl ForeignObject for tags::TagDictionary {
+    type Object = rsmlui_sys::dictionary::Dictionary;
+}
 
-    fn raw(&self) -> *const Self::Target {
-        self.raw
+/// Shared handle newtype for both [`Dictionary`] and [`DictionaryRef`].
+#[repr(transparent)]
+pub struct DictionaryHandle<'a, M: ObjectOwnership<tags::TagDictionary>, C: Constness>(
+    ForeignHandle<'a, tags::TagDictionary, M, C>,
+);
+
+// pub type Dictionary = DictionaryHandle<'static, Native, Mut>;
+
+/// A borrowed version of [`Dictionary`].
+pub type DictionaryRef<'a> = DictionaryHandle<'a, Foreign, Immut>;
+
+impl<'a> DictionaryRef<'a> {
+    /// # Safety
+    ///
+    /// - `raw` must be a valid, non-null pointer to a `Dictionary` that
+    ///   outlives `'a`.
+    pub(crate) unsafe fn from_raw(raw: ObjectPtr<tags::TagDictionary>) -> Self {
+        Self(unsafe { ForeignHandle::<_, Foreign, Immut>::from_raw(raw) })
     }
 }
 
-impl<'a> Dictionary<'a> {
-    /// # Safety:
-    /// - `raw` must be a valid non-null `Dictionary` pointer
-    pub(crate) unsafe fn from_raw(raw: Ptr<Self>) -> Self {
-        Self {
-            raw,
-            _phantom: PhantomData,
-        }
-    }
 
+impl<'a> DictionaryRef<'a> {
     pub fn try_get<T: TypeVariant + ?Sized, K: AsRef<str>>(&self, key: K) -> Option<&'a T> {
         // Safety: `self.raw` is a valid `Dictionary`
-        let variant = unsafe { dictionary_get_variant(self.raw(), key.as_ref()) };
+        let variant = unsafe { dictionary_get_variant(self.0.as_ptr(), key.as_ref()) };
 
         if variant.is_null() {
             return None;
         }
 
         // Safety: `variant` is a valid non-null pointer
-        let variant = unsafe { Variant::from_raw(variant) };
+        let variant = unsafe { VariantRef::from_raw(variant) };
 
         variant.try_get_as::<T>()
     }

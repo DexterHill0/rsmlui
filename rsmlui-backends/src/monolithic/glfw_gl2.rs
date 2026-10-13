@@ -133,7 +133,7 @@ impl GlfwGl2Backend {
     /// The interfaces must already be registered with [`Rml`] before calling this.
     ///
     /// [`Rml`]: rsmlui_core::core::core::Rml
-    pub fn tick(&mut self, context: &Context) -> Result<bool, CoreError> {
+    pub fn tick(&mut self, context: &mut Context) -> Result<bool, CoreError> {
         thread_local! {
             static CALLBACK_USER_DATA: Cell<Option<(
                 *const Context,
@@ -147,7 +147,7 @@ impl GlfwGl2Backend {
                 context as *const _,
                 // Safety: the raw pointer is only stored for the duration of `process_events`;
                 // it is cleared immediately after and never outlives `context`.
-                unsafe { context.as_raw_ptr() },
+                unsafe { context.as_mut_ptr() },
                 self.key_down_callback.as_mut() as *mut _,
             )))
         });
@@ -189,11 +189,11 @@ impl GlfwGl2Backend {
             })
         }
 
-        // Safety: `context.as_raw_ptr()` is valid for the duration of this call.
+        // Safety: `context.as_mut_ptr()` is valid for the duration of this call.
         // `trampoline` is a bare fn that reads only from the thread-local set above,
         // which is cleared before this function returns, so no pointer escapes.
         let running = unsafe {
-            backend::process_events(context.as_raw_ptr(), trampoline, self.options.power_save)
+            backend::process_events(context.as_mut_ptr(), trampoline, self.options.power_save)
         };
 
         CALLBACK_USER_DATA.with(|cell| cell.set(None));
@@ -213,7 +213,7 @@ impl GlfwGl2Backend {
     /// Run the event loop until the window closes.
     ///
     /// See the docs on [`GlfwGl2Backend`] for an example of running the backend.
-    pub fn run(&mut self, context: &Context) -> Result<(), CoreError> {
+    pub fn run(&mut self, context: &mut Context) -> Result<(), CoreError> {
         while self.tick(context)? {}
         Ok(())
     }

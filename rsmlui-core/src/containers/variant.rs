@@ -1,14 +1,14 @@
-use std::marker::PhantomData;
-
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::variant::{self as sys};
 use sealed::sealed;
 
 use crate::_private::FromSys;
 use crate::math::{Vec2, Vec3, Vec4};
+use crate::object::constness::{Constness, Immut};
+use crate::object::foreign::{ForeignHandle, ForeignObject, ObjectPtr};
+use crate::object::ownership::{Foreign, ObjectOwnership};
 use crate::types::colour::Colorb;
 use crate::types::renderer::ColorStop;
-use crate::utils::raw::{Ptr, Raw};
 
 #[sealed]
 pub trait TypeVariant {
@@ -20,45 +20,57 @@ pub trait TypeVariant {
     unsafe fn from_variant<'a>(variant: *const sys::Variant) -> &'a Self;
 }
 
-// TODO: more types, operators
-#[rmldoc(file = "api_Rml-Variant.md", name = "Rml::Variant")]
-pub struct Variant<'a> {
-    pub(crate) raw: Ptr<Self>,
-    _phantom: PhantomData<&'a ()>,
+pub mod tags {
+    pub enum TagVariant {}
 }
 
-impl<'a> Raw for Variant<'a> {
-    type Target = sys::Variant;
+impl ForeignObject for tags::TagVariant {
+    type Object = sys::Variant;
+}
 
-    fn raw(&self) -> *const Self::Target {
-        self.raw
+/// Shared handle newtype for both [`Variant`] and [`VariantRef`].
+#[repr(transparent)]
+pub struct VariantHandle<'a, M: ObjectOwnership<tags::TagVariant>, C: Constness>(
+    ForeignHandle<'a, tags::TagVariant, M, C>,
+);
+
+// // TODO: more types, operators
+// #[rmldoc(file = "api_Rml-Variant.md", name = "Rml::Variant")]
+// pub type Variant = VariantHandle<'static, Native, Mut>;
+
+/// A borrowed version of [`Variant`].
+// TODO: more types, operators
+#[rmldoc(file = "api_Rml-Variant.md", name = "Rml::Variant")]
+pub type VariantRef<'a> = VariantHandle<'a, Foreign, Immut>;
+
+impl<'a> VariantRef<'a> {
+    /// # Safety
+    ///
+    /// - `raw` must be a valid, non-null pointer to a `Variant` that
+    ///   outlives `'a`.
+    pub(crate) unsafe fn from_raw(raw: ObjectPtr<tags::TagVariant>) -> Self {
+        Self(unsafe { ForeignHandle::<_, Foreign, Immut>::from_raw(raw) })
     }
 }
 
 #[rmldoc(file = "api_Rml-Variant.md")]
-impl<'a> Variant<'a> {
-    /// # Safety:
-    /// - `raw` must be a valid non-null `Variant` pointer
-    pub(crate) unsafe fn from_raw(raw: Ptr<Self>) -> Self {
-        Self {
-            raw,
-            _phantom: PhantomData,
-        }
-    }
-
+impl<'a> VariantRef<'a> {
     #[rmldoc(name = "Rml::Variant::GetInto")]
     pub fn try_get_as<T: TypeVariant + ?Sized>(&self) -> Option<&'a T> {
         // Safety: `self.raw` is a valid `Variant`
-        let ty = unsafe { sys::variant_get_type(self.raw()) };
+        let ty = unsafe { sys::variant_get_type(self.0.as_ptr()) };
 
         if ty != T::VARIANT_TYPE {
             return None;
         }
 
         // Safety: We have verified the variant is the correct type for `T`
-        unsafe { Some(T::from_variant(self.raw())) }
+        unsafe { Some(T::from_variant(self.0.as_ptr())) }
     }
 
+    /// # Panics
+    ///
+    /// Use [`VariantHandle::try_get_as`] for a non-panicking version.
     pub fn get_as<T: TypeVariant + ?Sized>(&self) -> &'a T {
         self.try_get_as().expect("variant is not the expected type")
     }

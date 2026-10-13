@@ -8,6 +8,19 @@ use sealed::sealed;
 /// The provenance or ownership has no part in whether an object is mutable, as there
 /// are instances where foreign (borrowed) objects should still be mutable, such as
 /// interfaces.
+///
+/// # Receiver types
+///
+/// Pick a receiver by mirroring the C++ member function's `const` qualifier, not the
+/// pointer's. A non-const member function is RmlUi stating it mutates `*this`, so it
+/// takes `&mut self`. In contrast, a `const` one takes only `&self`.
+/// A general rule of thumb: `const` methods go in the `C: Constness` block and use
+/// `as_ptr`, non-const methods go in the `Mut` block and use `as_mut_ptr`.
+///
+/// While mixing them up isn't ideal, there won't be any unsound behaviour as the
+/// `as_mut_ptr` won't be callable from a `Immut` handle, even if you accidentally
+/// write the reciever as `&mut self`, it will just simply mean the user will require
+/// mut access to the handle uneccessarily.
 #[sealed]
 pub trait Constness {
     type Ptr<T>;
