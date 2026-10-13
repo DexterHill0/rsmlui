@@ -1,11 +1,8 @@
 use rsmlui::core::core::Rml;
 use rsmlui::core::font::FontFaceSource;
-use rsmlui::interfaces::default::FileDefault;
 use rsmlui::monolithic::{BackendOptions, GlfwGl2Backend};
 
 fn main() {
-    let mut file_interface = FileDefault::new();
-
     let mut backend =
         GlfwGl2Backend::initialize("Demo", (800, 600), BackendOptions::default()).unwrap();
 
@@ -15,23 +12,9 @@ fn main() {
         false
     }));
 
-    let rml = Rml::new(backend.backend_handle());
+    let mut rml = Rml::new(backend.backend_handle());
 
-    // the borrowed interfaces hold a shared borrow of `backend` until they drop, so these
-    // are scoped to release that as `backend.run` needs `&mut backend`
-    {
-        let mut system = backend.get_system_interface().unwrap();
-
-        rml.set_system_interface(Some(&mut system));
-    }
-
-    {
-        let mut renderer = backend.get_render_interface().unwrap();
-
-        rml.set_render_interface(Some(&mut renderer));
-    }
-
-    rml.set_file_interface(Some(&mut file_interface));
+    backend.install_interfaces(&mut rml);
 
     rml.initialise().unwrap();
 

@@ -12,6 +12,7 @@ use rsmlui_sys::system_interface::RmlSystemInterface;
 use rsmlui_sys::{Rml_Input_KeyIdentifier, Rml_Input_KeyModifier, backend};
 
 use crate::error::BackendError;
+use crate::interfaces::default::FileDefault;
 use crate::interfaces::gl2::RendererGl2Ref;
 use crate::interfaces::win32::SystemWin32Ref;
 use crate::monolithic::{BackendOptions, KeyDownCallback, KeyDownCallbackDyn};
@@ -50,6 +51,7 @@ pub struct Win32Gl2Backend {
     handle: BackendHandle,
     key_down_callback: KeyDownCallback,
     options: BackendOptions,
+    file_interface: FileDefault,
 }
 
 not_send_sync!(Win32Gl2Backend);
@@ -76,39 +78,35 @@ impl Win32Gl2Backend {
             handle: BackendHandle::new(backend::shutdown),
             key_down_callback: Box::new(noop_key_down),
             options,
+            file_default: FileDefault::new(),
         })
     }
 
-    /// Pass this to [`Rml::set_system_interface`](rsmlui_core::core::core::Rml::set_system_interface).
+    /// Installs the interfaces into the [`Rml`] instance.
     ///
-    /// The returned interface Borrows from `&self`, so the borrow checker prevents holding
-    /// it past this backend's lifetime.
+    /// Installs the [`FileDefault`] interface as the file interface.
     ///
-    /// The object returned by this function is a mutable reference to the interface, so
-    /// dropping this value does not free the underlying object, as we do not own that value.
-    pub fn get_system_interface(&self) -> Option<SystemWin32Ref<'_>> {
-        let itf = backend::get_system_interface();
+    /// [`FileDefault`]: crate::interfaces::default::FileDefault
+    pub fn install_interfaces(&mut self, rml: &mut Rml) {
+        let system = backend::get_system_interface();
 
-        if itf.is_null() {
-            return None;
+        if !system.is_null() {
+            let mut itf = unsafe { SystemWin32Ref::from_raw(system) };
+
+            rml.set_system_interface(Some(&mut itf));
         }
 
-        // Function is not unsafe but is marked as unsafe as it shouldn't be used by users.
-        Some(unsafe { SystemWin32Ref::from_raw(itf) })
-    }
+        let render = backend::get_render_interface();
 
-    /// Pass this to [`Rml::set_render_interface`](rsmlui_core::core::core::Rml::set_render_interface).
-    ///
-    /// See [`get_system_interface`](Win32Gl2Backend::get_system_interface) for lifetime semantics.
-    pub fn get_render_interface(&self) -> Option<RendererGl2Ref<'_>> {
-        let itf = backend::get_render_interface();
+        if !render.is_null() {
+            let mut itf = unsafe { RendererGl2Ref::from_raw(render) };
 
-        if itf.is_null() {
-            return None;
+            rml.set_render_interface(Some(&mut itf));
         }
 
-        // Safety: [`Self::initialize`] will initialize an OpenGL context.
-        Some(unsafe { RendererGl2Ref::from_raw(itf) })
+        let file = &mut self.file_interface;
+
+        rml.set_file_interface(Some(file));
     }
 
     /// Override the key-down callback used during [`process_events`].
