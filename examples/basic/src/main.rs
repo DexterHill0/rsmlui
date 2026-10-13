@@ -1,6 +1,5 @@
-use rsmlui::core::core::Rml;
 use rsmlui::core::font::FontFaceSource;
-use rsmlui::interfaces::default::FileDefault;
+use rsmlui::core::rml::Rml;
 use rsmlui::monolithic::BackendOptions;
 #[cfg(target_os = "windows")]
 use rsmlui::monolithic::Win32Gl2Backend;

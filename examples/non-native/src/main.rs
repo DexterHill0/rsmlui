@@ -1,4 +1,4 @@
-use rsmlui::core::core::Rml;
+use rsmlui::core::rml::Rml;
 use rsmlui::core::font::FontFaceSource;
 use rsmlui::monolithic::{BackendOptions, GlfwGl2Backend};
 

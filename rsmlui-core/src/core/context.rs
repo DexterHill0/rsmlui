@@ -8,7 +8,7 @@ use crate::math::UVec2;
 use crate::utils::raw::{PtrMut, Raw, RawMut};
 
 #[rmldoc(file = "api_Rml-Context.md", name = "Rml::Context")]
-#[drop_tree(borrows(crate::core::core::Rml))]
+#[drop_tree(borrows(crate::core::rml::Rml))]
 pub struct Context {
     pub(crate) raw: PtrMut<Context>,
 }
