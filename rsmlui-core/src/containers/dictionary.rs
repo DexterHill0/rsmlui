@@ -34,7 +34,6 @@ impl<'a> DictionaryRef<'a> {
     }
 }
 
-
 impl<'a> DictionaryRef<'a> {
     pub fn try_get<T: TypeVariant + ?Sized, K: AsRef<str>>(&self, key: K) -> Option<&'a T> {
         // Safety: `self.raw` is a valid `Dictionary`

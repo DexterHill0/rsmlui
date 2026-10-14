@@ -2,15 +2,35 @@
 
 #include <RmlUi/Core.h>
 
+#include <vector>
+
+#include "RmlUi/Core/DecorationTypes.h"
 #include "RmlUi/Core/Types.h"
 #include "RmlUi/Core/Variant.h"
 #include "rust/cxx.h"
 
 namespace rsmlui {
 
+// `Rml::Variant` is neither trivially movable nor trivially destructible, so it can't be
+// handed to Rust by value.
+// We allocate instead to get a stable pointer that can be passed to rust.
+// I think we can get around that by passing around opaque blobs of sizeof(Variant)
+// but unless allocation proves a performance issue this is easier for now.
+inline auto new_variant() -> Rml::Variant* {
+    return new Rml::Variant();
+}
+
+inline void variant_destructor(Rml::Variant* variant) {
+    delete variant;
+}
+
 inline auto variant_get_type(const Rml::Variant* variant)
     -> Rml::Variant::Type {
     return variant->Rml::Variant::GetType();
+}
+
+inline void variant_clear(Rml::Variant* variant) {
+    variant->Rml::Variant::Clear();
 }
 
 inline auto variant_as_bool(const Rml::Variant* variant) -> const bool& {
@@ -82,6 +102,75 @@ inline auto variant_as_str(const Rml::Variant* variant) -> rust::Str {
     const auto& str = variant->GetReference<std::string>();
 
     return {str};
+}
+
+inline void variant_set_bool(Rml::Variant* variant, bool value) {
+    // Use operator= instead of `Set` as `Set` does not clear the previous value.
+    *variant = value;
+}
+
+inline void variant_set_byte(Rml::Variant* variant, uint8_t value) {
+    *variant = value;
+}
+
+inline void variant_set_char(Rml::Variant* variant, int8_t value) {
+    *variant = static_cast<char>(value);
+}
+
+inline void variant_set_float(Rml::Variant* variant, float value) {
+    *variant = value;
+}
+
+inline void variant_set_double(Rml::Variant* variant, double value) {
+    *variant = value;
+}
+
+inline void variant_set_int(Rml::Variant* variant, int32_t value) {
+    *variant = value;
+}
+
+inline void variant_set_int64(Rml::Variant* variant, int64_t value) {
+    *variant = value;
+}
+
+inline void variant_set_uint(Rml::Variant* variant, uint32_t value) {
+    *variant = value;
+}
+
+inline void variant_set_uint64(Rml::Variant* variant, uint64_t value) {
+    *variant = value;
+}
+
+inline void variant_set_vector2f(Rml::Variant* variant, Rml::Vector2f value) {
+    *variant = value;
+}
+
+inline void variant_set_vector3f(Rml::Variant* variant, Rml::Vector3f value) {
+    *variant = value;
+}
+
+inline void variant_set_vector4f(Rml::Variant* variant, Rml::Vector4f value) {
+    *variant = value;
+}
+
+inline void variant_set_colorb(Rml::Variant* variant, Rml::Colourb value) {
+    *variant = value;
+}
+
+inline void variant_set_color_stop_list(
+    Rml::Variant* variant,
+    rust::Slice<const Rml::ColorStop> value
+) {
+    *variant = Rml::ColorStopList(value.begin(), value.end());
+}
+
+inline void variant_set_str(Rml::Variant* variant, rust::Str value) {
+    *variant = Rml::String(value);
+}
+
+inline void
+variant_set_variant(Rml::Variant* variant, const Rml::Variant* value) {
+    *variant = *value;
 }
 
 } // namespace rsmlui
