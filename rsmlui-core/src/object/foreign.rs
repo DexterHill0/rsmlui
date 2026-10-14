@@ -48,48 +48,74 @@ pub unsafe trait ForeignDestroy: ForeignObject {
     fn assert_droppable(_raw: *mut Self::Object) {}
 }
 
-/// Represents any handle to a foreign object. This can be any combination of ownership, constness
-/// and provenance. See the trait bounds for more information on these concepts.
+/// Represents any handle to a foreign object. This can be any combination of ownership,
+/// constness and provenance. See the trait bounds for more information on these concepts.
 ///
 /// # Provenance
 ///
-/// Provenance simply defines what a given object must outlive for it to be valid. This is represented
-/// normally using Rust's lifetimes. Any object where `M = Native` will typically have a `'static`
-/// lifetime as the value does not depend on the lifetime of any other object except the program itself,
-/// at which point it will be cleaned up at the end of execution.
-/// Any object where `M = Foreign` will typically have a lifetime tied to the object that handed out
-/// the borrow, so it cannot outlive that object.
-///
-/// # Accessor lifetime rules
-///
-/// For any single foreign object, only ever hand out handles of one [`Constness`].
-/// Mixing them means one handle can return `&'a` references into the object while
-/// another mutates or frees it.
-/// Note this is about the object itself, _not_ the ownership. Two handles with
-/// different `M` are equally unsound if they have have a conflicting `C`.
-///
-/// Following on from above:
-/// A handle may return `&'a` references into its object _only_ when `M = Foreign` and
-/// `C = Immut`. The combination means the handle is simply a reference that can't
-/// outlive the foreign object, and nothing accessible through the handle can invalidate
-/// the data, therefore the data can outlive the handle and can be given a lifetime
-/// that of the parent. For example, in [`DictionaryRef`], `try_get_as` can return `T`
-/// with a lifetime beloning to the dictionary object itself, as no methods on
-/// the dictionary can invalidate the data, and the handle reference doesn't determine
-/// the lifetime of the data.
-/// Every other combination must tie references to `&self`, so that  `&mut self`
-/// operations are blocked while any other reference is alive.
+/// Provenance simply defines what a given object must outlive for it to be valid. This
+/// is represented normally using Rust's lifetimes. Any object where `M = Native` will
+/// typically have a `'static` lifetime as the value does not depend on the lifetime of any
+/// other object except the program itself, at which point it will be cleaned up at the end
+/// of execution. Any object where `M = Foreign` will typically have a lifetime tied to the
+/// object that handed out the borrow, so it cannot outlive that object.
 ///
 /// # Aliasing rules
 ///
-/// By Rust's own rules you can't have multiple `&mut` references to the same data, as `&mut`
-/// cannot be aliased. However, raw pointers don't have this same rule, so having two [`Mut`]
-/// handles to the same object is _not_ UB. The single-threaded nature means that writes
-/// to two handles, pointing to the same object, will happen synchronously. The worst outcome
-/// is that two individual code paths, for example two event callbacks, could both modify
-/// the same object and confuse one about what the values in the data are, but it can never
-/// lead to UB.
+/// Two handles to the same object must never have a conflicting [`Constness`], or one
+/// could hand out `&'a` references into the object while the other mutates or frees it.
+/// Note this is about the object itself, _not_ the ownership. Two handles with a
+/// different `M` are equally unsound if they have a conflicting `C`.
 ///
+/// Whether you have to enforce that by hand depends on the relationship of the second handle:
+///
+/// 1. Child handles: these are obtained from a parent handle. These borrow the parent,
+///    through a `self` reference, so the borrow checker already guarantees two conflicting
+///    handles can't be live at once, therefore differing constness is fine. This is why a mutable
+///    accessor, like a `get_mut` _must_ take `&mut self`.  Getting this wrongcould allow multiple
+///    handles to exist together that otherwise shouldn't.
+///
+/// 2. Sibling handles: similar to child handles, but don't necessarily borrow their direct
+///    parent. For example, a [`VariantRef`] from a [`DictionaryRef`]. The variant borrows
+///    the `'a` lifetime, _not_ the `'self` lifetime, so it can survive even when the
+///    [`DictionaryRef`] is dropped. This makes the two handles siblings, not children.
+///    See the **Accessor lifetime rules** section below for more on this case.
+///
+/// 3. Independent handles: these are created independently, with no parent borrow. For example,
+///    a [`ContextHandle`] from `create_context` and another from `get_context` would be two
+///    independent handles. These purposefuly don't borrow their parent (that's what `drop-tree`
+///    is for), so nothing relates either of them together and the borrow checker can't help.
+///    These are the handles the rule above has to be enforced on manually (manually in the
+///    sense that care needs to be taken when writing the code and constructing handles to
+///    make sure this rule isn't violated).
+///
+/// By Rust's own rules you can't alias `&mut`, as it carries a uniqueness guarantee the
+/// optimiser relies on. Raw pointers do not follow this rule, so two [`Mut`] handles to one
+/// object is _not_ UB.
+/// Separately, [`ForeignHandle`] being `!Send` and `!Sync` rules out a data race, which
+/// _would_ be UB for raw pointers too. The worst outcome is two code paths, for example two event
+/// callbacks, both modifying the same object and confusing one another about what the data holds.
+///
+/// # Accessor lifetime rules
+///
+/// A handle may return `&'a` references into its object _only_ when `M = Foreign` and
+/// `C = Immut`. That combination means the handle itself just a reference to some data
+/// it can't outlive. No methods on the handle can invalidate the data it references,
+/// therefore any refrenced created from this can take the `'a` life of the parent,
+/// making both handles siblings not children. If the original handle is lost, the data
+/// it points to is still valid with the lifetime `'a`, so the referenced data is also
+/// still valid.
+/// For example, `try_get` on a [`DictionaryRef`] returns `&T` with a lifetime belonging to
+/// the dictionary object itself. If the [`DictionaryRef`] is dropped, that doesn't mean anything
+/// hashappened to the actual dictionary's memory, so the `&T` data is still valid.
+///
+/// Every other combination must tie references to `&self`, so `&mut self` operations are
+/// blocked while any reference is alive. This includes the _read-only_ accessors on a
+/// `Mut` handle - in a mutable dictionary, `get` must borrow `&self` so that it conflicts
+/// with `get_mut`.
+///
+/// [`VariantRef`]: crate::containers::variant::VariantRef
+/// [`ContextHandle`]: crate::core::context::ContextHandle
 /// [`DictionaryRef`]: crate::containers::dictionary::DictionaryRef
 pub struct ForeignHandle<'a, O: ForeignObject, M: ObjectOwnership<O> = Native, C: Constness = Immut>
 {
