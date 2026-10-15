@@ -28,9 +28,11 @@ pub trait ObjectOwnership<O: ForeignObject> {
 }
 
 /// Rust owns the C++ resource and destroys it on drop.
+#[derive(Debug)]
 pub enum Native {}
 
 /// C++ owns the resource therfore there is no drop code.
+#[derive(Debug)]
 pub enum Foreign {}
 
 #[sealed]

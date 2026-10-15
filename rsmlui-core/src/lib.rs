@@ -18,10 +18,10 @@ mod utils;
 
 pub use core::backend_handle::BackendHandle;
 pub use core::context::Context;
-pub use core::rml::Rml;
 pub use core::element_document::ElementDocument;
 pub use core::log;
 pub use core::log::{always, assert, debug, error, info, warning};
+pub use core::rml::Rml;
 
 pub use error::{Error, Result};
 pub use types::math;

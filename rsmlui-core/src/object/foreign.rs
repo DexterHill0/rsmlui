@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
 
@@ -122,6 +123,16 @@ pub struct ForeignHandle<'a, O: ForeignObject, M: ObjectOwnership<O> = Native, C
     raw: *mut O::Object,
     _lt: PhantomData<&'a ()>,
     _tag: PhantomData<(O, M, C)>,
+}
+
+impl<'a, O: ForeignObject, M: ObjectOwnership<O>, C: Constness> Debug
+    for ForeignHandle<'a, O, M, C>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ForeignHandle")
+            .field("raw", &"<foreign object>")
+            .finish()
+    }
 }
 
 not_send_sync!(['a, O: ForeignObject, M: ObjectOwnership<O>, C: Constness] ForeignHandle['a, O, M, C]);

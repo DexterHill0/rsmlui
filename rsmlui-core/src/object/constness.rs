@@ -29,9 +29,11 @@ pub trait Constness {
 }
 
 /// The resource is immutabe. It can only be constructed from a *const pointer, and can only return a *const pointer.
+#[derive(Debug)]
 pub enum Immut {}
 
 /// The resource is mutable. It can only be constructed from a *mut pointer, and can return both *const and *mut pointers.
+#[derive(Debug)]
 pub enum Mut {}
 
 #[sealed]
