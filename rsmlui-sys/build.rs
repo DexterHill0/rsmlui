@@ -319,6 +319,7 @@ fn main() {
         "src/ffi/context.rs",
         "src/ffi/element_document.rs",
         "src/ffi/element.rs",
+        "src/ffi/element_instancer.rs",
         "src/ffi/variant.rs",
         "src/ffi/dictionary.rs",
         "src/ffi/file_interface.rs",

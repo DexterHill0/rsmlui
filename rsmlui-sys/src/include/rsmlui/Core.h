@@ -1,6 +1,8 @@
 #pragma once
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Core.h>
+#include <RmlUi/Core/ElementInstancer.h>
+#include <RmlUi/Core/Factory.h>
 #include <RmlUi/Core/Math.h>
 
 #include "RmlUi/Core/Log.h"
@@ -97,5 +99,12 @@ inline void register_plugin(Rml::Plugin* plugin) {
 
 inline void unregister_plugin(Rml::Plugin* plugin) {
     Rml::UnregisterPlugin(plugin);
+}
+
+inline void register_element_instancer(
+    rust::String name,
+    Rml::ElementInstancer* instancer
+) {
+    Rml::Factory::RegisterElementInstancer(name.c_str(), instancer);
 }
 } // namespace rsmlui

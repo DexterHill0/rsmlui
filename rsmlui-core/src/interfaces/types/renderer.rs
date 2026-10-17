@@ -146,7 +146,7 @@ pub struct LoadedTexture {
     pub handle: TextureHandle,
 }
 
-/// Implement this trait to add behaviour ot a custom [`Rml::RenderInterface`].
+/// Implement this trait to add behaviour to a custom [`Rml::RenderInterface`].
 ///
 /// Some methods require implementations, while some have default implementations.
 ///

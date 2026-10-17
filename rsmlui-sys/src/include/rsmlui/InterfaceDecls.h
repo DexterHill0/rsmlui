@@ -4,6 +4,7 @@
 #include <cstddef>
 
 #include "./Utils.h"
+#include "RmlUi/Core/ElementInstancer.h"
 #include "RmlUi/Core/FileInterface.h"
 #include "RmlUi/Core/Plugin.h"
 #include "RmlUi/Core/RenderInterface.h"
@@ -164,3 +165,26 @@ struct RustPluginInterface: public Rml::Plugin {
 
 ASSERT_INTERFACE_LAYOUT(RustPluginInterface);
 } // namespace rsmlui::plugin
+
+namespace rsmlui::element_instancer {
+struct RustElementInstancer: public Rml::ElementInstancer {
+    RustElementInstancer(const void* rust_meta, void* rust_data) :
+        rust_meta(rust_meta),
+        rust_data(rust_data) {}
+
+    auto InstanceElement(
+        Rml::Element* parent,
+        const Rml::String& tag,
+        const Rml::XMLAttributes& attributes
+    ) -> Rml::ElementPtr override;
+
+    auto ReleaseElement(Rml::Element* element) -> void override;
+
+  public:
+    const void* rust_meta;
+    void* rust_data;
+};
+
+ASSERT_INTERFACE_LAYOUT(RustElementInstancer);
+
+} // namespace rsmlui::element_instancer

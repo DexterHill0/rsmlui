@@ -8,6 +8,7 @@ pub mod core;
 pub mod dictionary;
 pub mod element;
 pub mod element_document;
+pub mod element_instancer;
 pub mod extern_types;
 pub mod file_interface;
 pub mod interfaces;

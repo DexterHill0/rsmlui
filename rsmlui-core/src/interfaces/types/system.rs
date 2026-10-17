@@ -67,7 +67,7 @@ unsafe impl<T: SystemInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<Ru
     }
 }
 
-/// Implement this trait to add behaviour ot a custom [`Rml::SystemInterface`].
+/// Implement this trait to add behaviour to a custom [`Rml::SystemInterface`].
 ///
 /// All methods have default implementations.
 ///

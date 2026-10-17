@@ -85,7 +85,7 @@ pub enum SeekOffset {
     End(isize),
 }
 
-/// Implement this trait to add behaviour ot a custom [`Rml::FileInterface`].
+/// Implement this trait to add behaviour to a custom [`Rml::FileInterface`].
 ///
 /// Some methods require implementations, while some have default implementations.
 ///

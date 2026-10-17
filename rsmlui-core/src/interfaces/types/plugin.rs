@@ -59,7 +59,7 @@ unsafe impl<T: PluginInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<Ru
     }
 }
 
-/// Implement this trait to add behaviour ot a custom [`Rml::Plugin`].
+/// Implement this trait to add behaviour to a custom [`Rml::Plugin`].
 ///
 /// All methods have default implementations.
 ///

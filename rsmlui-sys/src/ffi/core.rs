@@ -15,6 +15,9 @@ mod ffi {
 
         #[cxx_name = "Plugin"]
         type RmlPlugin = crate::plugin_interface::RmlPlugin;
+
+        #[cxx_name = "ElementInstancer"]
+        type RmlElementInstancer = crate::element_instancer::RmlElementInstancer;
     }
 
     #[namespace = "Rml::Style"]
@@ -70,6 +73,11 @@ mod ffi {
 
         unsafe fn register_plugin(plugin: *mut RmlPlugin);
         unsafe fn unregister_plugin(plugin: *mut RmlPlugin);
+
+        /// # Safety
+        ///
+        /// - `instancer` must be a valid pointer to an `ElementInstancer` that outlives `Rml::shutdown`.
+        unsafe fn register_element_instancer(name: String, instancer: *mut RmlElementInstancer);
     }
 }
 
@@ -99,6 +107,6 @@ mod ffi {
 pub use ffi::{
     FontStyle, FontWeight, create_context, get_file_interface, get_render_interface,
     get_system_interface, get_version, initialise, load_font_face_from_file,
-    load_font_face_from_memory, log_message, register_plugin, set_file_interface,
-    set_render_interface, set_system_interface, shutdown, unregister_plugin,
+    load_font_face_from_memory, log_message, register_element_instancer, register_plugin,
+    set_file_interface, set_render_interface, set_system_interface, shutdown, unregister_plugin,
 };
