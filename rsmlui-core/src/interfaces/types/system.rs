@@ -15,39 +15,75 @@ use sealed::sealed;
 
 use crate::_private::HasOwnedInterface;
 use crate::core::log::LogLevel;
-use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
+use crate::interfaces::bridge::BridgedHandle;
+use crate::interfaces::object::InterfaceObject;
 use crate::math::Vec2;
 use crate::types::cursor::Cursor;
 use crate::utils::conversions::{FromSys, IntoSys};
+use crate::utils::private::Uncallable;
 
-/// The receiver type for all [`SystemInterface`] methods.
-pub type SystemInterfaceHandle<T> = InterfaceHandle<T, RustSystemInterface>;
+pub type SystemInterfaceObject<T> = InterfaceObject<T, RustSystemInterface>;
 
-/// An owned, heap-pinned system interface. Construct via [`OwnedInterface::new`].
-pub type OwnedSystemInterface<T> = OwnedInterface<T, RustSystemInterface>;
-
-/// Implement this trait to create a custom [`Rml::SystemInterface`] for RmlUi.
+/// A custom [`Rml::SystemInterface`].
 ///
-/// Every method has a default implementation that forwards to the C++ base class behaviour.
+/// [`Rml::SystemInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/system.html
+pub type SystemInterface<T> = BridgedHandle<T, RustSystemInterface>;
+
+#[sealed]
+unsafe impl<T: SystemInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<RustSystemInterface>
+    for T
+{
+    fn construct(handle: &mut SystemInterfaceObject<Self>) {
+        // The fat pointer data component is the address of the heap-allocated `InterfaceObject`.
+        // That address is stable for the lifetime of the `BridgedHandle`.
+        let fat_ptr: *mut dyn SystemInterfaceBridge = handle;
+
+        let (data, meta) = fat_ptr.to_raw_parts();
+
+        let meta_raw: *const () = unsafe { transmute(meta) };
+
+        let cpp =
+            unsafe { new_rust_system_interface(meta_raw as *const Opaque, data as *mut Opaque) };
+
+        handle.bridge = cpp;
+    }
+
+    unsafe fn destroy_bridge(bridge: *mut RustSystemInterface) {
+        // Safety: `bridge` is a valid, non-null pointer
+        unsafe { rust_system_interface_destructor(bridge) }
+    }
+
+    unsafe fn assert_not_registered(bridge: *mut RustSystemInterface) {
+        let current_interface_ptr = core::get_system_interface();
+
+        // `RustSystemInterface` inherits from `SystemInterface` in C++
+        // so the cast is safe.
+        let self_ptr = bridge.cast();
+
+        assert_ne!(
+            current_interface_ptr, self_ptr,
+            "system interface dropped while still registered"
+        );
+    }
+}
+
+/// Implement this trait to add behaviour ot a custom [`Rml::SystemInterface`].
 ///
-/// Methods receive `self: &mut SystemInterfaceHandle<Self>` rather than `&mut self` in order
+/// All methods have default implementations.
+///
+/// Methods receive `self: &mut SystemInterfaceObject<Self>` rather than `&mut self` in order
 /// to ensure correct initialisation and lifetime of values.
-/// [`SystemInterfaceHandle`] implements [`Deref`] and [`DerefMut`] to give access to the
-/// underlying user data.
 ///
 /// ## Dyn-compatibility
 ///
 /// Every method is marked `where Self: Sized`, which keeps the trait dyn-compatible. Therefore,
-/// methods are not callable through a `dyn SystemInterface` trait object. Dispatch must always
-/// go through the [`InterfaceHandle`].
+/// methods are not callable through a `dyn SystemInterface` trait object.
 ///
-/// [`Deref`]: std::ops::Deref
-/// [`DerefMut`]: std::ops::DerefMut
 /// [`Rml::SystemInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/system.html
 #[rmldoc(file = "api_Rml-SystemInterface.md", name = "Rml::SystemInterface")]
-pub trait SystemInterface {
+pub trait SystemInterfaceBehaviour {
     #[rmldoc(name = "Rml::SystemInterface::GetElapsedTime")]
-    fn get_elapsed_time(self: &mut SystemInterfaceHandle<Self>) -> f64
+    fn get_elapsed_time(self: &mut SystemInterfaceObject<Self>) -> f64
     where
         Self: Sized,
     {
@@ -55,7 +91,7 @@ pub trait SystemInterface {
     }
 
     #[rmldoc(name = "Rml::SystemInterface::TranslateString")]
-    fn translate_string(self: &mut SystemInterfaceHandle<Self>, input: &str) -> String
+    fn translate_string(self: &mut SystemInterfaceObject<Self>, input: &str) -> String
     where
         Self: Sized,
     {
@@ -64,7 +100,7 @@ pub trait SystemInterface {
 
     #[rmldoc(name = "Rml::SystemInterface::JoinPath")]
     fn join_path(
-        self: &mut SystemInterfaceHandle<Self>,
+        self: &mut SystemInterfaceObject<Self>,
         document_path: std::path::PathBuf,
         path: std::path::PathBuf,
     ) -> std::path::PathBuf
@@ -82,7 +118,7 @@ pub trait SystemInterface {
     }
 
     #[rmldoc(name = "Rml::SystemInterface::LogMessage")]
-    fn log_message(self: &mut SystemInterfaceHandle<Self>, level: LogLevel, message: &str) -> bool
+    fn log_message(self: &mut SystemInterfaceObject<Self>, level: LogLevel, message: &str) -> bool
     where
         Self: Sized,
     {
@@ -92,7 +128,7 @@ pub trait SystemInterface {
     }
 
     #[rmldoc(name = "Rml::SystemInterface::SetMouseCursor")]
-    fn set_mouse_cursor(self: &mut SystemInterfaceHandle<Self>, cursor: Cursor)
+    fn set_mouse_cursor(self: &mut SystemInterfaceObject<Self>, cursor: Cursor)
     where
         Self: Sized,
     {
@@ -101,7 +137,7 @@ pub trait SystemInterface {
     }
 
     #[rmldoc(name = "Rml::SystemInterface::SetClipboardText")]
-    fn set_clipboard_text(self: &mut SystemInterfaceHandle<Self>, text: &str)
+    fn set_clipboard_text(self: &mut SystemInterfaceObject<Self>, text: &str)
     where
         Self: Sized,
     {
@@ -109,7 +145,7 @@ pub trait SystemInterface {
     }
 
     #[rmldoc(name = "Rml::SystemInterface::GetClipboardText")]
-    fn get_clipboard_text(self: &mut SystemInterfaceHandle<Self>) -> String
+    fn get_clipboard_text(self: &mut SystemInterfaceObject<Self>) -> String
     where
         Self: Sized,
     {
@@ -118,7 +154,7 @@ pub trait SystemInterface {
 
     #[rmldoc(name = "Rml::SystemInterface::ActivateKeyboard")]
     fn activate_keyboard(
-        self: &mut SystemInterfaceHandle<Self>,
+        self: &mut SystemInterfaceObject<Self>,
         caret_position: Vec2,
         line_height: f32,
     ) where
@@ -134,7 +170,7 @@ pub trait SystemInterface {
     }
 
     #[rmldoc(name = "Rml::SystemInterface::DeactivateKeyboard")]
-    fn deactivate_keyboard(self: &mut SystemInterfaceHandle<Self>)
+    fn deactivate_keyboard(self: &mut SystemInterfaceObject<Self>)
     where
         Self: Sized,
     {
@@ -144,7 +180,7 @@ pub trait SystemInterface {
 
 // The sys crate uses `SystemInterfaceBridge` as the dispatch from C++ to Rust.
 // This impl forwards each call to the user's `SystemInterface` implementation.
-unsafe impl<T: SystemInterface> SystemInterfaceBridge for SystemInterfaceHandle<T> {
+unsafe impl<T: SystemInterfaceBehaviour> SystemInterfaceBridge for SystemInterfaceObject<T> {
     #[inline]
     unsafe fn get_elapsed_time(&mut self) -> f64 {
         T::get_elapsed_time(self)
@@ -198,61 +234,17 @@ unsafe impl<T: SystemInterface> SystemInterfaceBridge for SystemInterfaceHandle<
     }
 }
 
-/// Marker trait for types that can supply a system interface to a [`Backend`].
-///
-/// Implemented automatically for any type where `&Self: IntoRawInterface<RmlSystemInterface>`,
-/// covering both [`OwnedSystemInterface<T>`] and C++ interface wrappers (e.g. `SystemWin32`).
-///
-/// [`Backend`]: rsmlui_backends::backend::Backend
-#[sealed]
-pub trait SystemInterfaceSource {}
-
-#[sealed]
-impl<T> SystemInterfaceSource for T where for<'a> &'a T: IntoRawInterface<RmlSystemInterface> {}
-
-#[sealed]
-impl<T: SystemInterface> super::OwnedInterfaceHandle<RustSystemInterface> for T {
-    fn init_bridge(handle: &mut SystemInterfaceHandle<T>) {
-        // The fat pointer data component is the address of the heap-allocated InterfaceHandle.
-        // That address is stable for the lifetime of the OwnedInterface.
-        let fat_ptr: *mut dyn SystemInterfaceBridge = handle;
-
-        let (data, meta) = fat_ptr.to_raw_parts();
-
-        let meta_raw: *const () = unsafe { transmute(meta) };
-
-        let cpp =
-            unsafe { new_rust_system_interface(meta_raw as *const Opaque, data as *mut Opaque) };
-
-        handle.bridge = cpp;
-    }
-
-    unsafe fn destroy(handle: &mut SystemInterfaceHandle<T>) {
-        unsafe { rust_system_interface_destructor(handle.bridge_ptr()) }
-    }
-
-    fn assert_not_registered(handle: &InterfaceHandle<Self, RustSystemInterface>) {
-        let current_interface_ptr = core::get_system_interface();
-
-        let self_ptr = unsafe { handle.bridge_ptr() }.cast();
-
-        assert_ne!(
-            current_interface_ptr, self_ptr,
-            "OwnedInterface dropped while still registered as RmlUI's system interface"
-        );
-    }
-}
-
-// Implemented on a shared borrow so the value and C++ object outlives the pointer.
-impl<T: SystemInterface> IntoRawInterface<RmlSystemInterface>
-    for &OwnedInterface<T, RustSystemInterface>
+// Using `RmlSystemInterface` so it's consistent with existing C++ file interfaces.
+// `RustSystemInterface` is simply a subclass of `RmlSystemInterface` so it represents
+// the same kind of object.
+impl<T: SystemInterfaceBehaviour> crate::interfaces::object::IntoRawInterface<RmlSystemInterface>
+    for &mut SystemInterface<T>
 {
-    fn into_raw(self) -> RawInterface<RmlSystemInterface> {
-        // `RustSystemInterface` is a subclass of `RmlSystemInterface` so the cast is valid.
-        RawInterface::new(self.as_sys_ptr().cast())
+    fn into_raw(self, _: Uncallable) -> *mut RmlSystemInterface {
+        self.bridge as _
     }
 }
 
-impl<T: SystemInterface> HasOwnedInterface<0> for T {
-    type Owned = OwnedSystemInterface<Self>;
+impl<T: SystemInterfaceBehaviour> HasOwnedInterface<RmlSystemInterface> for T {
+    type Owned = SystemInterface<T>;
 }

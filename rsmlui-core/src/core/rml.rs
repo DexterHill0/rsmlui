@@ -13,9 +13,10 @@ use crate::core::backend_handle::BackendHandle;
 use crate::core::context::{Context, ContextHandle};
 use crate::core::font::{FontFaceOptions, FontFaceSource};
 use crate::error::Error;
-use crate::interfaces::IntoRawInterface;
+use crate::interfaces::object::IntoRawInterface;
 use crate::math::UVec2;
 use crate::utils::conversions::IntoSys;
+use crate::utils::private::Uncallable;
 
 static IS_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
@@ -89,7 +90,7 @@ impl Rml {
         &self,
         interface: Option<impl IntoRawInterface<RmlSystemInterface>>,
     ) {
-        let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw().0);
+        let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw(Uncallable::new()));
 
         unsafe { core::set_system_interface(raw) }
     }
@@ -99,14 +100,14 @@ impl Rml {
         &self,
         interface: Option<impl IntoRawInterface<RmlRenderInterface>>,
     ) {
-        let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw().0);
+        let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw(Uncallable::new()));
 
         unsafe { core::set_render_interface(raw) }
     }
 
     #[rmldoc(name = "Rml::SetFileInterface")]
     pub fn set_file_interface(&self, interface: Option<impl IntoRawInterface<RmlFileInterface>>) {
-        let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw().0);
+        let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw(Uncallable::new()));
 
         unsafe { core::set_file_interface(raw) }
     }

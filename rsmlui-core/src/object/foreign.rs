@@ -12,7 +12,15 @@ use crate::utils::macros::not_send_sync;
 /// handle to own one ([`Native`]), its tag must also implement [`ForeignDestroy`]. Without a
 /// way to free the object, only borrowed handles are representable.
 pub trait ForeignObject {
-    /// The equivalent foreign type for `Self`.
+    /// The foreign object represented by the tag (`Self`).
+    ///
+    /// This will commonly be a pointer to an object allocated by C++.
+    /// However, that won't always be true like in the case of interfaces
+    /// where they hold a Rust-allocated object but that contains a pointer
+    /// to a foreign object.
+    ///
+    /// In one way or another though there will always be a pointer to a
+    /// foreign object contained within whatever `Object` is.
     type Object;
 }
 
@@ -46,7 +54,12 @@ pub unsafe trait ForeignDestroy: ForeignObject {
 
     /// Called bedpre [`ForeignDestroy::destroy`]. Use to ensure any runtime invariants
     /// have no been violated by the object being dropped.
-    fn assert_droppable(_raw: *mut Self::Object) {}
+    ///
+    /// # Safety
+    ///
+    /// - The pointer may still be aliased by C++, so it should ONLY be read from,
+    ///   NEVER mutated.
+    unsafe fn assert_droppable(_raw: *mut Self::Object) {}
 }
 
 /// Represents any handle to a foreign object. This can be any combination of ownership,

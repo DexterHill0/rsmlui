@@ -1,5 +1,6 @@
-use rsmlui_core::_private::{FILE_INTERFACE_N, HasOwnedInterface};
-use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
+use rsmlui_core::_private::HasOwnedInterface;
+use rsmlui_core::Uncallable;
+use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::object::constness::Mut;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
 use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
@@ -21,7 +22,7 @@ unsafe impl ForeignDestroy for tags::TagFileDefault {
         unsafe { default_file_interface_destructor(raw) }
     }
 
-    fn assert_droppable(raw: *mut Self::Object) {
+    unsafe fn assert_droppable(raw: *mut Self::Object) {
         assert_ne!(
             core::get_file_interface(),
             raw,
@@ -62,12 +63,12 @@ impl Default for FileDefault {
 impl<'a, M: ObjectOwnership<tags::TagFileDefault>> IntoRawInterface<RmlFileInterface>
     for &mut FileDefaultHandle<'a, M>
 {
-    fn into_raw(self) -> RawInterface<RmlFileInterface> {
-        RawInterface::new(unsafe { self.0.as_mut_ptr() })
+    fn into_raw(self, _: Uncallable) -> *mut RmlFileInterface {
+        unsafe { self.0.as_mut_ptr() }
     }
 }
 
-impl<'a, M: ObjectOwnership<tags::TagFileDefault>> HasOwnedInterface<{ FILE_INTERFACE_N }>
+impl<'a, M: ObjectOwnership<tags::TagFileDefault>> HasOwnedInterface<RmlFileInterface>
     for FileDefaultHandle<'a, M>
 {
     type Owned = Self;

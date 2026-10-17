@@ -25,12 +25,11 @@ pub use core::rml::Rml;
 
 pub use error::{Error, Result};
 pub use types::math;
+pub use utils::private::Uncallable;
 
 #[doc(hidden)]
 pub mod _private {
-    pub use crate::interfaces::_private::{
-        FILE_INTERFACE_N, HasOwnedInterface, RENDER_INTERFACE_N, SYSTEM_INTERFACE_N,
-    };
+    pub use crate::interfaces::object::_private::*;
     pub use crate::utils::conversions::{FromSys, IntoSys};
     pub use crate::utils::macros::{not_send_sync, not_unwind_safe};
 }

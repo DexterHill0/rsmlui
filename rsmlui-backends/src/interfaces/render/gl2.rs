@@ -1,5 +1,6 @@
-use rsmlui_core::_private::{HasOwnedInterface, IntoSys, RENDER_INTERFACE_N};
-use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
+use rsmlui_core::_private::{HasOwnedInterface, IntoSys};
+use rsmlui_core::Uncallable;
+use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::math::UVec2;
 use rsmlui_core::object::constness::Mut;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectMutPtr};
@@ -40,7 +41,7 @@ unsafe impl ForeignDestroy for tags::TagGl2 {
         unsafe { gl2_render_interface_destructor(raw) }
     }
 
-    fn assert_droppable(raw: *mut Self::Object) {
+    unsafe fn assert_droppable(raw: *mut Self::Object) {
         assert_ne!(
             core::get_render_interface(),
             raw,
@@ -155,12 +156,12 @@ impl<'a> RendererGl2Ref<'a> {
 impl<'a, M: ObjectOwnership<tags::TagGl2>> IntoRawInterface<RmlRenderInterface>
     for &mut Gl2Handle<'a, M>
 {
-    fn into_raw(self) -> RawInterface<RmlRenderInterface> {
-        RawInterface::new(unsafe { self.0.as_mut_ptr() })
+    fn into_raw(self, _: Uncallable) -> *mut RmlRenderInterface {
+        unsafe { self.0.as_mut_ptr() }
     }
 }
 
-impl<'a, M: ObjectOwnership<tags::TagGl2>> HasOwnedInterface<{ RENDER_INTERFACE_N }>
+impl<'a, M: ObjectOwnership<tags::TagGl2>> HasOwnedInterface<RmlRenderInterface>
     for Gl2Handle<'a, M>
 {
     type Owned = Self;

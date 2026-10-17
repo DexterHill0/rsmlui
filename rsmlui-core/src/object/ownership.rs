@@ -45,7 +45,7 @@ impl<O: ForeignObject> ObjectOwnership<O> for Foreign {
 #[sealed]
 impl<O: ForeignDestroy> ObjectOwnership<O> for Native {
     unsafe fn on_drop(raw: *mut O::Object) {
-        O::assert_droppable(raw);
+        unsafe { O::assert_droppable(raw) };
 
         unsafe { O::destroy(raw) }
     }

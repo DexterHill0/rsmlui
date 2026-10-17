@@ -12,9 +12,56 @@ use sealed::sealed;
 use thiserror::Error;
 
 use crate::_private::HasOwnedInterface;
-use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
+use crate::interfaces::bridge::BridgedHandle;
+use crate::interfaces::object::InterfaceObject;
 use crate::types::handles::FileHandle;
 use crate::utils::conversions::{FromSys, IntoSys};
+use crate::utils::private::Uncallable;
+
+pub type FileInterfaceObject<T> = InterfaceObject<T, RustFileInterface>;
+
+/// A custom [`Rml::FileInterface`].
+///
+/// [`Rml::FileInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/file.html
+pub type FileInterface<T> = BridgedHandle<T, RustFileInterface>;
+
+#[sealed]
+unsafe impl<T: FileInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<RustFileInterface>
+    for T
+{
+    fn construct(handle: &mut FileInterfaceObject<Self>) {
+        // The fat pointer data component is the address of the heap-allocated `InterfaceObject`.
+        // That address is stable for the lifetime of the `BridgedHandle`.
+        let fat_ptr: *mut dyn FileInterfaceBridge = handle;
+
+        let (data, meta) = fat_ptr.to_raw_parts();
+
+        let meta_raw: *const () = unsafe { transmute(meta) };
+
+        let cpp =
+            unsafe { new_rust_file_interface(meta_raw as *const Opaque, data as *mut Opaque) };
+
+        handle.bridge = cpp;
+    }
+
+    unsafe fn destroy_bridge(bridge: *mut RustFileInterface) {
+        // Safety: `bridge` is a valid, non-null pointer
+        unsafe { rust_file_interface_destructor(bridge) }
+    }
+
+    unsafe fn assert_not_registered(bridge: *mut RustFileInterface) {
+        let current_interface_ptr = core::get_file_interface();
+
+        // `RustFileInterface` inherits from `FileInterface` in C++
+        // so the cast is safe.
+        let self_ptr = bridge.cast();
+
+        assert_ne!(
+            current_interface_ptr, self_ptr,
+            "file interface dropped while still registered"
+        );
+    }
+}
 
 /// Errors produced by the default [`FileInterface`] method implementations.
 #[derive(Error, Debug)]
@@ -31,12 +78,6 @@ pub enum FileError {
     InvalidPath,
 }
 
-/// The receiver type for all [`FileInterface`] methods.
-pub type FileInterfaceHandle<T> = InterfaceHandle<T, RustFileInterface>;
-
-/// An owned, heap-pinned system interface. Construct via [`OwnedInterface::new`].
-pub type OwnedFileInterface<T> = OwnedInterface<T, RustFileInterface>;
-
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SeekOffset {
     Beginning(usize),
@@ -44,42 +85,36 @@ pub enum SeekOffset {
     End(isize),
 }
 
-/// Implement this trait to create a custom [`Rml::FileInterface`] for RmlUi.
+/// Implement this trait to add behaviour ot a custom [`Rml::FileInterface`].
 ///
-/// `Open`, `Close`, `Read`, `Seek`, and `Tell` are pure virtual in C++ and must be implemented.
-/// `Length` and `LoadFile` have default implementations that forward to the C++ base class.
+/// Some methods require implementations, while some have default implementations.
 ///
-/// Methods receive `self: &mut FileInterfaceHandle<Self>` rather than `&mut self` in order
+/// Methods receive `self: &mut FileInterfaceObject<Self>` rather than `&mut self` in order
 /// to ensure correct initialisation and lifetime of values.
-/// [`FileInterfaceHandle`] implements [`Deref`] and [`DerefMut`] to give access to the
-/// underlying user data.
 ///
 /// ## Dyn-compatibility
 ///
 /// Every method is marked `where Self: Sized`, which keeps the trait dyn-compatible. Therefore,
-/// methods are not callable through a `dyn FileInterface` trait object. Dispatch must always
-/// go through the [`InterfaceHandle`].
+/// methods are not callable through a `dyn FileInterface` trait object.
 ///
-/// [`Deref`]: std::ops::Deref
-/// [`DerefMut`]: std::ops::DerefMut
-/// [`Rml::FileInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/system.html
+/// [`Rml::FileInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/file.html
 #[rmldoc(file = "api_Rml-FileInterface.md", name = "Rml::FileInterface")]
-pub trait FileInterface {
+pub trait FileInterfaceBehaviour {
     type Error: std::error::Error + From<FileError>;
 
     #[rmldoc(name = "Rml::FileInterface::Open")]
-    fn open(self: &mut FileInterfaceHandle<Self>, path: &Path) -> Result<FileHandle, Self::Error>
+    fn open(self: &mut FileInterfaceObject<Self>, path: &Path) -> Result<FileHandle, Self::Error>
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::FileInterface::Close")]
-    fn close(self: &mut FileInterfaceHandle<Self>, file: FileHandle) -> Result<(), Self::Error>
+    fn close(self: &mut FileInterfaceObject<Self>, file: FileHandle) -> Result<(), Self::Error>
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::FileInterface::Read")]
     fn read(
-        self: &mut FileInterfaceHandle<Self>,
+        self: &mut FileInterfaceObject<Self>,
         file: FileHandle,
         buf: &mut [u8],
     ) -> Result<usize, Self::Error>
@@ -88,7 +123,7 @@ pub trait FileInterface {
 
     #[rmldoc(name = "Rml::FileInterface::Seek")]
     fn seek(
-        self: &mut FileInterfaceHandle<Self>,
+        self: &mut FileInterfaceObject<Self>,
         file: FileHandle,
         offset: SeekOffset,
     ) -> Result<(), Self::Error>
@@ -96,12 +131,12 @@ pub trait FileInterface {
         Self: Sized;
 
     #[rmldoc(name = "Rml::FileInterface::Tell")]
-    fn tell(self: &mut FileInterfaceHandle<Self>, file: FileHandle) -> usize
+    fn tell(self: &mut FileInterfaceObject<Self>, file: FileHandle) -> usize
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::FileInterface::Length")]
-    fn length(self: &mut FileInterfaceHandle<Self>, file: FileHandle) -> usize
+    fn length(self: &mut FileInterfaceObject<Self>, file: FileHandle) -> usize
     where
         Self: Sized,
     {
@@ -109,7 +144,7 @@ pub trait FileInterface {
     }
 
     #[rmldoc(name = "Rml::FileInterface::LoadFile")]
-    fn load_file(self: &mut FileInterfaceHandle<Self>, path: &Path) -> Result<Vec<u8>, Self::Error>
+    fn load_file(self: &mut FileInterfaceObject<Self>, path: &Path) -> Result<Vec<u8>, Self::Error>
     where
         Self: Sized,
     {
@@ -133,7 +168,7 @@ pub trait FileInterface {
 
 // The sys crate uses `FileInterfaceBridge` as the dispatch from C++ to Rust.
 // This impl forwards each call to the user's `FileInterface` implementation.
-unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
+unsafe impl<T: FileInterfaceBehaviour> FileInterfaceBridge for FileInterfaceObject<T> {
     unsafe fn open(&mut self, path: &str) -> rsmlui_sys::Rml_FileHandle {
         match T::open(self, Path::new(path)) {
             Ok(handle) => handle.into_sys(),
@@ -162,8 +197,8 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
         size: usize,
         file: rsmlui_sys::Rml_FileHandle,
     ) -> usize {
-        // Safety: mirrors C fread; the caller allocates a buffer of exactly `size` bytes and
-        // passes that same value as `size`. RmlUI upholds this for every call it makes.
+        // Safety: the caller allocates a buffer of exactly `size` bytes and  passes
+        // that same value as `size`.
         let buf = unsafe { std::slice::from_raw_parts_mut(buffer, size) };
 
         #[allow(clippy::manual_unwrap_or_default, clippy::manual_unwrap_or)]
@@ -223,61 +258,17 @@ unsafe impl<T: FileInterface> FileInterfaceBridge for FileInterfaceHandle<T> {
     }
 }
 
-/// Marker trait for types that can supply a file interface to a [`Backend`].
-///
-/// Implemented automatically for any type where `&Self: IntoRawInterface<RmlFileInterface>`,
-/// covering both [`OwnedFileInterface<T>`] and C++ interface wrappers.
-///
-/// [`Backend`]: rsmlui_backends::backend::Backend
-#[sealed]
-pub trait FileInterfaceSource {}
-
-#[sealed]
-impl<T> FileInterfaceSource for T where for<'a> &'a T: IntoRawInterface<RmlFileInterface> {}
-
-#[sealed]
-impl<T: FileInterface> super::OwnedInterfaceHandle<RustFileInterface> for T {
-    fn init_bridge(handle: &mut FileInterfaceHandle<T>) {
-        // The fat pointer data component is the address of the heap-allocated InterfaceHandle.
-        // That address is stable for the lifetime of the OwnedInterface.
-        let fat_ptr: *mut dyn FileInterfaceBridge = handle;
-
-        let (data, meta) = fat_ptr.to_raw_parts();
-
-        let meta_raw: *const () = unsafe { transmute(meta) };
-
-        let cpp =
-            unsafe { new_rust_file_interface(meta_raw as *const Opaque, data as *mut Opaque) };
-
-        handle.bridge = cpp;
-    }
-
-    unsafe fn destroy(handle: &mut FileInterfaceHandle<T>) {
-        unsafe { rust_file_interface_destructor(handle.bridge_ptr()) }
-    }
-
-    fn assert_not_registered(handle: &InterfaceHandle<Self, RustFileInterface>) {
-        let current_interface_ptr = core::get_file_interface();
-
-        let self_ptr = unsafe { handle.bridge_ptr() }.cast();
-
-        assert_ne!(
-            current_interface_ptr, self_ptr,
-            "OwnedInterface dropped while still registered as RmlUI's file interface"
-        );
-    }
-}
-
-// Implemented on a shared borrow so the value and C++ object outlives the pointer.
-impl<T: FileInterface> IntoRawInterface<RmlFileInterface>
-    for &OwnedInterface<T, RustFileInterface>
+// Using `RmlFileInterface` so it's consistent with existing C++ file interfaces.
+// `RustFileInterface` is simply a subclass of `RmlFileInterface` so it represents
+// the same kind of object.
+impl<T: FileInterfaceBehaviour> crate::interfaces::object::IntoRawInterface<RmlFileInterface>
+    for &mut FileInterface<T>
 {
-    fn into_raw(self) -> RawInterface<RmlFileInterface> {
-        // `RustFileInterface` is a subclass of `RmlFileInterface` so the cast is valid.
-        RawInterface::new(self.as_sys_ptr().cast())
+    fn into_raw(self, _: Uncallable) -> *mut RmlFileInterface {
+        self.bridge as _
     }
 }
 
-impl<T: FileInterface> HasOwnedInterface<2> for T {
-    type Owned = OwnedFileInterface<Self>;
+impl<T: FileInterfaceBehaviour> HasOwnedInterface<RmlFileInterface> for T {
+    type Owned = FileInterface<T>;
 }

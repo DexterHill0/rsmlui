@@ -1,7 +1,6 @@
-use rsmlui_core::_private::{
-    HasOwnedInterface, IntoSys, RENDER_INTERFACE_N, not_send_sync, not_unwind_safe,
-};
-use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
+use rsmlui_core::_private::{HasOwnedInterface, IntoSys, not_send_sync, not_unwind_safe};
+use rsmlui_core::Uncallable;
+use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::math::UVec2;
 use rsmlui_core::object::constness::Mut;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
@@ -33,7 +32,7 @@ unsafe impl ForeignDestroy for tags::TagGl3 {
         gl3_shutdown();
     }
 
-    fn assert_droppable(raw: *mut Self::Object) {
+    unsafe fn assert_droppable(raw: *mut Self::Object) {
         assert_ne!(
             core::get_render_interface(),
             raw,
@@ -149,12 +148,12 @@ impl<'a, M: ObjectOwnership<tags::TagGl3>> Gl3Handle<'a, M> {
 impl<'a, M: ObjectOwnership<tags::TagGl3>> IntoRawInterface<RmlRenderInterface>
     for &mut Gl3Handle<'a, M>
 {
-    fn into_raw(self) -> RawInterface<RmlRenderInterface> {
-        RawInterface::new(unsafe { self.0.as_mut_ptr() })
+    fn into_raw(self, _: Uncallable) -> *mut RmlRenderInterface {
+        unsafe { self.0.as_mut_ptr() }
     }
 }
 
-impl<'a, M: ObjectOwnership<tags::TagGl3>> HasOwnedInterface<{ RENDER_INTERFACE_N }>
+impl<'a, M: ObjectOwnership<tags::TagGl3>> HasOwnedInterface<RmlRenderInterface>
     for Gl3Handle<'a, M>
 {
     type Owned = Self;

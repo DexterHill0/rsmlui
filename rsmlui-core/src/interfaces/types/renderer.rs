@@ -18,7 +18,8 @@ use sealed::sealed;
 
 use crate::_private::HasOwnedInterface;
 use crate::containers::dictionary::DictionaryRef;
-use crate::interfaces::{InterfaceHandle, IntoRawInterface, OwnedInterface, RawInterface};
+use crate::interfaces::bridge::BridgedHandle;
+use crate::interfaces::object::InterfaceObject;
 use crate::math::{IVec2, Mat4, Vec2};
 use crate::types::colour::Colorb;
 use crate::types::handles::{
@@ -27,12 +28,52 @@ use crate::types::handles::{
 use crate::types::rectangle::Rectanglei;
 use crate::types::renderer::{BlendMode, ClipMaskOperation, ColorStopList, ColorStops, Vertex};
 use crate::utils::conversions::{FromSys, IntoSys};
+use crate::utils::private::Uncallable;
 
-/// The receiver type for all [`RenderInterface`] methods.
-pub type RenderInterfaceHandle<T> = InterfaceHandle<T, RustRenderInterface>;
+pub type RenderInterfaceObject<T> = InterfaceObject<T, RustRenderInterface>;
 
-/// An owned, heap-pinned render interface. Construct via [`OwnedInterface::new`].
-pub type OwnedRenderInterface<T> = OwnedInterface<T, RustRenderInterface>;
+/// A custom [`Rml::RenderInterface`].
+///
+/// [`Rml::RenderInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/file.html
+pub type RenderInterface<T> = BridgedHandle<T, RustRenderInterface>;
+
+#[sealed]
+unsafe impl<T: RenderInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<RustRenderInterface>
+    for T
+{
+    fn construct(handle: &mut RenderInterfaceObject<Self>) {
+        // The fat pointer data component is the address of the heap-allocated InterfaceHandle.
+        // That address is stable for the lifetime of the OwnedInterface.
+        let fat_ptr: *mut dyn RenderInterfaceBridge = handle;
+
+        let (data, meta) = fat_ptr.to_raw_parts();
+
+        let meta_raw: *const () = unsafe { transmute(meta) };
+
+        let cpp =
+            unsafe { new_rust_render_interface(meta_raw as *const Opaque, data as *mut Opaque) };
+
+        handle.bridge = cpp;
+    }
+
+    unsafe fn destroy_bridge(bridge: *mut RustRenderInterface) {
+        // Safety: `bridge` is a valid, non-null pointer
+        unsafe { rust_render_interface_destructor(bridge) }
+    }
+
+    unsafe fn assert_not_registered(bridge: *mut RustRenderInterface) {
+        let current_interface_ptr = core::get_render_interface();
+
+        // `RustRenderInterface` inherits from `RenderInterface` in C++
+        // so the cast is safe.
+        let self_ptr = bridge.cast();
+
+        assert_ne!(
+            current_interface_ptr, self_ptr,
+            "render interface dropped while still registered"
+        );
+    }
+}
 
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -105,29 +146,24 @@ pub struct LoadedTexture {
     pub handle: TextureHandle,
 }
 
-/// Implement this trait to create a custom [`Rml::RenderInterface`] for RmlUi.
+/// Implement this trait to add behaviour ot a custom [`Rml::RenderInterface`].
 ///
-/// Every method has a default implementation that forwards to the C++ base class behaviour.
+/// Some methods require implementations, while some have default implementations.
 ///
-/// Methods receive `self: &mut RenderInterfaceHandle<Self>` rather than `&mut self` in order
+/// Methods receive `self: &mut RenderInterfaceObject<Self>` rather than `&mut self` in order
 /// to ensure correct initialisation and lifetime of values.
-/// [`RenderInterfaceHandle`] implements [`Deref`] and [`DerefMut`] to give access to the
-/// underlying user data.
 ///
 /// ## Dyn-compatibility
 ///
 /// Every method is marked `where Self: Sized`, which keeps the trait dyn-compatible. Therefore,
-/// methods are not callable through a `dyn RenderInterface` trait object. Dispatch must always
-/// go through the [`InterfaceHandle`].
+/// methods are not callable through a `dyn RenderInterface` trait object.
 ///
-/// [`Deref`]: std::ops::Deref
-/// [`DerefMut`]: std::ops::DerefMut
-/// [`Rml::RenderInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/renderer.html
+/// [`Rml::RenderInterface`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/interfaces/render.html
 #[rmldoc(file = "api_Rml-RenderInterface.md", name = "Rml::RenderInterface")]
-pub trait RenderInterface {
+pub trait RenderInterfaceBehaviour {
     #[rmldoc(name = "Rml::RenderInterface::CompileGeometry")]
     fn compile_geometry(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         vertices: &[Vertex],
         indices: &[i32],
     ) -> CompiledGeometryHandle
@@ -136,7 +172,7 @@ pub trait RenderInterface {
 
     #[rmldoc(name = "Rml::RenderInterface::RenderGeometry")]
     fn render_geometry(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         geometry: CompiledGeometryHandle,
         translation: Vec2,
         texture: TextureHandle,
@@ -144,18 +180,18 @@ pub trait RenderInterface {
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::ReleaseGeometry")]
-    fn release_geometry(self: &mut RenderInterfaceHandle<Self>, geometry: CompiledGeometryHandle)
+    fn release_geometry(self: &mut RenderInterfaceObject<Self>, geometry: CompiledGeometryHandle)
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::LoadTexture")]
-    fn load_texture(self: &mut RenderInterfaceHandle<Self>, source: &str) -> Option<LoadedTexture>
+    fn load_texture(self: &mut RenderInterfaceObject<Self>, source: &str) -> Option<LoadedTexture>
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::GenerateTexture")]
     fn generate_texture(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         source: &[u8],
         texture_dimensions: IVec2,
     ) -> Option<TextureHandle>
@@ -163,22 +199,22 @@ pub trait RenderInterface {
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::ReleaseTexture")]
-    fn release_texture(self: &mut RenderInterfaceHandle<Self>, texture: TextureHandle)
+    fn release_texture(self: &mut RenderInterfaceObject<Self>, texture: TextureHandle)
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::EnableScissorRegion")]
-    fn enable_scissor_region(self: &mut RenderInterfaceHandle<Self>, enable: bool)
+    fn enable_scissor_region(self: &mut RenderInterfaceObject<Self>, enable: bool)
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::SetScissorRegion")]
-    fn set_scissor_region(self: &mut RenderInterfaceHandle<Self>, region: Rectanglei)
+    fn set_scissor_region(self: &mut RenderInterfaceObject<Self>, region: Rectanglei)
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::EnableClipMask")]
-    fn enable_clip_mask(self: &mut RenderInterfaceHandle<Self>, enable: bool)
+    fn enable_clip_mask(self: &mut RenderInterfaceObject<Self>, enable: bool)
     where
         Self: Sized,
     {
@@ -187,7 +223,7 @@ pub trait RenderInterface {
 
     #[rmldoc(name = "Rml::RenderInterface::RenderToClipMask")]
     fn render_to_clip_mask(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         operation: ClipMaskOperation,
         geometry: CompiledGeometryHandle,
         translation: Vec2,
@@ -205,7 +241,7 @@ pub trait RenderInterface {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::SetTransform")]
-    fn set_transform(self: &mut RenderInterfaceHandle<Self>, transform: &Mat4)
+    fn set_transform(self: &mut RenderInterfaceObject<Self>, transform: &Mat4)
     where
         Self: Sized,
     {
@@ -218,7 +254,7 @@ pub trait RenderInterface {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::PushLayer")]
-    fn push_layer(self: &mut RenderInterfaceHandle<Self>) -> LayerHandle
+    fn push_layer(self: &mut RenderInterfaceObject<Self>) -> LayerHandle
     where
         Self: Sized,
     {
@@ -227,7 +263,7 @@ pub trait RenderInterface {
 
     #[rmldoc(name = "Rml::RenderInterface::CompositeLayers")]
     fn composite_layers(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         source: LayerHandle,
         destination: LayerHandle,
         blend_mode: BlendMode,
@@ -247,7 +283,7 @@ pub trait RenderInterface {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::PopLayer")]
-    fn pop_layer(self: &mut RenderInterfaceHandle<Self>)
+    fn pop_layer(self: &mut RenderInterfaceObject<Self>)
     where
         Self: Sized,
     {
@@ -255,7 +291,7 @@ pub trait RenderInterface {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::SaveLayerAsTexture")]
-    fn save_layer_as_texture(self: &mut RenderInterfaceHandle<Self>) -> TextureHandle
+    fn save_layer_as_texture(self: &mut RenderInterfaceObject<Self>) -> TextureHandle
     where
         Self: Sized,
     {
@@ -267,7 +303,7 @@ pub trait RenderInterface {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::SaveLayerAsMaskImage")]
-    fn save_layer_as_mask_image(self: &mut RenderInterfaceHandle<Self>) -> CompiledFilterHandle
+    fn save_layer_as_mask_image(self: &mut RenderInterfaceObject<Self>) -> CompiledFilterHandle
     where
         Self: Sized,
     {
@@ -280,7 +316,7 @@ pub trait RenderInterface {
 
     #[rmldoc(name = "Rml::RenderInterface::CompileFilter")]
     fn compile_filter(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         kind: FilterKind,
     ) -> CompiledFilterHandle
     where
@@ -310,7 +346,7 @@ pub trait RenderInterface {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::ReleaseFilter")]
-    fn release_filter(self: &mut RenderInterfaceHandle<Self>, filter: CompiledFilterHandle)
+    fn release_filter(self: &mut RenderInterfaceObject<Self>, filter: CompiledFilterHandle)
     where
         Self: Sized,
     {
@@ -319,7 +355,7 @@ pub trait RenderInterface {
 
     #[rmldoc(name = "Rml::RenderInterface::CompileShader")]
     fn compile_shader(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         kind: ShaderKind,
     ) -> CompiledShaderHandle
     where
@@ -344,7 +380,7 @@ pub trait RenderInterface {
 
     #[rmldoc(name = "Rml::RenderInterface::RenderShader")]
     fn render_shader(
-        self: &mut RenderInterfaceHandle<Self>,
+        self: &mut RenderInterfaceObject<Self>,
         shader: CompiledShaderHandle,
         geometry: CompiledGeometryHandle,
         translation: Vec2,
@@ -364,7 +400,7 @@ pub trait RenderInterface {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::ReleaseShader")]
-    fn release_shader(self: &mut RenderInterfaceHandle<Self>, shader: CompiledShaderHandle)
+    fn release_shader(self: &mut RenderInterfaceObject<Self>, shader: CompiledShaderHandle)
     where
         Self: Sized,
     {
@@ -374,7 +410,7 @@ pub trait RenderInterface {
 
 // The sys crate uses `RenderInterfaceBridge` as the dispatch from C++ to Rust.
 // This impl forwards each call to the user's `RenderInterface` implementation.
-unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<T> {
+unsafe impl<T: RenderInterfaceBehaviour> RenderInterfaceBridge for RenderInterfaceObject<T> {
     #[inline]
     unsafe fn compile_geometry(
         &mut self,
@@ -734,61 +770,17 @@ unsafe impl<T: RenderInterface> RenderInterfaceBridge for RenderInterfaceHandle<
     }
 }
 
-/// Marker trait for types that can supply a render interface to a [`Backend`].
-///
-/// Implemented automatically for any type where `&Self: IntoRawInterface<RmlRenderInterface>`,
-/// covering both [`OwnedRenderInterface<T>`] and C++ interface wrappers (e.g. `RendererGl2`).
-///
-/// [`Backend`]: rsmlui_backends::backend::Backend
-#[sealed]
-pub trait RenderInterfaceSource {}
-
-#[sealed]
-impl<T> RenderInterfaceSource for T where for<'a> &'a T: IntoRawInterface<RmlRenderInterface> {}
-
-#[sealed]
-impl<T: RenderInterface> super::OwnedInterfaceHandle<RustRenderInterface> for T {
-    fn init_bridge(handle: &mut RenderInterfaceHandle<T>) {
-        // The fat pointer data component is the address of the heap-allocated InterfaceHandle.
-        // That address is stable for the lifetime of the OwnedInterface.
-        let fat_ptr: *mut dyn RenderInterfaceBridge = handle;
-
-        let (data, meta) = fat_ptr.to_raw_parts();
-
-        let meta_raw: *const () = unsafe { transmute(meta) };
-
-        let cpp =
-            unsafe { new_rust_render_interface(meta_raw as *const Opaque, data as *mut Opaque) };
-
-        handle.bridge = cpp;
-    }
-
-    unsafe fn destroy(handle: &mut RenderInterfaceHandle<T>) {
-        unsafe { rust_render_interface_destructor(handle.bridge_ptr()) }
-    }
-
-    fn assert_not_registered(handle: &InterfaceHandle<Self, RustRenderInterface>) {
-        let current_interface_ptr = core::get_render_interface();
-
-        let self_ptr = unsafe { handle.bridge_ptr() }.cast();
-
-        assert_ne!(
-            current_interface_ptr, self_ptr,
-            "OwnedInterface dropped while still registered as RmlUI's render interface"
-        );
-    }
-}
-
-// Implemented on a shared borrow so the value and C++ object outlives the pointer.
-impl<T: RenderInterface> IntoRawInterface<RmlRenderInterface>
-    for &OwnedInterface<T, RustRenderInterface>
+// Using `RmlRenderInterface` so it's consistent with existing C++ file interfaces.
+// `RustRenderInterface` is simply a subclass of `RmlRenderInterface` so it represents
+// the same kind of object.
+impl<T: RenderInterfaceBehaviour> crate::interfaces::object::IntoRawInterface<RmlRenderInterface>
+    for &mut RenderInterface<T>
 {
-    fn into_raw(self) -> RawInterface<RmlRenderInterface> {
-        // `RustRenderInterface` is a subclass of `RmlRenderInterface` so the cast is valid.
-        RawInterface::new(self.as_sys_ptr().cast())
+    fn into_raw(self, _: Uncallable) -> *mut RmlRenderInterface {
+        self.bridge as _
     }
 }
 
-impl<T: RenderInterface> HasOwnedInterface<1> for T {
-    type Owned = OwnedRenderInterface<Self>;
+impl<T: RenderInterfaceBehaviour> HasOwnedInterface<RmlRenderInterface> for T {
+    type Owned = RenderInterface<T>;
 }

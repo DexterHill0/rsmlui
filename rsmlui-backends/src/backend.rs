@@ -2,10 +2,10 @@ use std::ops::{Deref, DerefMut};
 
 use rsmlui_core::BackendHandle;
 use rsmlui_core::core::context::Context;
-use rsmlui_core::interfaces::file::FileInterfaceSource;
-use rsmlui_core::interfaces::renderer::RenderInterfaceSource;
-use rsmlui_core::interfaces::system::SystemInterfaceSource;
-use rsmlui_core::interfaces::{OwnedFileInterface, OwnedRenderInterface, OwnedSystemInterface};
+use rsmlui_core::interfaces::object::InterfaceSource;
+use rsmlui_sys::file_interface::RmlFileInterface;
+use rsmlui_sys::render_interface::RmlRenderInterface;
+use rsmlui_sys::system_interface::RmlSystemInterface;
 
 use crate::error::BackendError;
 use crate::window::WindowDriver;
@@ -16,9 +16,9 @@ use crate::window::WindowDriver;
 /// happen through the `Backend` value itself.
 pub struct BackendInner<S, R, F, W>
 where
-    S: SystemInterfaceSource,
-    R: RenderInterfaceSource,
-    F: FileInterfaceSource,
+    S: InterfaceSource<RmlSystemInterface>,
+    R: InterfaceSource<RmlRenderInterface>,
+    F: InterfaceSource<RmlFileInterface>,
     W: WindowDriver,
 {
     pub system: S,
@@ -28,11 +28,11 @@ where
 }
 
 /// A compositional backend that owns Rust-implemented interfaces, including a [`WindowDriver`].
-/// These interfaces *can* include individual interfaces implemented in C++, such as the
+/// These interfaces _can_ include individual interfaces implemented in C++, such as the
 /// Win32 system interface, or GL2 render interface.
 ///
 /// Like a monolithic backend, the caller is responsible for registering the owned
-/// interfaces with [`Rml`] and calling [`Rml::initialise`] **before** [`Backend::run`].
+/// interfaces with [`Rml`] and calling [`Rml::initialise`] _before_ [`Backend::run`].
 /// Interfaces can be registered directly since [`Backend`] derefs to [`BackendInner`]:
 ///
 /// ```no_run
@@ -74,9 +74,9 @@ where
 /// [`Rml::initialise`]: rsmlui_core::core::core::Rml::initialise
 pub struct Backend<S, R, F, W>
 where
-    S: SystemInterfaceSource,
-    R: RenderInterfaceSource,
-    F: FileInterfaceSource,
+    S: InterfaceSource<RmlSystemInterface>,
+    R: InterfaceSource<RmlRenderInterface>,
+    F: InterfaceSource<RmlFileInterface>,
     W: WindowDriver,
 {
     // Non-owning pointer into the heap allocation owned by `handle`'s closure.
@@ -85,14 +85,11 @@ where
     handle: BackendHandle,
 }
 
-pub type RustBackend<S, R, F, W> =
-    Backend<OwnedSystemInterface<S>, OwnedRenderInterface<R>, OwnedFileInterface<F>, W>;
-
 impl<S, R, F, W> Backend<S, R, F, W>
 where
-    S: SystemInterfaceSource + 'static,
-    R: RenderInterfaceSource + 'static,
-    F: FileInterfaceSource + 'static,
+    S: InterfaceSource<RmlSystemInterface> + 'static,
+    R: InterfaceSource<RmlRenderInterface> + 'static,
+    F: InterfaceSource<RmlFileInterface> + 'static,
     W: WindowDriver + 'static,
 {
     pub fn new(system: S, render: R, file: F, window: W) -> Self {
@@ -113,7 +110,7 @@ where
     /// Returns a handle to pass to [`Rml::new`].
     ///
     /// `Rml` stores a clone of the internal Rc. The `system` and `window`
-    /// allocations are only freed once **both** `Rml` and this `Backend` have
+    /// allocations are only freed once _both_ `Rml` and this `Backend` have
     /// released their clones, ensuring `core::shutdown` always runs first.
     ///
     /// [`Rml::new`]: rsmlui_core::core::core::Rml::new
@@ -156,9 +153,9 @@ where
 
 impl<S, R, F, W> Deref for Backend<S, R, F, W>
 where
-    S: SystemInterfaceSource,
-    R: RenderInterfaceSource,
-    F: FileInterfaceSource,
+    S: InterfaceSource<RmlSystemInterface>,
+    R: InterfaceSource<RmlRenderInterface>,
+    F: InterfaceSource<RmlFileInterface>,
     W: WindowDriver,
 {
     type Target = BackendInner<S, R, F, W>;
@@ -174,9 +171,9 @@ where
 
 impl<S, R, F, W> DerefMut for Backend<S, R, F, W>
 where
-    S: SystemInterfaceSource,
-    R: RenderInterfaceSource,
-    F: FileInterfaceSource,
+    S: InterfaceSource<RmlSystemInterface>,
+    R: InterfaceSource<RmlRenderInterface>,
+    F: InterfaceSource<RmlFileInterface>,
     W: WindowDriver,
 {
     fn deref_mut(&mut self) -> &mut BackendInner<S, R, F, W> {

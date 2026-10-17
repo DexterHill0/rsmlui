@@ -101,6 +101,11 @@ mod ffi {
     unsafe extern "C++" {
         include!("rsmlui/FileInterface.h");
 
+        /// A struct that represents a file interface created in rust.
+        ///
+        /// This essentially "inherits" from `RmlFileInterface`, but it's its own
+        /// struct to be able to hold the necessary data for rust-based interfaces
+        /// to work.
         type RustFileInterface;
 
         /// # Safety

@@ -1,5 +1,6 @@
-use rsmlui_core::_private::{HasOwnedInterface, SYSTEM_INTERFACE_N};
-use rsmlui_core::interfaces::{IntoRawInterface, RawInterface};
+use rsmlui_core::_private::HasOwnedInterface;
+use rsmlui_core::Uncallable;
+use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::object::constness::Mut;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectMutPtr};
 use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
@@ -36,7 +37,7 @@ unsafe impl ForeignDestroy for tags::TagGlfw {
         unsafe { glfw_system_interface_destructor(raw) }
     }
 
-    fn assert_droppable(raw: *mut Self::Object) {
+    unsafe fn assert_droppable(raw: *mut Self::Object) {
         assert_ne!(
             core::get_system_interface(),
             raw,
@@ -85,12 +86,12 @@ impl<'a> SystemGlfwRef<'a> {
 impl<'a, M: ObjectOwnership<tags::TagGlfw>> IntoRawInterface<RmlSystemInterface>
     for &mut GlfwHandle<'a, M>
 {
-    fn into_raw(self) -> RawInterface<RmlSystemInterface> {
-        RawInterface::new(unsafe { self.0.as_mut_ptr() })
+    fn into_raw(self, _: Uncallable) -> *mut RmlSystemInterface {
+        unsafe { self.0.as_mut_ptr() }
     }
 }
 
-impl<'a, M: ObjectOwnership<tags::TagGlfw>> HasOwnedInterface<{ SYSTEM_INTERFACE_N }>
+impl<'a, M: ObjectOwnership<tags::TagGlfw>> HasOwnedInterface<RmlSystemInterface>
     for GlfwHandle<'a, M>
 {
     type Owned = Self;
