@@ -301,7 +301,7 @@ Parameters:
 | `type` | `const String &` | The new event type. |
 | `interruptible` | `bool` | Whether the event can be interrupted during dispatch. |
 | `bubbles` | `bool` | Whether the event executes the bubble phase. If false, only capture and target phase is executed. |
-| `default_action_phase` | `DefaultActionPhase` | Defines during which phase(s) the 'Element::ProcessDefaultAction' method is called. |
+| `default_action_phase` | `DefaultActionPhase` | Defines during which phase(s) the '[Element::ProcessDefaultAction](api_Rml-Element.md#processdefaultaction)' method is called. |
 <!-- /rsmlui:block -->
 
 <!-- rsmlui:block["Rml::GetTextureSourceList"] refid="_core_2_core_8h_1a54917ce87819f15d66b14beb84372981" -->

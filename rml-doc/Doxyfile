@@ -96,8 +96,7 @@ EXCLUDE_SYMBOLS   = \
   Rml::Detail::* \
   Rml::EffectSpecification \
   Rml::EffectSpecification::* \
-  Rml::Element \
-  Rml::Element::* \
+  Rml::Element::PositionedBox \
   Rml::ElementForm \
   Rml::ElementForm::* \
   Rml::ElementFormControl \

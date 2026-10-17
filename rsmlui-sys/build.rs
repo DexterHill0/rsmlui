@@ -318,6 +318,7 @@ fn main() {
         "src/ffi/system_interface.rs",
         "src/ffi/context.rs",
         "src/ffi/element_document.rs",
+        "src/ffi/element.rs",
         "src/ffi/variant.rs",
         "src/ffi/dictionary.rs",
         "src/ffi/file_interface.rs",

@@ -6,6 +6,7 @@ pub mod backend;
 pub mod context;
 pub mod core;
 pub mod dictionary;
+pub mod element;
 pub mod element_document;
 pub mod extern_types;
 pub mod file_interface;

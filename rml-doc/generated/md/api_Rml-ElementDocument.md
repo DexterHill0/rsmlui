@@ -150,7 +150,7 @@ Parameters:
 
 | Name | Type | Description |
 |------|------|-------------|
-| `current_element` | `Element *` | The element to start from. |
+| `current_element` | `[Element](api_Rml-Element.md#element) *` | The element to start from. |
 | `forward` | `bool` | True to search forward, false to search backward. |
 | `wrap_around` | `bool` | True to continue searching wrapping around the document root. |
 <!-- /rsmlui:block -->
