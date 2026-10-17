@@ -2,7 +2,6 @@ use std::mem::transmute;
 
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
-use rsmlui_sys::interfaces::Opaque;
 use rsmlui_sys::render_interface::{
     RenderInterfaceBridge, RmlRenderInterface, RustRenderInterface, new_rust_render_interface,
     render_interface_default_compile_filter, render_interface_default_compile_shader,
@@ -14,6 +13,7 @@ use rsmlui_sys::render_interface::{
     render_interface_default_save_layer_as_texture, render_interface_default_set_transform,
     rust_render_interface_destructor,
 };
+use rsmlui_sys::utils::c_void;
 use sealed::sealed;
 
 use crate::_private::HasOwnedInterface;
@@ -51,7 +51,7 @@ unsafe impl<T: RenderInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<Ru
         let meta_raw: *const () = unsafe { transmute(meta) };
 
         let cpp =
-            unsafe { new_rust_render_interface(meta_raw as *const Opaque, data as *mut Opaque) };
+            unsafe { new_rust_render_interface(meta_raw.cast::<c_void>(), data.cast::<c_void>()) };
 
         handle.bridge = cpp;
     }

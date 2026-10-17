@@ -1,6 +1,6 @@
 use crate::context::Context;
 use crate::element_document::ElementDocument;
-use crate::ffi::utils::fat_from_cpp;
+use crate::interfaces::bridge::fat_from_cpp;
 
 /// Dispatch trait called by C++ when it invokes a virtual method on `RustPluginInterface`.
 ///
@@ -97,9 +97,9 @@ mod ffi {
 
     #[namespace = "rsmlui"]
     unsafe extern "C++" {
-        include!("rsmlui/InterfaceDecls.h");
+        include!("rsmlui/Utils.h");
 
-        type Opaque = crate::interfaces::Opaque;
+        type c_void = crate::utils::c_void;
     }
 
     #[namespace = "rsmlui::plugin"]
@@ -113,8 +113,8 @@ mod ffi {
         ///
         /// - `interface_meta` and `interface_data` must be valid pointers constructed from `to_raw_parts`.
         unsafe fn new_rust_plugin_interface(
-            interface_meta: *const Opaque,
-            interface_data: *mut Opaque,
+            interface_meta: *const c_void,
+            interface_data: *mut c_void,
         ) -> *mut RustPluginInterface;
 
         /// # Safety

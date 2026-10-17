@@ -2,11 +2,11 @@ use std::mem::transmute;
 
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core::unregister_plugin;
-use rsmlui_sys::interfaces::Opaque;
 use rsmlui_sys::plugin_interface::{
     PluginInterfaceBridge, RmlPlugin, RustPluginInterface, new_rust_plugin_interface,
     rust_plugin_interface_destructor,
 };
+use rsmlui_sys::utils::c_void;
 use sealed::sealed;
 
 use crate::_private::HasOwnedInterface;
@@ -37,7 +37,7 @@ unsafe impl<T: PluginInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<Ru
         let meta_raw: *const () = unsafe { transmute(meta) };
 
         let cpp =
-            unsafe { new_rust_plugin_interface(meta_raw as *const Opaque, data as *mut Opaque) };
+            unsafe { new_rust_plugin_interface(meta_raw.cast::<c_void>(), data.cast::<c_void>()) };
 
         handle.bridge = cpp;
     }
@@ -71,6 +71,7 @@ unsafe impl<T: PluginInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<Ru
 /// methods are not callable through a `dyn PluginInterface` trait object.
 ///
 /// [`Rml::Plugin`]: https://mikke89.github.io/RmlUiDoc/pages/cpp_manual/plugins.html
+#[allow(unused)]
 #[rmldoc(file = "api_Rml-Plugin.md", name = "Rml::Plugin")]
 pub trait PluginInterfaceBehaviour {
     // NOTE: This trait's default method impls don't call back out to the C++

@@ -2,7 +2,6 @@ use std::mem::transmute;
 
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
-use rsmlui_sys::interfaces::Opaque;
 use rsmlui_sys::system_interface::{
     RmlSystemInterface, RustSystemInterface, SystemInterfaceBridge, new_rust_system_interface,
     rust_system_interface_destructor, system_interface_default_activate_keyboard,
@@ -11,6 +10,7 @@ use rsmlui_sys::system_interface::{
     system_interface_default_log_message, system_interface_default_set_clipboard_text,
     system_interface_default_set_mouse_cursor, system_interface_default_translate_string,
 };
+use rsmlui_sys::utils::c_void;
 use sealed::sealed;
 
 use crate::_private::HasOwnedInterface;
@@ -43,7 +43,7 @@ unsafe impl<T: SystemInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<Ru
         let meta_raw: *const () = unsafe { transmute(meta) };
 
         let cpp =
-            unsafe { new_rust_system_interface(meta_raw as *const Opaque, data as *mut Opaque) };
+            unsafe { new_rust_system_interface(meta_raw.cast::<c_void>(), data.cast::<c_void>()) };
 
         handle.bridge = cpp;
     }

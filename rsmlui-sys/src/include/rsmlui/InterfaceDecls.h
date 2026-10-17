@@ -7,10 +7,7 @@
 #include "RmlUi/Core/FileInterface.h"
 #include "RmlUi/Core/Plugin.h"
 #include "RmlUi/Core/RenderInterface.h"
-
-namespace rsmlui {
-class Opaque;
-} // namespace rsmlui
+#include "src/ffi/interfaces/bridge.rs.h"
 
 namespace rsmlui::system_interface {
 
@@ -40,6 +37,8 @@ struct RustSystemInterface: public Rml::SystemInterface {
     const void* rust_meta;
     void* rust_data;
 };
+
+ASSERT_INTERFACE_LAYOUT(RustSystemInterface);
 
 } // namespace rsmlui::system_interface
 
@@ -105,6 +104,9 @@ struct RustRenderInterface: public Rml::RenderInterface {
     const void* rust_meta;
     void* rust_data;
 };
+
+ASSERT_INTERFACE_LAYOUT(RustRenderInterface);
+
 } // namespace rsmlui::render_interface
 
 namespace rsmlui::file_interface {
@@ -128,6 +130,9 @@ struct RustFileInterface: public Rml::FileInterface {
     const void* rust_meta;
     void* rust_data;
 };
+
+ASSERT_INTERFACE_LAYOUT(RustFileInterface);
+
 } // namespace rsmlui::file_interface
 
 namespace rsmlui::plugin {

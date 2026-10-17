@@ -5,21 +5,21 @@ use rsmlui_core::object::constness::Mut;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectMutPtr};
 use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::core;
-use rsmlui_sys::interfaces::Opaque;
 use rsmlui_sys::system_interface::{
     RmlSystemInterface, glfw_system_interface_destructor, new_glfw_system_interface,
 };
+use rsmlui_sys::utils::c_void;
 
 /// # Safety
 ///
 /// - Must return a valid `GLFWwindow*` that outlives any interface built from it.
 pub unsafe trait HasGlfwWindow {
-    fn window_ptr(&self) -> *mut Opaque;
+    fn window_ptr(&self) -> *mut c_void;
 }
 
 #[cfg(feature = "glfw-rs")]
 unsafe impl HasGlfwWindow for glfw::Window {
-    fn window_ptr(&self) -> *mut Opaque {
+    fn window_ptr(&self) -> *mut c_void {
         glfw::Context::window_ptr(self).cast()
     }
 }

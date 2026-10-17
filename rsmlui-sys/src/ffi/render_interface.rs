@@ -1,27 +1,7 @@
-use std::mem::offset_of;
-
-use crate::interfaces::InterfaceBridgeLayout;
-use crate::utils::fat_from_cpp;
+use crate::interfaces::bridge::fat_from_cpp;
 use crate::{
-    Layouts_RenderInterfaceLayoutGuard, Rml_CompiledFilterHandle, Rml_CompiledGeometryHandle,
-    Rml_CompiledShaderHandle, Rml_LayerHandle, Rml_TextureHandle, const_assert_eq,
-};
-
-// Asserts that the layout of the interface bridge matches the layout of the
-// `RustRenderInterface` struct in C++.
-const _: () = {
-    const_assert_eq!(
-        offset_of!(Layouts_RenderInterfaceLayoutGuard, vtable_),
-        offset_of!(InterfaceBridgeLayout, cpp_vtable)
-    );
-    const_assert_eq!(
-        offset_of!(Layouts_RenderInterfaceLayoutGuard, rust_meta),
-        offset_of!(InterfaceBridgeLayout, rust_meta)
-    );
-    const_assert_eq!(
-        offset_of!(Layouts_RenderInterfaceLayoutGuard, rust_data),
-        offset_of!(InterfaceBridgeLayout, rust_data)
-    );
+    Rml_CompiledFilterHandle, Rml_CompiledGeometryHandle, Rml_CompiledShaderHandle,
+    Rml_LayerHandle, Rml_TextureHandle,
 };
 
 pub unsafe trait RenderInterfaceBridge {
@@ -287,9 +267,9 @@ mod ffi {
 
     #[namespace = "rsmlui"]
     unsafe extern "C++" {
-        include!("rsmlui/InterfaceDecls.h");
+        include!("rsmlui/Utils.h");
 
-        type Opaque = crate::interfaces::Opaque;
+        type c_void = crate::utils::c_void;
     }
 
     #[namespace = "rsmlui::render_interface"]
@@ -302,8 +282,8 @@ mod ffi {
         ///
         /// - `interface_meta` and `interface_data` must be valid pointers constructed from `to_raw_parts`.
         unsafe fn new_rust_render_interface(
-            interface_meta: *const Opaque,
-            interface_data: *mut Opaque,
+            interface_meta: *const c_void,
+            interface_data: *mut c_void,
         ) -> *mut RustRenderInterface;
 
         /// # Safety

@@ -3,6 +3,7 @@
 #include <RmlUi/Core/Plugin.h>
 
 #include "./InterfaceDecls.h"
+#include "rsmlui/Utils.h"
 #include "rust/cxx.h"
 #include "src/ffi/plugin_interface.rs.h"
 
@@ -68,8 +69,8 @@ inline auto RustPluginInterface::OnDataModelDestroy(
 }
 
 inline auto new_rust_plugin_interface(
-    const rsmlui::Opaque* rust_meta,
-    rsmlui::Opaque* rust_data
+    const rsmlui::c_void* rust_meta,
+    rsmlui::c_void* rust_data
 ) -> RustPluginInterface* {
     return new RustPluginInterface(
         reinterpret_cast<const void*>(rust_meta),

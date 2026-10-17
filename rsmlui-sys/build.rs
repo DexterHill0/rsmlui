@@ -272,15 +272,9 @@ fn main() {
         .allowlist_type("Rml::Unit")
         .allowlist_type("Rml::NumericValue")
         .allowlist_type("Rml::ColorStop")
-        .blocklist_type("Rml::Variant")
+        .allowlist_type("Rml::Variant")
         .allowlist_type("Rml::Variant::Type")
         .blocklist_function(".*Variant.*")
-        .allowlist_type("Layouts::SystemInterfaceLayoutGuard")
-        .allowlist_type("rsmlui::system_interface::RustSystemInterface")
-        .allowlist_type("Layouts::RenderInterfaceLayoutGuard")
-        .allowlist_type("rsmlui::render_interface::RustRenderInterface")
-        .allowlist_type("Layouts::FileInterfaceLayoutGuard")
-        .allowlist_type("rsmlui::file_interface::RustFileInterface")
         .allowlist_item("Misc::STDIO_SEEK_CUR")
         .allowlist_item("Misc::STDIO_SEEK_END")
         .allowlist_item("Misc::STDIO_SEEK_SET")
@@ -328,6 +322,8 @@ fn main() {
         "src/ffi/dictionary.rs",
         "src/ffi/file_interface.rs",
         "src/ffi/plugin_interface.rs",
+        "src/ffi/utils.rs",
+        "src/ffi/interfaces/bridge.rs",
         "src/ffi/interfaces/file_default.rs",
     ];
 

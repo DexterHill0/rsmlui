@@ -8,16 +8,16 @@ mod ffi {
 
     #[namespace = "rsmlui"]
     unsafe extern "C++" {
-        include!("rsmlui/InterfaceDecls.h");
+        include!("rsmlui/Utils.h");
 
-        type Opaque = crate::interfaces::Opaque;
+        type c_void = crate::utils::c_void;
     }
 
     #[namespace = "rsmlui::system_interface"]
     unsafe extern "C++" {
         include!("rsmlui/SystemInterface.h");
 
-        unsafe fn new_glfw_system_interface(glfw_window: *mut Opaque) -> *mut RmlSystemInterface;
+        unsafe fn new_glfw_system_interface(glfw_window: *mut c_void) -> *mut RmlSystemInterface;
 
         /// # Safety
         ///

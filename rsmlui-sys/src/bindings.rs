@@ -5,16 +5,6 @@
 #[repr(C)] #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)] pub struct Rml_ColourbPremultiplied { pub red: u8, pub green: u8, pub blue: u8, pub alpha: u8 }
 #[repr(C)] #[derive(Debug, Copy, Clone)] pub struct Rml_Matrix4f(pub [[f32; 4]; 4]);
 
-#[repr(C)]
-#[derive(Debug)]
-pub struct Rml_NonCopyMoveable {
-    pub _address: u8,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of Rml_NonCopyMoveable"][::std::mem::size_of::<Rml_NonCopyMoveable>() - 1usize];
-    ["Alignment of Rml_NonCopyMoveable"][::std::mem::align_of::<Rml_NonCopyMoveable>() - 1usize];
-};
 #[doc = "Templated class for a generic two-component vector."]
 pub type Rml_Vector2f = Rml_Vector2<f32>;
 #[doc = "Templated class for a generic two-component vector."]
@@ -84,6 +74,13 @@ pub enum Rml_Log_Type {
     LT_DEBUG = 5,
     LT_MAX = 6,
 }
+#[doc = "Variant is a container that can store a selection of basic types. The variant will store the\nvalue in the native form corresponding to the version of Set that was called.\n\nGet is templated to convert from the stored form to the requested form by using a TypeConverter."]
+#[repr(C)]
+#[derive(Debug)]
+pub struct Rml_Variant {
+    type_: Rml_Variant_Type,
+    data: [::std::os::raw::c_char; 32usize],
+}
 #[repr(u64)]
 #[non_exhaustive]
 #[doc = " Type of data stored in the variant. We use size_t as base to avoid 'padding due to alignment specifier' warning."]
@@ -117,6 +114,13 @@ pub enum Rml_Variant_Type {
     VOIDPTR = 42,
 }
 pub const Rml_Variant_LOCAL_DATA_SIZE: usize = 32;
+#[allow(clippy::unnecessary_operation, clippy::identity_op)]
+const _: () = {
+    ["Size of Rml_Variant"][::std::mem::size_of::<Rml_Variant>() - 40usize];
+    ["Alignment of Rml_Variant"][::std::mem::align_of::<Rml_Variant>() - 8usize];
+    ["Offset of field: Rml_Variant::type_"][::std::mem::offset_of!(Rml_Variant, type_) - 0usize];
+    ["Offset of field: Rml_Variant::data"][::std::mem::offset_of!(Rml_Variant, data) - 8usize];
+};
 #[repr(u8)]
 #[non_exhaustive]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -520,66 +524,6 @@ pub enum Rml_BlendMode {
     Blend = 0,
     Replace = 1,
 }
-#[repr(C)]
-pub struct rsmlui_system_interface_RustSystemInterface__bindgen_vtable(::std::os::raw::c_void);
-#[repr(C)]
-pub struct rsmlui_system_interface_RustSystemInterface {
-    pub vtable_: *const rsmlui_system_interface_RustSystemInterface__bindgen_vtable,
-    pub rust_meta: *const ::std::os::raw::c_void,
-    pub rust_data: *mut ::std::os::raw::c_void,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of rsmlui_system_interface_RustSystemInterface"]
-        [::std::mem::size_of::<rsmlui_system_interface_RustSystemInterface>() - 24usize];
-    ["Alignment of rsmlui_system_interface_RustSystemInterface"]
-        [::std::mem::align_of::<rsmlui_system_interface_RustSystemInterface>() - 8usize];
-    ["Offset of field: rsmlui_system_interface_RustSystemInterface::rust_meta"]
-        [::std::mem::offset_of!(rsmlui_system_interface_RustSystemInterface, rust_meta) - 8usize];
-    ["Offset of field: rsmlui_system_interface_RustSystemInterface::rust_data"]
-        [::std::mem::offset_of!(rsmlui_system_interface_RustSystemInterface, rust_data) - 16usize];
-};
-#[repr(C)]
-pub struct rsmlui_render_interface_RustRenderInterface__bindgen_vtable(::std::os::raw::c_void);
-#[repr(C)]
-pub struct rsmlui_render_interface_RustRenderInterface {
-    pub vtable_: *const rsmlui_render_interface_RustRenderInterface__bindgen_vtable,
-    pub rust_meta: *const ::std::os::raw::c_void,
-    pub rust_data: *mut ::std::os::raw::c_void,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of rsmlui_render_interface_RustRenderInterface"]
-        [::std::mem::size_of::<rsmlui_render_interface_RustRenderInterface>() - 24usize];
-    ["Alignment of rsmlui_render_interface_RustRenderInterface"]
-        [::std::mem::align_of::<rsmlui_render_interface_RustRenderInterface>() - 8usize];
-    ["Offset of field: rsmlui_render_interface_RustRenderInterface::rust_meta"]
-        [::std::mem::offset_of!(rsmlui_render_interface_RustRenderInterface, rust_meta) - 8usize];
-    ["Offset of field: rsmlui_render_interface_RustRenderInterface::rust_data"]
-        [::std::mem::offset_of!(rsmlui_render_interface_RustRenderInterface, rust_data) - 16usize];
-};
-#[repr(C)]
-pub struct rsmlui_file_interface_RustFileInterface__bindgen_vtable(::std::os::raw::c_void);
-#[repr(C)]
-pub struct rsmlui_file_interface_RustFileInterface {
-    pub vtable_: *const rsmlui_file_interface_RustFileInterface__bindgen_vtable,
-    pub rust_meta: *const ::std::os::raw::c_void,
-    pub rust_data: *mut ::std::os::raw::c_void,
-}
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-    ["Size of rsmlui_file_interface_RustFileInterface"]
-        [::std::mem::size_of::<rsmlui_file_interface_RustFileInterface>() - 24usize];
-    ["Alignment of rsmlui_file_interface_RustFileInterface"]
-        [::std::mem::align_of::<rsmlui_file_interface_RustFileInterface>() - 8usize];
-    ["Offset of field: rsmlui_file_interface_RustFileInterface::rust_meta"]
-        [::std::mem::offset_of!(rsmlui_file_interface_RustFileInterface, rust_meta) - 8usize];
-    ["Offset of field: rsmlui_file_interface_RustFileInterface::rust_data"]
-        [::std::mem::offset_of!(rsmlui_file_interface_RustFileInterface, rust_data) - 16usize];
-};
-pub type Layouts_SystemInterfaceLayoutGuard = rsmlui_system_interface_RustSystemInterface;
-pub type Layouts_RenderInterfaceLayoutGuard = rsmlui_render_interface_RustRenderInterface;
-pub type Layouts_FileInterfaceLayoutGuard = rsmlui_file_interface_RustFileInterface;
 pub const Misc_STDIO_SEEK_CUR: i32 = 1;
 pub const Misc_STDIO_SEEK_END: i32 = 2;
 pub const Misc_STDIO_SEEK_SET: i32 = 0;

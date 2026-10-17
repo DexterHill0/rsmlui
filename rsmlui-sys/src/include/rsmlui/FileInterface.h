@@ -52,8 +52,8 @@ RustFileInterface::LoadFile(const Rml::String& path, Rml::String& out_data)
 }
 
 inline auto new_rust_file_interface(
-    const rsmlui::Opaque* rust_meta,
-    rsmlui::Opaque* rust_data
+    const rsmlui::c_void* rust_meta,
+    rsmlui::c_void* rust_data
 ) -> RustFileInterface* {
     return new RustFileInterface(
         reinterpret_cast<const void*>(rust_meta),

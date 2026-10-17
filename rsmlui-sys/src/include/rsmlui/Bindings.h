@@ -5,16 +5,6 @@
 
 #include <cstdint>
 
-#include "./InterfaceDecls.h"
-
-namespace Layouts {
-using SystemInterfaceLayoutGuard =
-    rsmlui::system_interface::RustSystemInterface;
-using RenderInterfaceLayoutGuard =
-    rsmlui::render_interface::RustRenderInterface;
-using FileInterfaceLayoutGuard = rsmlui::file_interface::RustFileInterface;
-}; // namespace Layouts
-
 namespace Rml {
 using Log_Type = Rml::Log::Type;
 };

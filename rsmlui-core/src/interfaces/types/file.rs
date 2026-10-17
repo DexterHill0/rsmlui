@@ -7,7 +7,7 @@ use rsmlui_sys::file_interface::{
     FileInterfaceBridge, RmlFileInterface, RustFileInterface, file_interface_default_length,
     file_interface_default_load_file, new_rust_file_interface, rust_file_interface_destructor,
 };
-use rsmlui_sys::interfaces::Opaque;
+use rsmlui_sys::utils::c_void;
 use sealed::sealed;
 use thiserror::Error;
 
@@ -39,7 +39,7 @@ unsafe impl<T: FileInterfaceBehaviour> crate::interfaces::bridge::BridgeOps<Rust
         let meta_raw: *const () = unsafe { transmute(meta) };
 
         let cpp =
-            unsafe { new_rust_file_interface(meta_raw as *const Opaque, data as *mut Opaque) };
+            unsafe { new_rust_file_interface(meta_raw.cast::<c_void>(), data.cast::<c_void>()) };
 
         handle.bridge = cpp;
     }

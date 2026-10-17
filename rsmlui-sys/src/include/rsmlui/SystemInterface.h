@@ -1,6 +1,8 @@
 #pragma once
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/SystemInterface.h>
+
+#include "rsmlui/Utils.h"
 #if _WIN32
     #include <RmlUi_Platform_Win32.h>
 #endif
@@ -66,8 +68,8 @@ inline void RustSystemInterface::DeactivateKeyboard() {
 }
 
 inline auto new_rust_system_interface(
-    const rsmlui::Opaque* rust_meta,
-    rsmlui::Opaque* rust_data
+    const rsmlui::c_void* rust_meta,
+    rsmlui::c_void* rust_data
 ) -> RustSystemInterface* {
     return new RustSystemInterface(
         reinterpret_cast<const void*>(rust_meta),
@@ -186,7 +188,7 @@ inline void win32_system_interface_destructor(Rml::SystemInterface* interface) {
 #ifdef RSMLUI_SYSTEM_GLFW
 namespace rsmlui::system_interface {
 
-inline auto new_glfw_system_interface(rsmlui::Opaque* glfw_window)
+inline auto new_glfw_system_interface(rsmlui::c_void* glfw_window)
     -> Rml::SystemInterface* {
     return new SystemInterface_GLFW((GLFWwindow*)glfw_window);
 }

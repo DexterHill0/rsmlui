@@ -2,6 +2,8 @@
 #include <RmlUi/Core/Core.h>
 #include <RmlUi/Core/RenderInterface.h>
 
+#include "rsmlui/Utils.h"
+
 #ifdef RSMLUI_RENDERER_GL2
     #include <RmlUi_Renderer_GL2.h>
 #endif
@@ -155,8 +157,8 @@ RustRenderInterface::ReleaseShader(Rml::CompiledShaderHandle shader) {
 }
 
 inline auto new_rust_render_interface(
-    const rsmlui::Opaque* rust_meta,
-    rsmlui::Opaque* rust_data
+    const rsmlui::c_void* rust_meta,
+    rsmlui::c_void* rust_data
 ) -> RustRenderInterface* {
     return new RustRenderInterface(
         reinterpret_cast<const void*>(rust_meta),
