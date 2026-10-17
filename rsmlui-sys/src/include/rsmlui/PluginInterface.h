@@ -46,12 +46,12 @@ inline auto RustPluginInterface::OnContextDestroy(Rml::Context* context)
 
 inline auto RustPluginInterface::OnElementCreate(Rml::Element* element)
     -> void {
-    // rust_on_element_create(this, element);
+    rust_on_element_create(this, element);
 }
 
 inline auto RustPluginInterface::OnElementDestroy(Rml::Element* element)
     -> void {
-    // rust_on_element_destroy(this, element)
+    rust_on_element_destroy(this, element);
 }
 
 inline auto RustPluginInterface::OnDataModelCreate(

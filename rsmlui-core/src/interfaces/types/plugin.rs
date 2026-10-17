@@ -11,6 +11,7 @@ use sealed::sealed;
 
 use crate::_private::HasOwnedInterface;
 use crate::core::context::ContextRefMut;
+use crate::core::element::ElementRefMut;
 use crate::core::element_document::ElementDocumentRefMut;
 use crate::interfaces::bridge::BridgedHandle;
 use crate::interfaces::object::InterfaceObject;
@@ -133,6 +134,20 @@ pub trait PluginInterfaceBehaviour {
     {
     }
 
+    #[rmldoc(name = "Rml::Plugin::OnElementCreate")]
+    fn on_element_create(self: &mut PluginInterfaceObject<Self>, element: ElementRefMut<'_>)
+    where
+        Self: Sized,
+    {
+    }
+
+    #[rmldoc(name = "Rml::Plugin::OnElementDestroy")]
+    fn on_element_destroy(self: &mut PluginInterfaceObject<Self>, element: ElementRefMut<'_>)
+    where
+        Self: Sized,
+    {
+    }
+
     #[rmldoc(name = "Rml::Plugin::OnDataModelCreate")]
     fn on_data_model_create(
         self: &mut PluginInterfaceObject<Self>,
@@ -197,6 +212,14 @@ unsafe impl<T: PluginInterfaceBehaviour> PluginInterfaceBridge for PluginInterfa
 
     unsafe fn on_context_destroy(&mut self, context: *mut rsmlui_sys::context::Context) {
         T::on_context_destroy(self, unsafe { ContextRefMut::from_raw(context) });
+    }
+
+    unsafe fn on_element_create(&mut self, element: *mut rsmlui_sys::element::Element) {
+        T::on_element_create(self, unsafe { ElementRefMut::from_raw(element) });
+    }
+
+    unsafe fn on_element_destroy(&mut self, element: *mut rsmlui_sys::element::Element) {
+        T::on_element_destroy(self, unsafe { ElementRefMut::from_raw(element) });
     }
 
     unsafe fn on_data_model_create(

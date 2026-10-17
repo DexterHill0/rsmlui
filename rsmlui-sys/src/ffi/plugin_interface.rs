@@ -1,4 +1,5 @@
 use crate::context::Context;
+use crate::element::Element;
 use crate::element_document::ElementDocument;
 use crate::interfaces::bridge::fat_from_cpp;
 
@@ -17,8 +18,8 @@ pub unsafe trait PluginInterfaceBridge {
     unsafe fn on_document_unload(&mut self, document: *mut ElementDocument);
     unsafe fn on_context_create(&mut self, context: *mut Context);
     unsafe fn on_context_destroy(&mut self, context: *mut Context);
-    // unsafe fn on_element_create(&mut self, element: *mut Element);
-    // unsafe fn on_element_destoryb(&mut self, element: *mut Element);
+    unsafe fn on_element_create(&mut self, element: *mut Element);
+    unsafe fn on_element_destroy(&mut self, element: *mut Element);
     unsafe fn on_data_model_create(&mut self, context: *mut Context, name: &str);
     unsafe fn on_data_model_destroy(&mut self, context: *mut Context, name: &str);
 }
@@ -59,8 +60,12 @@ unsafe fn rust_on_context_create(cpp_this: *mut RustPluginInterface, context: *m
 unsafe fn rust_on_context_destroy(cpp_this: *mut RustPluginInterface, context: *mut Context) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_context_destroy(context) }
 }
-// unsafe fn rust_on_element_create(element: *mut Element) {}
-// unsafe fn rust_on_element_destoryb(element: *mut Element) {}
+unsafe fn rust_on_element_create(cpp_this: *mut RustPluginInterface, element: *mut Element) {
+    unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_element_create(element) }
+}
+unsafe fn rust_on_element_destroy(cpp_this: *mut RustPluginInterface, element: *mut Element) {
+    unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_element_destroy(element) }
+}
 unsafe fn rust_on_data_model_create(
     cpp_this: *mut RustPluginInterface,
     context: *mut Context,
@@ -93,6 +98,7 @@ mod ffi {
 
         type Context = crate::context::Context;
         type ElementDocument = crate::element_document::ElementDocument;
+        type Element = crate::element::Element;
     }
 
     #[namespace = "rsmlui"]
@@ -144,8 +150,11 @@ mod ffi {
             cpp_this: *mut RustPluginInterface,
             context: *mut Context,
         );
-        // unsafe fn rust_on_element_create(cpp_this: *mut RustPluginInterface, element: *mut Element);
-        // unsafe fn rust_on_element_destoryb(cpp_this: *mut RustPluginInterface, element: *mut Element);
+        unsafe fn rust_on_element_create(cpp_this: *mut RustPluginInterface, element: *mut Element);
+        unsafe fn rust_on_element_destroy(
+            cpp_this: *mut RustPluginInterface,
+            element: *mut Element,
+        );
         unsafe fn rust_on_data_model_create(
             cpp_this: *mut RustPluginInterface,
             context: *mut Context,
