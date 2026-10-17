@@ -11,6 +11,7 @@ pub mod extern_types;
 pub mod file_interface;
 pub mod interfaces;
 pub mod math;
+pub mod plugin_interface;
 pub mod render_interface;
 pub mod system_interface;
 pub mod utils;

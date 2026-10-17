@@ -777,7 +777,7 @@ impl<T: RenderInterfaceBehaviour> crate::interfaces::object::IntoRawInterface<Rm
     for &mut RenderInterface<T>
 {
     fn into_raw(self, _: Uncallable) -> *mut RmlRenderInterface {
-        self.bridge as _
+        self.bridge.cast()
     }
 }
 

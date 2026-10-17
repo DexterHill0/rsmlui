@@ -5,6 +5,7 @@ use drop_tree::{DropCtx, drop_tree};
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::core;
 use rsmlui_sys::file_interface::RmlFileInterface;
+use rsmlui_sys::plugin_interface::RmlPlugin;
 use rsmlui_sys::render_interface::RmlRenderInterface;
 use rsmlui_sys::system_interface::RmlSystemInterface;
 
@@ -87,7 +88,7 @@ impl Rml {
 
     #[rmldoc(name = "Rml::SetSystemInterface")]
     pub fn set_system_interface(
-        &self,
+        &mut self,
         interface: Option<impl IntoRawInterface<RmlSystemInterface>>,
     ) {
         let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw(Uncallable::new()));
@@ -97,7 +98,7 @@ impl Rml {
 
     #[rmldoc(name = "Rml::SetRenderInterface")]
     pub fn set_render_interface(
-        &self,
+        &mut self,
         interface: Option<impl IntoRawInterface<RmlRenderInterface>>,
     ) {
         let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw(Uncallable::new()));
@@ -106,10 +107,27 @@ impl Rml {
     }
 
     #[rmldoc(name = "Rml::SetFileInterface")]
-    pub fn set_file_interface(&self, interface: Option<impl IntoRawInterface<RmlFileInterface>>) {
+    pub fn set_file_interface(
+        &mut self,
+        interface: Option<impl IntoRawInterface<RmlFileInterface>>,
+    ) {
         let raw = interface.map_or_else(ptr::null_mut, |itf| itf.into_raw(Uncallable::new()));
 
         unsafe { core::set_file_interface(raw) }
+    }
+
+    #[rmldoc(name = "Rml::RegisterPlugin")]
+    pub fn register_plugin(&mut self, plugin: impl IntoRawInterface<RmlPlugin>) {
+        let raw = plugin.into_raw(Uncallable::new());
+
+        unsafe { core::register_plugin(raw) }
+    }
+
+    #[rmldoc(name = "Rml::RegisterPlugin")]
+    pub fn unregister_plugin(&mut self, plugin: impl IntoRawInterface<RmlPlugin>) {
+        let raw = plugin.into_raw(Uncallable::new());
+
+        unsafe { core::unregister_plugin(raw) }
     }
 
     #[rmldoc(name = "Rml::Initialise")]

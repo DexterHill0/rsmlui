@@ -42,6 +42,8 @@ pub struct ElementDocument {
     handle: ElementDocumentHandle,
 }
 
+pub type ElementDocumentRefMut<'a> = ForeignHandle<'a, tags::TagElementDocument, Foreign, Mut>;
+
 not_send_sync!(ElementDocument);
 
 #[rmldoc(file = "api_Rml-ElementDocument.md")]

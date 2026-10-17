@@ -241,7 +241,7 @@ impl<T: SystemInterfaceBehaviour> crate::interfaces::object::IntoRawInterface<Rm
     for &mut SystemInterface<T>
 {
     fn into_raw(self, _: Uncallable) -> *mut RmlSystemInterface {
-        self.bridge as _
+        self.bridge.cast()
     }
 }
 

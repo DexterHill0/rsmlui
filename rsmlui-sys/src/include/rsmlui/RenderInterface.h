@@ -158,7 +158,10 @@ inline auto new_rust_render_interface(
     const rsmlui::Opaque* rust_meta,
     rsmlui::Opaque* rust_data
 ) -> RustRenderInterface* {
-    return new RustRenderInterface((void*)rust_meta, (void*)rust_data);
+    return new RustRenderInterface(
+        reinterpret_cast<const void*>(rust_meta),
+        reinterpret_cast<void*>(rust_data)
+    );
 }
 
 inline void rust_render_interface_destructor(RustRenderInterface* obj) {

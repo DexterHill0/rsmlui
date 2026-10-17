@@ -12,6 +12,9 @@ mod ffi {
         type Context = crate::context::Context;
 
         type Vector2i = crate::Rml_Vector2i;
+
+        #[cxx_name = "Plugin"]
+        type RmlPlugin = crate::plugin_interface::RmlPlugin;
     }
 
     #[namespace = "Rml::Style"]
@@ -64,6 +67,9 @@ mod ffi {
         fn get_system_interface() -> *mut RmlSystemInterface;
         fn get_render_interface() -> *mut RmlRenderInterface;
         fn get_file_interface() -> *mut RmlFileInterface;
+
+        unsafe fn register_plugin(plugin: *mut RmlPlugin);
+        unsafe fn unregister_plugin(plugin: *mut RmlPlugin);
     }
 }
 
@@ -93,6 +99,6 @@ mod ffi {
 pub use ffi::{
     FontStyle, FontWeight, create_context, get_file_interface, get_render_interface,
     get_system_interface, get_version, initialise, load_font_face_from_file,
-    load_font_face_from_memory, log_message, set_file_interface, set_render_interface,
-    set_system_interface, shutdown,
+    load_font_face_from_memory, log_message, register_plugin, set_file_interface,
+    set_render_interface, set_system_interface, shutdown, unregister_plugin,
 };

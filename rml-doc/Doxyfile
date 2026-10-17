@@ -200,8 +200,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::NumericValue::* \
   Rml::ObserverPtr \
   Rml::ObserverPtr::* \
-  Rml::Plugin \
-  Rml::Plugin::* \
   Rml::PointerDefinition \
   Rml::PointerDefinition::* \
   Rml::PointerTraits \

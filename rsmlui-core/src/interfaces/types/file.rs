@@ -265,7 +265,7 @@ impl<T: FileInterfaceBehaviour> crate::interfaces::object::IntoRawInterface<RmlF
     for &mut FileInterface<T>
 {
     fn into_raw(self, _: Uncallable) -> *mut RmlFileInterface {
-        self.bridge as _
+        self.bridge.cast()
     }
 }
 

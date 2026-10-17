@@ -91,6 +91,7 @@ fn build_rmlui_renderer(bridge: &mut cc::Build) {
     bridge.file("RmlUi/Source/Core/RenderInterface.cpp");
     bridge.file("RmlUi/Source/Core/SystemInterface.cpp");
     bridge.file("RmlUi/Source/Core/FileInterface.cpp");
+    bridge.file("RmlUi/Source/Core/Plugin.cpp");
 }
 
 // globs the include headers and creates a dummy cpp source file
@@ -223,6 +224,7 @@ fn main() {
         .blocklist_item("Rml::SystemInterface")
         .blocklist_item("Rml::RenderInterface")
         .blocklist_item("Rml::FileInterface")
+        .blocklist_item("Rml::Plugin")
         .blocklist_item("Rml::String")
         .blocklist_item("Rml::byte")
         .blocklist_item("Rml::Span")
@@ -230,6 +232,7 @@ fn main() {
         .blocklist_function(".*SystemInterface.*")
         .blocklist_function(".*RenderInterface.*")
         .blocklist_function(".*FileInterface.*")
+        .blocklist_function(".*Plugin.*")
         .blocklist_type("Rml::Colour")
         .blocklist_type("Rml::Colourb")
         .blocklist_type("Rml::ColourbPremultiplied")
@@ -277,7 +280,7 @@ fn main() {
         .allowlist_type("Layouts::RenderInterfaceLayoutGuard")
         .allowlist_type("rsmlui::render_interface::RustRenderInterface")
         .allowlist_type("Layouts::FileInterfaceLayoutGuard")
-        .allowlist_type("rsmlui::render_interface::RustFileInterface")
+        .allowlist_type("rsmlui::file_interface::RustFileInterface")
         .allowlist_item("Misc::STDIO_SEEK_CUR")
         .allowlist_item("Misc::STDIO_SEEK_END")
         .allowlist_item("Misc::STDIO_SEEK_SET")
@@ -324,6 +327,7 @@ fn main() {
         "src/ffi/variant.rs",
         "src/ffi/dictionary.rs",
         "src/ffi/file_interface.rs",
+        "src/ffi/plugin_interface.rs",
         "src/ffi/interfaces/file_default.rs",
     ];
 

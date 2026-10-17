@@ -1,7 +1,11 @@
 #pragma once
 #include <RmlUi/Core/SystemInterface.h>
 
+#include <cstddef>
+
+#include "./Utils.h"
 #include "RmlUi/Core/FileInterface.h"
+#include "RmlUi/Core/Plugin.h"
 #include "RmlUi/Core/RenderInterface.h"
 
 namespace rsmlui {
@@ -11,7 +15,7 @@ class Opaque;
 namespace rsmlui::system_interface {
 
 struct RustSystemInterface: public Rml::SystemInterface {
-    RustSystemInterface(void* rust_meta, void* rust_data) :
+    RustSystemInterface(const void* rust_meta, void* rust_data) :
         rust_meta(rust_meta),
         rust_data(rust_data) {}
 
@@ -33,7 +37,7 @@ struct RustSystemInterface: public Rml::SystemInterface {
     void DeactivateKeyboard() override;
 
   public:
-    void* rust_meta;
+    const void* rust_meta;
     void* rust_data;
 };
 
@@ -41,7 +45,7 @@ struct RustSystemInterface: public Rml::SystemInterface {
 
 namespace rsmlui::render_interface {
 struct RustRenderInterface: public Rml::RenderInterface {
-    RustRenderInterface(void* rust_meta, void* rust_data) :
+    RustRenderInterface(const void* rust_meta, void* rust_data) :
         rust_meta(rust_meta),
         rust_data(rust_data) {}
 
@@ -98,7 +102,7 @@ struct RustRenderInterface: public Rml::RenderInterface {
     void ReleaseShader(Rml::CompiledShaderHandle shader) override;
 
   public:
-    void* rust_meta;
+    const void* rust_meta;
     void* rust_data;
 };
 } // namespace rsmlui::render_interface
@@ -106,7 +110,7 @@ struct RustRenderInterface: public Rml::RenderInterface {
 namespace rsmlui::file_interface {
 
 struct RustFileInterface: public Rml::FileInterface {
-    RustFileInterface(void* rust_meta, void* rust_data) :
+    RustFileInterface(const void* rust_meta, void* rust_data) :
         rust_meta(rust_meta),
         rust_data(rust_data) {}
 
@@ -121,8 +125,37 @@ struct RustFileInterface: public Rml::FileInterface {
         -> bool override;
 
   public:
-    void* rust_meta;
+    const void* rust_meta;
     void* rust_data;
 };
-
 } // namespace rsmlui::file_interface
+
+namespace rsmlui::plugin {
+
+struct RustPluginInterface: public Rml::Plugin {
+    RustPluginInterface(const void* rust_meta, void* rust_data) :
+        rust_meta(rust_meta),
+        rust_data(rust_data) {}
+
+  public:
+    const void* rust_meta;
+    void* rust_data;
+
+    auto OnInitialise() -> void override;
+    auto OnShutdown() -> void override;
+    auto OnDocumentOpen(Rml::Context* context, const Rml::String& document_path)
+        -> void override;
+    auto OnDocumentLoad(Rml::ElementDocument* document) -> void override;
+    auto OnDocumentUnload(Rml::ElementDocument* document) -> void override;
+    auto OnContextCreate(Rml::Context* context) -> void override;
+    auto OnContextDestroy(Rml::Context* context) -> void override;
+    auto OnElementCreate(Rml::Element* element) -> void override;
+    auto OnElementDestroy(Rml::Element* element) -> void override;
+    auto OnDataModelCreate(Rml::Context* context, const Rml::String& name)
+        -> void override;
+    auto OnDataModelDestroy(Rml::Context* context, const Rml::String& name)
+        -> void override;
+};
+
+ASSERT_INTERFACE_LAYOUT(RustPluginInterface);
+} // namespace rsmlui::plugin

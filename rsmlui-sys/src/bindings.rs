@@ -525,7 +525,7 @@ pub struct rsmlui_system_interface_RustSystemInterface__bindgen_vtable(::std::os
 #[repr(C)]
 pub struct rsmlui_system_interface_RustSystemInterface {
     pub vtable_: *const rsmlui_system_interface_RustSystemInterface__bindgen_vtable,
-    pub rust_meta: *mut ::std::os::raw::c_void,
+    pub rust_meta: *const ::std::os::raw::c_void,
     pub rust_data: *mut ::std::os::raw::c_void,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -544,7 +544,7 @@ pub struct rsmlui_render_interface_RustRenderInterface__bindgen_vtable(::std::os
 #[repr(C)]
 pub struct rsmlui_render_interface_RustRenderInterface {
     pub vtable_: *const rsmlui_render_interface_RustRenderInterface__bindgen_vtable,
-    pub rust_meta: *mut ::std::os::raw::c_void,
+    pub rust_meta: *const ::std::os::raw::c_void,
     pub rust_data: *mut ::std::os::raw::c_void,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]
@@ -563,7 +563,7 @@ pub struct rsmlui_file_interface_RustFileInterface__bindgen_vtable(::std::os::ra
 #[repr(C)]
 pub struct rsmlui_file_interface_RustFileInterface {
     pub vtable_: *const rsmlui_file_interface_RustFileInterface__bindgen_vtable,
-    pub rust_meta: *mut ::std::os::raw::c_void,
+    pub rust_meta: *const ::std::os::raw::c_void,
     pub rust_data: *mut ::std::os::raw::c_void,
 }
 #[allow(clippy::unnecessary_operation, clippy::identity_op)]

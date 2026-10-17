@@ -4,6 +4,7 @@
 #include <RmlUi/Core/Math.h>
 
 #include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/Plugin.h"
 #include "rust/cxx.h"
 
 namespace rsmlui {
@@ -88,5 +89,13 @@ inline void log_message(Rml::Log::Type type, rust::String message) {
 
 inline void shutdown() {
     Rml::Shutdown();
+}
+
+inline void register_plugin(Rml::Plugin* plugin) {
+    Rml::RegisterPlugin(plugin);
+}
+
+inline void unregister_plugin(Rml::Plugin* plugin) {
+    Rml::UnregisterPlugin(plugin);
 }
 } // namespace rsmlui

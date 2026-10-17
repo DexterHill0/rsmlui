@@ -69,7 +69,10 @@ inline auto new_rust_system_interface(
     const rsmlui::Opaque* rust_meta,
     rsmlui::Opaque* rust_data
 ) -> RustSystemInterface* {
-    return new RustSystemInterface((void*)rust_meta, (void*)rust_data);
+    return new RustSystemInterface(
+        reinterpret_cast<const void*>(rust_meta),
+        reinterpret_cast<void*>(rust_data)
+    );
 }
 
 inline void rust_system_interface_destructor(RustSystemInterface* obj) {
@@ -166,7 +169,6 @@ system_interface_default_deactivate_keyboard(RustSystemInterface* interface) {
 
 } // namespace rsmlui::system_interface
 
-
 #if _WIN32
 namespace rsmlui::system_interface {
 
@@ -184,7 +186,8 @@ inline void win32_system_interface_destructor(Rml::SystemInterface* interface) {
 #ifdef RSMLUI_SYSTEM_GLFW
 namespace rsmlui::system_interface {
 
-inline auto new_glfw_system_interface(rsmlui::Opaque* glfw_window) -> Rml::SystemInterface* {
+inline auto new_glfw_system_interface(rsmlui::Opaque* glfw_window)
+    -> Rml::SystemInterface* {
     return new SystemInterface_GLFW((GLFWwindow*)glfw_window);
 }
 
@@ -194,4 +197,3 @@ inline void glfw_system_interface_destructor(Rml::SystemInterface* interface) {
 
 } // namespace rsmlui::system_interface
 #endif
-

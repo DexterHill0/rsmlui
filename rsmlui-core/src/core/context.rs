@@ -26,6 +26,10 @@ pub struct Context {
     handle: ContextHandle,
 }
 
+// Currently not quite the same as `ContextHandle` due to the non-static lifetime.
+// TODO: figure out how to also implement methods on this
+pub type ContextRefMut<'a> = ForeignHandle<'a, tags::TagContext, Foreign, Mut>;
+
 not_send_sync!(Context);
 
 // TODO: Context is required to be a named struct for drop-tree, not a type alias like
