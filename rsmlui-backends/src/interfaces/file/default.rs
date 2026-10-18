@@ -1,7 +1,7 @@
 use rsmlui_core::_private::HasOwnedInterface;
 use rsmlui_core::Uncallable;
 use rsmlui_core::interfaces::object::IntoRawInterface;
-use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::constness::NonConst;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
 use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::core;
@@ -34,7 +34,7 @@ unsafe impl ForeignDestroy for tags::TagFileDefault {
 /// Shared handle newtype for both [`FileDefault`] and [`FileDefaultRef`].
 #[repr(transparent)]
 pub struct FileDefaultHandle<'a, M: ObjectOwnership<tags::TagFileDefault>>(
-    ForeignHandle<'a, tags::TagFileDefault, M, Mut>,
+    ForeignHandle<'a, tags::TagFileDefault, M, NonConst>,
 );
 
 /// Owns a C++-allocated `DefaultFileInterface` instance.
@@ -50,7 +50,9 @@ impl FileDefault {
     pub fn new() -> Self {
         // Safety: `new_default_file_interface` returns a valid, non-null pointer allocated
         // with `new`.
-        Self(unsafe { ForeignHandle::<_, Native, Mut>::from_raw(new_default_file_interface()) })
+        Self(unsafe {
+            ForeignHandle::<_, Native, NonConst>::from_raw(new_default_file_interface())
+        })
     }
 }
 

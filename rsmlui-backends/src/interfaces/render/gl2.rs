@@ -2,7 +2,7 @@ use rsmlui_core::_private::{HasOwnedInterface, IntoSys};
 use rsmlui_core::Uncallable;
 use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::math::UVec2;
-use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::constness::NonConst;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectMutPtr};
 use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::interfaces::render_interface_gl2::{
@@ -53,11 +53,11 @@ unsafe impl ForeignDestroy for tags::TagGl2 {
 /// Uninitialized GL2 renderer. Holds the C++ object but is not yet usable as a render interface.
 /// See [`RendererGl2Uninit::assume_init`].
 #[repr(transparent)]
-pub struct RendererGl2Uninit(ForeignHandle<'static, tags::TagGl2Uninit, Native, Mut>);
+pub struct RendererGl2Uninit(ForeignHandle<'static, tags::TagGl2Uninit, Native, NonConst>);
 
 /// Shared handle newtype for both [`RendererGl2`] and [`RendererGl2Ref`].
 #[repr(transparent)]
-pub struct Gl2Handle<'a, M: ObjectOwnership<tags::TagGl2>>(ForeignHandle<'a, tags::TagGl2, M, Mut>);
+pub struct Gl2Handle<'a, M: ObjectOwnership<tags::TagGl2>>(ForeignHandle<'a, tags::TagGl2, M, NonConst>);
 
 /// Owns a C++-allocated `RenderInterface_GL2` instance.
 ///
@@ -77,7 +77,7 @@ impl Default for RendererGl2Uninit {
     fn default() -> Self {
         // Safety: new_gl2_render_interface returns a valid, non-null `RenderInterface_GL2`
         unsafe {
-            Self(ForeignHandle::<_, Native, Mut>::from_raw(
+            Self(ForeignHandle::<_, Native, NonConst>::from_raw(
                 new_gl2_render_interface(),
             ))
         }
@@ -149,7 +149,7 @@ impl<'a> RendererGl2Ref<'a> {
     /// - `raw` must be a valid, non-null pointer to a `RenderInterface_GL2` that
     ///   outlives `'a`.
     pub(crate) unsafe fn from_raw(raw: ObjectMutPtr<tags::TagGl2>) -> Self {
-        Self(unsafe { ForeignHandle::<_, Foreign, Mut>::from_raw(raw) })
+        Self(unsafe { ForeignHandle::<_, Foreign, NonConst>::from_raw(raw) })
     }
 }
 

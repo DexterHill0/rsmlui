@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem::ManuallyDrop;
 
-use crate::object::constness::{Constness, Immut, Mut};
+use crate::object::constness::{Const, Constness, NonConst};
 use crate::object::ownership::{Native, ObjectOwnership};
 use crate::utils::macros::not_send_sync;
 
@@ -74,64 +74,74 @@ pub unsafe trait ForeignDestroy: ForeignObject {
 /// of execution. Any object where `M = Foreign` will typically have a lifetime tied to the
 /// object that handed out the borrow, so it cannot outlive that object.
 ///
+/// Where the latter rule is applied slightly differently is objects where expressing the
+/// owner using lifetimes could lead to selt-referential structs. For example, creating a
+/// [`Context`] from [`Rml`] would logically create the context with the `'rml` lifetime.
+/// However, you may want to store the [`Rml`] and [`Context`] on the same struct, which
+/// would not be possible with a lifetime. This is why [`Context`], and other similar objects
+/// are `'static` even though they are [`Foreign`]. The `drop-tree` crate uses [`Rc`]'s to
+/// model provenance at runtime and ensure objects without explicit lifetime borrows are
+/// dropped in the correct order.
+///
 /// # Aliasing rules
 ///
-/// Two handles to the same object must never have a conflicting [`Constness`], or one
-/// could hand out `&'a` references into the object while the other mutates or frees it.
-/// Note this is about the object itself, _not_ the ownership. Two handles with a
-/// different `M` are equally unsound if they have a conflicting `C`.
+/// Handles are allowed to alias freely. The underlying structure in a handle is simply
+/// a raw pointer which makes no exclusivity claims on the data. Therefore, two [`NonConst`]
+/// handles to the same object is not unsound. Many areas in RmlUi depend on this
+/// non-exclusivity.
 ///
-/// Whether you have to enforce that by hand depends on the relationship of the second handle:
+/// The only reason we are able to uphold this claim is because a handle never hands out
+/// a Rust reference (I.E `&T` or `&mut T`) into the foreign object.
 ///
-/// 1. Child handles: these are obtained from a parent handle. These borrow the parent,
-///    through a `self` reference, so the borrow checker already guarantees two conflicting
-///    handles can't be live at once, therefore differing constness is fine. This is why a mutable
-///    accessor, like a `get_mut` _must_ take `&mut self`.  Getting this wrongcould allow multiple
-///    handles to exist together that otherwise shouldn't.
+/// Everything also being `!Send` and `!Sync` rules out thread-based data races, which _would_
+/// make aliasing raw pointers unsound. The worst outcome of two handles mutating one object
+/// is two code paths confusing each other about what the data holds.
 ///
-/// 2. Sibling handles: similar to child handles, but don't necessarily borrow their direct
-///    parent. For example, a [`VariantRef`] from a [`DictionaryRef`]. The variant borrows
-///    the `'a` lifetime, _not_ the `'self` lifetime, so it can survive even when the
-///    [`DictionaryRef`] is dropped. This makes the two handles siblings, not children.
-///    See the **Accessor lifetime rules** section below for more on this case.
+/// # Reference rules
 ///
-/// 3. Independent handles: these are created independently, with no parent borrow. For example,
-///    a [`ContextHandle`] from `create_context` and another from `get_context` would be two
-///    independent handles. These purposefuly don't borrow their parent (that's what `drop-tree`
-///    is for), so nothing relates either of them together and the borrow checker can't help.
-///    These are the handles the rule above has to be enforced on manually (manually in the
-///    sense that care needs to be taken when writing the code and constructing handles to
-///    make sure this rule isn't violated).
+/// A handle must _never_ return a Rust reference into the foreign object, mutable or not.
+/// Accessors return owned or [`Copy`] values instead.
 ///
-/// By Rust's own rules you can't alias `&mut`, as it carries a uniqueness guarantee the
-/// optimiser relies on. Raw pointers do not follow this rule, so two [`Mut`] handles to one
-/// object is _not_ UB.
-/// Separately, [`ForeignHandle`] being `!Send` and `!Sync` rules out a data race, which
-/// _would_ be UB for raw pointers too. The worst outcome is two code paths, for example two event
-/// callbacks, both modifying the same object and confusing one another about what the data holds.
+/// A `&mut T` reference is simply invalid to hand out as the memory is not ours and allowing
+/// us to mutate it could lead to numerous invariants of the foreign code being violated.
 ///
-/// # Accessor lifetime rules
+/// A `&T` is different. It promises the bytes it points at don't change for its lifetime.
+/// However, nothing about the handle that issues the reference can truly guarantee that.
+/// For example, the owner of the issuing handle could mutate it, and as far as Rust is concerned,
+/// the two handles are unrelated values, so the borrow checker sees no issues.
 ///
-/// A handle may return `&'a` references into its object _only_ when `M = Foreign` and
-/// `C = Immut`. That combination means the handle itself just a reference to some data
-/// it can't outlive. No methods on the handle can invalidate the data it references,
-/// therefore any refrenced created from this can take the `'a` life of the parent,
-/// making both handles siblings not children. If the original handle is lost, the data
-/// it points to is still valid with the lifetime `'a`, so the referenced data is also
-/// still valid.
-/// For example, `try_get` on a [`DictionaryRef`] returns `&T` with a lifetime belonging to
-/// the dictionary object itself. If the [`DictionaryRef`] is dropped, that doesn't mean anything
-/// hashappened to the actual dictionary's memory, so the `&T` data is still valid.
+/// Unfortunately, tying `&T` to `&self` (via `&'_ T`) is _not_ sufficient, because every handle
+/// between the owner and the reference would also have to reborrow, rather than propagate `'a`.
+/// Anywhere that fails to do that would open up the same hole above that the borrow checker
+/// would not detct.
 ///
-/// Every other combination must tie references to `&self`, so `&mut self` operations are
-/// blocked while any reference is alive. This includes the _read-only_ accessors on a
-/// `Mut` handle - in a mutable dictionary, `get` must borrow `&self` so that it conflicts
-/// with `get_mut`.
+/// The above applies to foreign data only. For example, [`InterfaceObject`] lives in a [`Box`],
+/// so the `&mut` handed out by [`BridgedHandle`]'s [`DerefMut`] is an ordinary reference into
+/// Rust-owned data, so it is safe to hand out.
 ///
-/// [`VariantRef`]: crate::containers::variant::VariantRef
-/// [`ContextHandle`]: crate::core::context::ContextHandle
-/// [`DictionaryRef`]: crate::containers::dictionary::DictionaryRef
-pub struct ForeignHandle<'a, O: ForeignObject, M: ObjectOwnership<O> = Native, C: Constness = Immut>
+/// # What `'a` means
+///
+/// `'a` carries the validity of the object, AKA how long it lives for. It has no control over
+/// mutation, that is what the reference rules are for.
+///
+/// `'a` names whatever keeps the object alive, _not_ the handle it was created from.
+/// For example, [`Element`]'s are owned by an [`ElementDocument`]. When borrowing a child
+/// [`Element`] from a parent, the returned handle is given the `'a` from the [`ElementDocument`]
+/// _not_ the `'a` from the parent element, as they all live for as long as the same document.
+/// Reborrowing from the parent element would still be sound, but would make
+/// `parent.append_child(child)` unwritable.
+///
+/// [`NonConst`]: crate::object::constness::NonConst
+/// [`InterfaceObject`]: crate::interfaces::object::InterfaceObject
+/// [`BridgedHandle`]: crate::interfaces::bridge::BridgedHandle
+/// [`DerefMut`]: std::ops::DerefMut
+/// [`Element`]: crate::core::element::Element
+/// [`ElementDocument`]: crate::core::element_document::ElementDocument
+/// [`Context`]: crate::core::context::Context
+/// [`Rml`]: crate::core::rml::Rml
+/// [`Rc`]: std::rc::Rc
+/// [`Foreign`]: crate::object::ownership::Foreign
+pub struct ForeignHandle<'a, O: ForeignObject, M: ObjectOwnership<O> = Native, C: Constness = Const>
 {
     raw: *mut O::Object,
     _lt: PhantomData<&'a ()>,
@@ -180,14 +190,14 @@ impl<'a, O: ForeignObject, M: ObjectOwnership<O>, C: Constness> ForeignHandle<'a
     ///
     /// While [`ForeignHandle`] can statically verify whether owning the object is
     /// representable, we can't check if the pointer being passed is actually a pointer
-    /// valid for the type of `M`<sup>1</sup>.
+    /// valid for the type of `C`<sup>1</sup>.
     ///
     /// 1: That is, a pointer to an object that shouldn't be modified _could_ be passed to
-    /// a handle where `M = Mut`. Generally, *const vs *mut should cover most of these cases,
+    /// a handle where `C = NonConst`. Generally, *const vs *mut should cover most of these cases,
     /// assuming the FFI functions return the right type.
     #[doc(hidden)]
     pub unsafe fn from_raw(raw: C::Ptr<O::Object>) -> Self {
-        // Safety: access to the pointer is only *const when `Immut` is the constness
+        // Safety: access to the pointer is only *const when `Const` is the constness
         unsafe { Self::from_mut(C::widen(raw)) }
     }
 
@@ -204,15 +214,15 @@ impl<'a, O: ForeignObject, M: ObjectOwnership<O>, C: Constness> ForeignHandle<'a
 
     /// Not unsafe but marked as so to discourage usage outside the rsmlui workspace.
     #[doc(hidden)]
-    pub unsafe fn as_ptr(&self) -> <Immut as Constness>::Ptr<O::Object> {
+    pub unsafe fn as_ptr(&self) -> <Const as Constness>::Ptr<O::Object> {
         self.raw
     }
 }
 
-impl<'a, O: ForeignObject, M: ObjectOwnership<O>> ForeignHandle<'a, O, M, Mut> {
+impl<'a, O: ForeignObject, M: ObjectOwnership<O>> ForeignHandle<'a, O, M, NonConst> {
     /// Not unsafe but marked as so to discourage usage outside the rsmlui workspace.
     #[doc(hidden)]
-    pub unsafe fn as_mut_ptr(&mut self) -> <Mut as Constness>::Ptr<O::Object> {
+    pub unsafe fn as_mut_ptr(&mut self) -> <NonConst as Constness>::Ptr<O::Object> {
         self.raw
     }
 }

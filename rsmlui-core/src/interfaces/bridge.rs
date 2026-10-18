@@ -4,7 +4,7 @@ use std::ops::{Deref, DerefMut};
 use sealed::sealed;
 
 use crate::interfaces::object::InterfaceObject;
-use crate::object::constness::{Constness, Mut};
+use crate::object::constness::{Constness, NonConst};
 use crate::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
 use crate::object::ownership::{Native, ObjectOwnership};
 
@@ -59,7 +59,7 @@ unsafe impl<T: BridgeOps<B>, B> ForeignDestroy for BridgedTag<T, B> {
 /// Wrapper around a [`ForeignHandle`] with a [`BridgedTag`].
 ///
 /// `T` is the user's interface implementation and `B` is the C++ bridge struct.
-pub type BridgedHandle<T, B> = ForeignHandle<'static, BridgedTag<T, B>, Native, Mut>;
+pub type BridgedHandle<T, B> = ForeignHandle<'static, BridgedTag<T, B>, Native, NonConst>;
 
 impl<T: BridgeOps<B>, B> BridgedHandle<T, B> {
     pub fn new(interface: T) -> Self {
@@ -85,7 +85,7 @@ impl<T, B, M: ObjectOwnership<BridgedTag<T, B>>, C: Constness> Deref
 }
 
 impl<T, B, M: ObjectOwnership<BridgedTag<T, B>>> DerefMut
-    for ForeignHandle<'_, BridgedTag<T, B>, M, Mut>
+    for ForeignHandle<'_, BridgedTag<T, B>, M, NonConst>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { &mut *self.as_mut_ptr() }

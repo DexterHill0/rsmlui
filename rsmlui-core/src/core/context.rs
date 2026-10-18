@@ -5,7 +5,7 @@ use crate::_private::{IntoSys, not_send_sync};
 use crate::core::element_document::{ElementDocument, ElementDocumentHandle};
 use crate::error::Error;
 use crate::math::UVec2;
-use crate::object::constness::Mut;
+use crate::object::constness::NonConst;
 use crate::object::foreign::{ForeignHandle, ForeignObject, ObjectMutPtr};
 use crate::object::ownership::Foreign;
 
@@ -17,7 +17,7 @@ impl ForeignObject for tags::TagContext {
     type Object = rsmlui_sys::context::Context;
 }
 
-pub type ContextHandle = ForeignHandle<'static, tags::TagContext, Foreign, Mut>;
+pub type ContextHandle = ForeignHandle<'static, tags::TagContext, Foreign, NonConst>;
 
 #[rmldoc(file = "api_Rml-Context.md", name = "Rml::Context")]
 #[drop_tree(borrows(crate::core::rml::Rml))]
@@ -28,7 +28,7 @@ pub struct Context {
 
 // Currently not quite the same as `ContextHandle` due to the non-static lifetime.
 // TODO: figure out how to also implement methods on this
-pub type ContextRefMut<'a> = ForeignHandle<'a, tags::TagContext, Foreign, Mut>;
+pub type ContextRefMut<'a> = ForeignHandle<'a, tags::TagContext, Foreign, NonConst>;
 
 not_send_sync!(Context);
 

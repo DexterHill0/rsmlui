@@ -1,7 +1,7 @@
 use rsmlui_core::_private::HasOwnedInterface;
 use rsmlui_core::Uncallable;
 use rsmlui_core::interfaces::object::IntoRawInterface;
-use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::constness::NonConst;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectMutPtr};
 use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::core;
@@ -49,7 +49,7 @@ unsafe impl ForeignDestroy for tags::TagGlfw {
 /// Shared handle newtype for both [`SystemGlfw`] and [`SystemGlfwRef`].
 #[repr(transparent)]
 pub struct GlfwHandle<'a, M: ObjectOwnership<tags::TagGlfw>>(
-    ForeignHandle<'a, tags::TagGlfw, M, Mut>,
+    ForeignHandle<'a, tags::TagGlfw, M, NonConst>,
 );
 
 /// Owns a C++-allocated `SystemInterface_GLFW` instance.
@@ -66,7 +66,7 @@ impl SystemGlfw {
         // Safety: `new_glfw_system_interface` returns a valid, non-null pointer allocated
         // with `new`.
         Self(unsafe {
-            ForeignHandle::<_, Native, Mut>::from_raw(new_glfw_system_interface(
+            ForeignHandle::<_, Native, NonConst>::from_raw(new_glfw_system_interface(
                 glfw_window.window_ptr(),
             ))
         })
@@ -79,7 +79,7 @@ impl<'a> SystemGlfwRef<'a> {
     /// - `raw` must be a valid, non-null pointer to a `RenderInterface_GL2` that
     ///   outlives `'a`.
     pub(crate) unsafe fn from_raw(raw: ObjectMutPtr<tags::TagGlfw>) -> Self {
-        Self(unsafe { ForeignHandle::<_, Foreign, Mut>::from_raw(raw) })
+        Self(unsafe { ForeignHandle::<_, Foreign, NonConst>::from_raw(raw) })
     }
 }
 

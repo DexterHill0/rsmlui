@@ -1,7 +1,7 @@
 use rsmlui_sys::dictionary::{self as sys};
 
 use crate::containers::variant::{TypeVariant, Variant, VariantRef, VariantRefMut};
-use crate::object::constness::{Constness, Immut, Mut};
+use crate::object::constness::{Constness, Const, NonConst};
 use crate::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectPtr};
 use crate::object::ownership::{Foreign, Native, ObjectOwnership};
 
@@ -27,13 +27,13 @@ pub struct DictionaryHandle<'a, M: ObjectOwnership<tags::TagDictionary>, C: Cons
 );
 
 /// Holds [`String`]: [`Variant`] key-value pairs.
-pub type Dictionary = DictionaryHandle<'static, Native, Mut>;
+pub type Dictionary = DictionaryHandle<'static, Native, NonConst>;
 
 /// A immutably borrowed version of [`Dictionary`].
-pub type DictionaryRef<'a> = DictionaryHandle<'a, Foreign, Immut>;
+pub type DictionaryRef<'a> = DictionaryHandle<'a, Foreign, Const>;
 
 /// A mutably borrowed version of [`Dictionary`].
-pub type DictionaryRefMut<'a> = DictionaryHandle<'a, Foreign, Mut>;
+pub type DictionaryRefMut<'a> = DictionaryHandle<'a, Foreign, NonConst>;
 
 impl Default for Dictionary {
     fn default() -> Self {
@@ -45,8 +45,16 @@ impl Default for Dictionary {
 
 macro_rules! dictionary_methods {
     ($lt:lifetime) => {
+        pub fn get_variant<K: AsRef<str>>(&self, key: K) -> VariantRef<$lt> {
+            let key = key.as_ref();
+
+            self.try_get_variant(key)
+                .unwrap_or_else(|| panic!("no such key `{key}`"))
+        }
+
         pub fn try_get_variant<K: AsRef<str>>(&self, key: K) -> Option<VariantRef<$lt>> {
-           let variant = unsafe { sys::dictionary_get_variant_const(self.0.as_ptr(), key.as_ref()) };
+            let variant =
+                unsafe { sys::dictionary_get_variant_const(self.0.as_ptr(), key.as_ref()) };
 
             if variant.is_null() {
                 return None;
@@ -56,18 +64,14 @@ macro_rules! dictionary_methods {
             Some(unsafe { VariantRef::from_raw(variant) })
         }
 
-        pub fn get_variant<K: AsRef<str>>(&self, key: K) -> VariantRef<$lt> {
-            let key = key.as_ref();
-
-            self.try_get_variant(key)
-                .unwrap_or_else(|| panic!("no such key `{key}`"))
-        }
-
-        pub fn try_get<K: AsRef<str>, T: TypeVariant + ?Sized>(&self, key: K) -> Option<&$lt T> {
+        pub fn try_get<K: AsRef<str>, T: TypeVariant + ?Sized>(
+            &self,
+            key: K,
+        ) -> Option<<T as ToOwned>::Owned> {
             self.try_get_variant(key)?.try_get_as::<T>()
         }
 
-        pub fn get<K: AsRef<str>, T: TypeVariant + ?Sized>(&self, key: K) -> &$lt T {
+        pub fn get<K: AsRef<str>, T: TypeVariant + ?Sized>(&self, key: K) -> <T as ToOwned>::Owned {
             self.get_variant(key).get_as::<T>()
         }
     };
@@ -85,7 +89,7 @@ impl Dictionary {
 }
 
 // As per `ForeignHandle` docs, we can only return objects with `'a` lifetime
-// when `M = Foreign` and `C = Immut`, as that allows the object to outlive
+// when `M = Foreign` and `C = Const`, as that allows the object to outlive
 // the handle ref
 impl<'a> DictionaryRef<'a> {
     dictionary_methods!('a);
@@ -95,16 +99,16 @@ impl<'a> DictionaryRef<'a> {
     /// - `raw` must be a valid, non-null pointer to a `Dictionary` that
     ///   outlives `'a`.
     pub(crate) unsafe fn from_raw(raw: ObjectPtr<tags::TagDictionary>) -> Self {
-        Self(unsafe { ForeignHandle::<_, Foreign, Immut>::from_raw(raw) })
+        Self(unsafe { ForeignHandle::<_, Foreign, Const>::from_raw(raw) })
     }
 }
 
 // Any other combination must tie the return data to `'self`
-impl<'a> DictionaryHandle<'a, Native, Immut> {
+impl<'a> DictionaryHandle<'a, Native, Const> {
     dictionary_methods!('_);
 }
 
-impl<'a, M: ObjectOwnership<tags::TagDictionary>> DictionaryHandle<'a, M, Mut> {
+impl<'a, M: ObjectOwnership<tags::TagDictionary>> DictionaryHandle<'a, M, NonConst> {
     dictionary_methods!('_);
 
     /// Inserts a [`Variant`] into the dictionary.

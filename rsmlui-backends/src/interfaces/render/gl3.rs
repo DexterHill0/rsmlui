@@ -2,7 +2,7 @@ use rsmlui_core::_private::{HasOwnedInterface, IntoSys, not_send_sync, not_unwin
 use rsmlui_core::Uncallable;
 use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::math::UVec2;
-use rsmlui_core::object::constness::Mut;
+use rsmlui_core::object::constness::NonConst;
 use rsmlui_core::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject};
 use rsmlui_core::object::ownership::{Foreign, Native, ObjectOwnership};
 use rsmlui_sys::interfaces::render_interface_gl3::{
@@ -51,7 +51,7 @@ not_send_sync!(UninitRendererGl3);
 
 /// Shared handle newtype for both [`RendererGl3`] and [`RendererGl3Ref`].
 #[repr(transparent)]
-pub struct Gl3Handle<'a, M: ObjectOwnership<tags::TagGl3>>(ForeignHandle<'a, tags::TagGl3, M, Mut>);
+pub struct Gl3Handle<'a, M: ObjectOwnership<tags::TagGl3>>(ForeignHandle<'a, tags::TagGl3, M, NonConst>);
 
 /// Owns a C++-allocated `RenderInterface_GL3` instance.
 ///
@@ -100,7 +100,7 @@ impl UninitRendererGl3 {
         // Safety: gl3_initialize() succeeded above, so glad function pointers are loaded
         // and the C++ constructor (which creates shaders) can execute safely.
         Some(Gl3Handle(unsafe {
-            ForeignHandle::<_, Native, Mut>::from_raw(new_gl3_render_interface())
+            ForeignHandle::<_, Native, NonConst>::from_raw(new_gl3_render_interface())
         }))
     }
 }

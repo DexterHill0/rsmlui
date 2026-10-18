@@ -3,7 +3,7 @@ use drop_tree::drop_tree;
 use rsmlui_macros::rmldoc;
 
 use crate::_private::not_send_sync;
-use crate::object::constness::Mut;
+use crate::object::constness::NonConst;
 use crate::object::foreign::{ForeignHandle, ForeignObject};
 use crate::object::ownership::Foreign;
 use crate::types::document::{FocusFlag, ModalFlag, ScrollFlag};
@@ -34,7 +34,7 @@ impl ForeignObject for tags::TagElementDocument {
     type Object = rsmlui_sys::element_document::ElementDocument;
 }
 
-pub type ElementDocumentHandle = ForeignHandle<'static, tags::TagElementDocument, Foreign, Mut>;
+pub type ElementDocumentHandle = ForeignHandle<'static, tags::TagElementDocument, Foreign, NonConst>;
 
 #[rmldoc(file = "api_Rml-ElementDocument.md", name = "Rml::ElementDocument")]
 #[drop_tree(borrows(crate::core::context::Context))]
@@ -42,7 +42,7 @@ pub struct ElementDocument {
     handle: ElementDocumentHandle,
 }
 
-pub type ElementDocumentRefMut<'a> = ForeignHandle<'a, tags::TagElementDocument, Foreign, Mut>;
+pub type ElementDocumentRefMut<'a> = ForeignHandle<'a, tags::TagElementDocument, Foreign, NonConst>;
 
 not_send_sync!(ElementDocument);
 

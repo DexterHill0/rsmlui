@@ -58,7 +58,7 @@ impl Drop for DropClosure {
 /// for [`Deref`] and [`DerefMut`]). When the clone is dropped and the refcount is
 /// zero, the drop closure is called and the data is freed. Because the closure
 /// always runs after `core::shutdown`, the interface pointers have already been
-/// set to null, which satisfies [`OwnedInterface`]'s drop-time
+/// set to null, which satisfies [`BridgedTag`]'s drop-time
 /// `assert_not_registered` check.
 ///
 /// [`Rml`]: crate::core::core::Rml
@@ -67,7 +67,7 @@ impl Drop for DropClosure {
 /// [`Rml::set_system_interface`]: crate::core::core::Rml::set_system_interface
 /// [`ForeignHandle`]: crate::object::foreign::ForeignHandle
 /// [`Foreign`]: crate::object::ownership::Foreign
-/// [`OwnedInterface`]: crate::interfaces::OwnedInterface
+/// [`BridgedTag`]: crate::interfaces::bridge::BridgedTag
 /// [`Deref`]: std::ops::Deref
 /// [`DerefMut`]: std::ops::DerefMut
 pub struct BackendHandle(Rc<DropClosure>);

@@ -560,83 +560,83 @@ unsafe impl<T: RenderInterfaceBehaviour> RenderInterfaceBridge for RenderInterfa
 
         let kind = match name {
             "opacity" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for opacity filter");
 
-                FilterKind::Opacity { value: *value }
+                FilterKind::Opacity { value }
             },
             "blur" => {
-                let sigma: &f32 = dictionary
-                    .try_get("sigma")
+                let sigma = dictionary
+                    .try_get::<_, f32>("sigma")
                     .expect("missing `sigma` for blur filter");
 
-                FilterKind::Blur { sigma: *sigma }
+                FilterKind::Blur { sigma }
             },
             "brightness" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for brightness filter");
 
-                FilterKind::Brightness { value: *value }
+                FilterKind::Brightness { value }
             },
             "contrast" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for contrast filter");
 
-                FilterKind::Contrast { value: *value }
+                FilterKind::Contrast { value }
             },
             "invert" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for invert filter");
 
-                FilterKind::Invert { value: *value }
+                FilterKind::Invert { value }
             },
             "grayscale" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for grayscale filter");
 
-                FilterKind::Grayscale { value: *value }
+                FilterKind::Grayscale { value }
             },
             "sepia" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for sepia filter");
 
-                FilterKind::Sepia { value: *value }
+                FilterKind::Sepia { value }
             },
             "hue-rotate" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let radians = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for hue-rotate filter");
 
-                FilterKind::HueRotate { radians: *value }
+                FilterKind::HueRotate { radians }
             },
             "saturate" => {
-                let value: &f32 = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, f32>("value")
                     .expect("missing `value` for saturate filter");
 
-                FilterKind::Saturate { value: *value }
+                FilterKind::Saturate { value }
             },
             "drop-shadow" => {
-                let sigma: &f32 = dictionary
-                    .try_get("sigma")
+                let sigma = dictionary
+                    .try_get::<_, f32>("sigma")
                     .expect("missing `sigma` for drop-shadow filter");
-                let color: &Colorb = dictionary
-                    .try_get("color")
+                let color = dictionary
+                    .try_get::<_, Colorb>("color")
                     .expect("missing `color` for drop-shadow filter");
-                let offset: &Vec2 = dictionary
-                    .try_get("offset")
+                let offset = dictionary
+                    .try_get::<_, Vec2>("offset")
                     .expect("missing `offset` for drop-shadow filter");
 
                 FilterKind::DropShadow {
-                    sigma: *sigma,
-                    color: *color,
-                    offset: *offset,
+                    sigma,
+                    color,
+                    offset,
                 }
             },
             _ => panic!("unknown filter name: {}", name),
@@ -661,85 +661,81 @@ unsafe impl<T: RenderInterfaceBehaviour> RenderInterfaceBridge for RenderInterfa
 
         let kind = match name {
             "linear-gradient" => {
-                let repeating: &bool = dictionary
-                    .try_get("repeating")
+                let repeating = dictionary
+                    .try_get::<_, bool>("repeating")
                     .expect("missing `repeating` for linear-gradient shader");
-                let p0: &Vec2 = dictionary
-                    .try_get("p0")
+                let p0 = dictionary
+                    .try_get::<_, Vec2>("p0")
                     .expect("missing `p0` for linear-gradient shader");
-                let p1: &Vec2 = dictionary
-                    .try_get("p1")
+                let p1 = dictionary
+                    .try_get::<_, Vec2>("p1")
                     .expect("missing `p1` for linear-gradient shader");
-                let length: &f32 = dictionary
-                    .try_get("length")
+                let length = dictionary
+                    .try_get::<_, f32>("length")
                     .expect("missing `length` for linear-gradient shader");
-                let color_stop_list: &ColorStops = dictionary
-                    .try_get("color_stop_list")
+                let color_stop_list = dictionary
+                    .try_get::<_, ColorStops>("color_stop_list")
                     .expect("missing `color_stop_list` for linear-gradient shader");
 
                 ShaderKind::LinearGradient {
-                    repeating: *repeating,
-                    p0: *p0,
-                    p1: *p1,
-                    length: *length,
-                    color_stop_list: color_stop_list.to_vec(),
+                    repeating,
+                    p0,
+                    p1,
+                    length,
+                    color_stop_list,
                 }
             },
             "radial-gradient" => {
-                let repeating: &bool = dictionary
-                    .try_get("repeating")
+                let repeating = dictionary
+                    .try_get::<_, bool>("repeating")
                     .expect("missing `repeating` for radial-gradient shader");
-                let center: &Vec2 = dictionary
-                    .try_get("center")
+                let center = dictionary
+                    .try_get::<_, Vec2>("center")
                     .expect("missing `center` for radial-gradient shader");
-                let radius: &Vec2 = dictionary
-                    .try_get("radius")
+                let radius = dictionary
+                    .try_get::<_, Vec2>("radius")
                     .expect("missing `radius` for radial-gradient shader");
-
-                let color_stop_list: &ColorStops = dictionary
-                    .try_get("color_stop_list")
+                let color_stop_list = dictionary
+                    .try_get::<_, ColorStops>("color_stop_list")
                     .expect("missing `color_stop_list` for radial-gradient shader");
 
                 ShaderKind::RadialGradient {
-                    repeating: *repeating,
-                    center: *center,
-                    radius: *radius,
-                    color_stop_list: color_stop_list.to_vec(),
+                    repeating,
+                    center,
+                    radius,
+                    color_stop_list,
                 }
             },
             "conic-gradient" => {
-                let repeating: &bool = dictionary
-                    .try_get("repeating")
+                let repeating = dictionary
+                    .try_get::<_, bool>("repeating")
                     .expect("missing `repeating` for conic-gradient shader");
-                let center: &Vec2 = dictionary
-                    .try_get("center")
+                let center = dictionary
+                    .try_get::<_, Vec2>("center")
                     .expect("missing `center` for conic-gradient shader");
-                let angle: &f32 = dictionary
-                    .try_get("angle")
+                let angle = dictionary
+                    .try_get::<_, f32>("angle")
                     .expect("missing `angle` for conic-gradient shader");
-                let color_stop_list: &ColorStops = dictionary
-                    .try_get("color_stop_list")
+                let color_stop_list = dictionary
+                    .try_get::<_, ColorStops>("color_stop_list")
                     .expect("missing `color_stop_list` for conic-gradient shader");
 
                 ShaderKind::ConicGradient {
-                    repeating: *repeating,
-                    center: *center,
-                    angle: *angle,
-                    color_stop_list: color_stop_list.to_vec(),
+                    repeating,
+                    center,
+                    angle,
+                    color_stop_list,
                 }
             },
             "shader" => {
-                let dimensions: &Vec2 = dictionary
-                    .try_get("dimensions")
+                let dimensions = dictionary
+                    .try_get::<_, Vec2>("dimensions")
                     .expect("missing `dimensions` for custom shader");
-                let value: &str = dictionary
-                    .try_get("value")
+                let value = dictionary
+                    .try_get::<_, str>("value")
                     .expect("missing `value` for custom shader");
 
-                ShaderKind::Custom {
-                    value: value.to_string(),
-                    dimensions: *dimensions,
-                }
+                ShaderKind::Custom { value, dimensions }
             },
             _ => panic!("unknown shader name: {}", name),
         };
