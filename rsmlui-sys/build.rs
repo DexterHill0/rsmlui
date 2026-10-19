@@ -42,7 +42,7 @@ const DEFINTIONS: &[(&str, &str)] = &[
     ("BUILD_SHARED_LIBS", "OFF"),
     ("RMLUI_STATIC_LIB", "ON"),
     ("RMLUI_DEBUG", "ON"),
-    ("RMLUI_NO_THIRDPARTY_CONTAINERS", "ON"),
+    ("RMLUI_THIRDPARTY_CONTAINERS", "ON"),
     ("UNICODE", "ON"),
     ("_UNICODE", "ON"),
     #[cfg(target_os = "windows")]
