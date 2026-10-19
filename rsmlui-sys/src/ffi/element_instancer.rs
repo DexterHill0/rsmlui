@@ -1,6 +1,6 @@
 use crate::dictionary::Dictionary;
 use crate::element::Element;
-use crate::interfaces::bridge::fat_from_cpp;
+use crate::interfaces::bridge::{InterfaceBridge, fat_from_cpp};
 
 /// Dispatch trait called by C++ when it invokes a virtual method on `RustElementInstancer`.
 ///
@@ -15,7 +15,7 @@ pub unsafe trait ElementInstancerBridge {
 }
 
 unsafe fn rust_instance_element(
-    cpp_this: *mut RustElementInstancer,
+    cpp_this: *mut InterfaceBridge,
     parent: *mut Element,
     tag: &str,
     attributes: &Dictionary,
@@ -26,7 +26,7 @@ unsafe fn rust_instance_element(
     }
 }
 
-unsafe fn rust_release_element(cpp_this: *mut RustElementInstancer, element: *mut Element) {
+unsafe fn rust_release_element(cpp_this: *mut InterfaceBridge, element: *mut Element) {
     unsafe { (*fat_from_cpp::<_, dyn ElementInstancerBridge>(cpp_this)).release_element(element) }
 }
 
@@ -46,6 +46,13 @@ mod ffi {
         include!("rsmlui/Utils.h");
 
         type c_void = crate::utils::c_void;
+    }
+
+    #[namespace = "rsmlui::interfaces"]
+    unsafe extern "C++" {
+        include!("rsmlui/Utils.h");
+
+        type InterfaceBridge = crate::interfaces::bridge::InterfaceBridge;
     }
 
     #[namespace = "rsmlui::element_instancer"]
@@ -70,12 +77,12 @@ mod ffi {
 
     extern "Rust" {
         unsafe fn rust_instance_element(
-            cpp_this: *mut RustElementInstancer,
+            cpp_this: *mut InterfaceBridge,
             parent: *mut Element,
             tag: &str,
             attributes: &Dictionary,
         );
-        unsafe fn rust_release_element(cpp_this: *mut RustElementInstancer, element: *mut Element);
+        unsafe fn rust_release_element(cpp_this: *mut InterfaceBridge, element: *mut Element);
     }
 }
 

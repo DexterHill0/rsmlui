@@ -1,4 +1,4 @@
-use crate::interfaces::bridge::fat_from_cpp;
+use crate::interfaces::bridge::{InterfaceBridge, fat_from_cpp};
 use crate::{
     Rml_CompiledFilterHandle, Rml_CompiledGeometryHandle, Rml_CompiledShaderHandle,
     Rml_LayerHandle, Rml_TextureHandle,
@@ -71,7 +71,7 @@ pub unsafe trait RenderInterfaceBridge {
 }
 
 unsafe fn rust_compile_geometry(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     vertices: &[Vertex],
     indices: &[i32],
 ) -> Rml_CompiledGeometryHandle {
@@ -82,7 +82,7 @@ unsafe fn rust_compile_geometry(
 }
 
 unsafe fn rust_render_geometry(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     geometry: Rml_CompiledGeometryHandle,
     translation: Vector2f,
     texture: Rml_TextureHandle,
@@ -97,14 +97,14 @@ unsafe fn rust_render_geometry(
 }
 
 unsafe fn rust_release_geometry(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     geometry: Rml_CompiledGeometryHandle,
 ) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).release_geometry(geometry) }
 }
 
 unsafe fn rust_load_texture(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     texture_dimensions: *mut Vector2i,
     source: &str,
 ) -> Rml_TextureHandle {
@@ -115,7 +115,7 @@ unsafe fn rust_load_texture(
 }
 
 unsafe fn rust_generate_texture(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     source: &[u8],
     source_dimensions: Vector2i,
 ) -> Rml_TextureHandle {
@@ -125,26 +125,26 @@ unsafe fn rust_generate_texture(
     }
 }
 
-unsafe fn rust_release_texture(cpp_this: *mut RustRenderInterface, texture: Rml_TextureHandle) {
+unsafe fn rust_release_texture(cpp_this: *mut InterfaceBridge, texture: Rml_TextureHandle) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).release_texture(texture) }
 }
 
-unsafe fn rust_enable_scissor_region(cpp_this: *mut RustRenderInterface, enable: bool) {
+unsafe fn rust_enable_scissor_region(cpp_this: *mut InterfaceBridge, enable: bool) {
     unsafe {
         (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).enable_scissor_region(enable)
     }
 }
 
-unsafe fn rust_set_scissor_region(cpp_this: *mut RustRenderInterface, region: Rectanglei) {
+unsafe fn rust_set_scissor_region(cpp_this: *mut InterfaceBridge, region: Rectanglei) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).set_scissor_region(region) }
 }
 
-unsafe fn rust_enable_clip_mask(cpp_this: *mut RustRenderInterface, enable: bool) {
+unsafe fn rust_enable_clip_mask(cpp_this: *mut InterfaceBridge, enable: bool) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).enable_clip_mask(enable) }
 }
 
 unsafe fn rust_render_to_clip_mask(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     operation: ClipMaskOperation,
     geometry: Rml_CompiledGeometryHandle,
     translation: Vector2f,
@@ -158,16 +158,16 @@ unsafe fn rust_render_to_clip_mask(
     }
 }
 
-unsafe fn rust_set_transform(cpp_this: *mut RustRenderInterface, transform: *const Matrix4f) {
+unsafe fn rust_set_transform(cpp_this: *mut InterfaceBridge, transform: *const Matrix4f) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).set_transform(transform) }
 }
 
-unsafe fn rust_push_layer(cpp_this: *mut RustRenderInterface) -> Rml_LayerHandle {
+unsafe fn rust_push_layer(cpp_this: *mut InterfaceBridge) -> Rml_LayerHandle {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).push_layer() }
 }
 
 unsafe fn rust_composite_layers(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     source: Rml_LayerHandle,
     destination: Rml_LayerHandle,
     blend_mode: BlendMode,
@@ -183,22 +183,22 @@ unsafe fn rust_composite_layers(
     }
 }
 
-unsafe fn rust_pop_layer(cpp_this: *mut RustRenderInterface) {
+unsafe fn rust_pop_layer(cpp_this: *mut InterfaceBridge) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).pop_layer() }
 }
 
-unsafe fn rust_save_layer_as_texture(cpp_this: *mut RustRenderInterface) -> Rml_TextureHandle {
+unsafe fn rust_save_layer_as_texture(cpp_this: *mut InterfaceBridge) -> Rml_TextureHandle {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).save_layer_as_texture() }
 }
 
 unsafe fn rust_save_layer_as_mask_image(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
 ) -> Rml_CompiledFilterHandle {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).save_layer_as_mask_image() }
 }
 
 unsafe fn rust_compile_filter(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     name: &str,
     parameters: *const Dictionary,
 ) -> Rml_CompiledFilterHandle {
@@ -208,14 +208,14 @@ unsafe fn rust_compile_filter(
 }
 
 unsafe fn rust_release_filter(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     filter: Rml_CompiledFilterHandle,
 ) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).release_filter(filter) }
 }
 
 unsafe fn rust_compile_shader(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     name: &str,
     parameters: *const Dictionary,
 ) -> Rml_CompiledShaderHandle {
@@ -225,7 +225,7 @@ unsafe fn rust_compile_shader(
 }
 
 unsafe fn rust_render_shader(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     shader: Rml_CompiledShaderHandle,
     geometry: Rml_CompiledGeometryHandle,
     translation: Vector2f,
@@ -242,7 +242,7 @@ unsafe fn rust_render_shader(
 }
 
 unsafe fn rust_release_shader(
-    cpp_this: *mut RustRenderInterface,
+    cpp_this: *mut InterfaceBridge,
     shader: Rml_CompiledShaderHandle,
 ) {
     unsafe { (*fat_from_cpp::<_, dyn RenderInterfaceBridge>(cpp_this)).release_shader(shader) }
@@ -270,6 +270,13 @@ mod ffi {
         include!("rsmlui/Utils.h");
 
         type c_void = crate::utils::c_void;
+    }
+
+    #[namespace = "rsmlui::interfaces"]
+    unsafe extern "C++" {
+        include!("rsmlui/Utils.h");
+
+        type InterfaceBridge = crate::interfaces::bridge::InterfaceBridge;
     }
 
     #[namespace = "rsmlui::render_interface"]
@@ -365,71 +372,71 @@ mod ffi {
 
     extern "Rust" {
         unsafe fn rust_compile_geometry(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             vertices: &[Vertex],
             indices: &[i32],
         ) -> usize;
         unsafe fn rust_render_geometry(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             geometry: usize,
             translation: Vector2f,
             texture: usize,
         );
-        unsafe fn rust_release_geometry(cpp_this: *mut RustRenderInterface, geometry: usize);
+        unsafe fn rust_release_geometry(cpp_this: *mut InterfaceBridge, geometry: usize);
         unsafe fn rust_load_texture(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             texture_dimensions: *mut Vector2i,
             source: &str,
         ) -> usize;
         unsafe fn rust_generate_texture(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             source: &[u8],
             source_dimensions: Vector2i,
         ) -> usize;
-        unsafe fn rust_release_texture(cpp_this: *mut RustRenderInterface, texture: usize);
-        unsafe fn rust_enable_scissor_region(cpp_this: *mut RustRenderInterface, enable: bool);
-        unsafe fn rust_set_scissor_region(cpp_this: *mut RustRenderInterface, region: Rectanglei);
-        unsafe fn rust_enable_clip_mask(cpp_this: *mut RustRenderInterface, enable: bool);
+        unsafe fn rust_release_texture(cpp_this: *mut InterfaceBridge, texture: usize);
+        unsafe fn rust_enable_scissor_region(cpp_this: *mut InterfaceBridge, enable: bool);
+        unsafe fn rust_set_scissor_region(cpp_this: *mut InterfaceBridge, region: Rectanglei);
+        unsafe fn rust_enable_clip_mask(cpp_this: *mut InterfaceBridge, enable: bool);
         unsafe fn rust_render_to_clip_mask(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             operation: ClipMaskOperation,
             geometry: usize,
             translation: Vector2f,
         );
         unsafe fn rust_set_transform(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             transform: *const Matrix4f,
         );
-        unsafe fn rust_push_layer(cpp_this: *mut RustRenderInterface) -> usize;
+        unsafe fn rust_push_layer(cpp_this: *mut InterfaceBridge) -> usize;
         unsafe fn rust_composite_layers(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             source: usize,
             destination: usize,
             blend_mode: BlendMode,
             filters: &[usize],
         );
-        unsafe fn rust_pop_layer(cpp_this: *mut RustRenderInterface);
-        unsafe fn rust_save_layer_as_texture(cpp_this: *mut RustRenderInterface) -> usize;
-        unsafe fn rust_save_layer_as_mask_image(cpp_this: *mut RustRenderInterface) -> usize;
+        unsafe fn rust_pop_layer(cpp_this: *mut InterfaceBridge);
+        unsafe fn rust_save_layer_as_texture(cpp_this: *mut InterfaceBridge) -> usize;
+        unsafe fn rust_save_layer_as_mask_image(cpp_this: *mut InterfaceBridge) -> usize;
         unsafe fn rust_compile_filter(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             name: &str,
             parameters: *const Dictionary,
         ) -> usize;
-        unsafe fn rust_release_filter(cpp_this: *mut RustRenderInterface, filter: usize);
+        unsafe fn rust_release_filter(cpp_this: *mut InterfaceBridge, filter: usize);
         unsafe fn rust_compile_shader(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             name: &str,
             parameters: *const Dictionary,
         ) -> usize;
         unsafe fn rust_render_shader(
-            cpp_this: *mut RustRenderInterface,
+            cpp_this: *mut InterfaceBridge,
             shader: usize,
             geometry: usize,
             translation: Vector2f,
             texture: usize,
         );
-        unsafe fn rust_release_shader(cpp_this: *mut RustRenderInterface, shader: usize);
+        unsafe fn rust_release_shader(cpp_this: *mut InterfaceBridge, shader: usize);
     }
 }
 

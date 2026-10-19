@@ -1,5 +1,5 @@
 use crate::Rml_FileHandle;
-use crate::interfaces::bridge::fat_from_cpp;
+use crate::interfaces::bridge::{InterfaceBridge, fat_from_cpp};
 
 /// Dispatch trait called by C++ when it invokes a virtual method on `RustFileInterface`.
 ///
@@ -18,16 +18,16 @@ pub unsafe trait FileInterfaceBridge {
     unsafe fn load_file(&mut self, path: &str, out_data: &mut Vec<u8>) -> bool;
 }
 
-unsafe fn rust_open(cpp_this: *mut RustFileInterface, path: &str) -> Rml_FileHandle {
+unsafe fn rust_open(cpp_this: *mut InterfaceBridge, path: &str) -> Rml_FileHandle {
     unsafe { (*fat_from_cpp::<_, dyn FileInterfaceBridge>(cpp_this)).open(path) }
 }
 
-unsafe fn rust_close(cpp_this: *mut RustFileInterface, file: Rml_FileHandle) {
+unsafe fn rust_close(cpp_this: *mut InterfaceBridge, file: Rml_FileHandle) {
     unsafe { (*fat_from_cpp::<_, dyn FileInterfaceBridge>(cpp_this)).close(file) }
 }
 
 unsafe fn rust_read(
-    cpp_this: *mut RustFileInterface,
+    cpp_this: *mut InterfaceBridge,
     buffer: *mut u8,
     size: usize,
     file: Rml_FileHandle,
@@ -36,7 +36,7 @@ unsafe fn rust_read(
 }
 
 unsafe fn rust_seek(
-    cpp_this: *mut RustFileInterface,
+    cpp_this: *mut InterfaceBridge,
     file: Rml_FileHandle,
     offset: i64,
     origin: i32,
@@ -44,16 +44,16 @@ unsafe fn rust_seek(
     unsafe { (*fat_from_cpp::<_, dyn FileInterfaceBridge>(cpp_this)).seek(file, offset, origin) }
 }
 
-unsafe fn rust_tell(cpp_this: *mut RustFileInterface, file: Rml_FileHandle) -> usize {
+unsafe fn rust_tell(cpp_this: *mut InterfaceBridge, file: Rml_FileHandle) -> usize {
     unsafe { (*fat_from_cpp::<_, dyn FileInterfaceBridge>(cpp_this)).tell(file) }
 }
 
-unsafe fn rust_length(cpp_this: *mut RustFileInterface, file: Rml_FileHandle) -> usize {
+unsafe fn rust_length(cpp_this: *mut InterfaceBridge, file: Rml_FileHandle) -> usize {
     unsafe { (*fat_from_cpp::<_, dyn FileInterfaceBridge>(cpp_this)).length(file) }
 }
 
 unsafe fn rust_load_file(
-    cpp_this: *mut RustFileInterface,
+    cpp_this: *mut InterfaceBridge,
     path: &str,
     out_data: &mut Vec<u8>,
 ) -> bool {
@@ -75,6 +75,13 @@ mod ffi {
         include!("rsmlui/Utils.h");
 
         type c_void = crate::utils::c_void;
+    }
+
+    #[namespace = "rsmlui::interfaces"]
+    unsafe extern "C++" {
+        include!("rsmlui/Utils.h");
+
+        type InterfaceBridge = crate::interfaces::bridge::InterfaceBridge;
     }
 
     #[namespace = "rsmlui::file_interface"]
@@ -114,24 +121,24 @@ mod ffi {
     }
 
     extern "Rust" {
-        unsafe fn rust_open(cpp_this: *mut RustFileInterface, path: &str) -> usize; // Rml_FileHandle
-        unsafe fn rust_close(cpp_this: *mut RustFileInterface, file: usize); // Rml_FileHandle
+        unsafe fn rust_open(cpp_this: *mut InterfaceBridge, path: &str) -> usize; // Rml_FileHandle
+        unsafe fn rust_close(cpp_this: *mut InterfaceBridge, file: usize); // Rml_FileHandle
         unsafe fn rust_read(
-            cpp_this: *mut RustFileInterface,
+            cpp_this: *mut InterfaceBridge,
             buffer: *mut u8,
             size: usize,
             file: usize, // Rml_FileHandle
         ) -> usize;
         unsafe fn rust_seek(
-            cpp_this: *mut RustFileInterface,
+            cpp_this: *mut InterfaceBridge,
             file: usize, // Rml_FileHandle
             offset: i64,
             origin: i32,
         ) -> bool;
-        unsafe fn rust_tell(cpp_this: *mut RustFileInterface, file: usize) -> usize; // Rml_FileHandle
-        unsafe fn rust_length(cpp_this: *mut RustFileInterface, file: usize) -> usize; // Rml_FileHandle
+        unsafe fn rust_tell(cpp_this: *mut InterfaceBridge, file: usize) -> usize; // Rml_FileHandle
+        unsafe fn rust_length(cpp_this: *mut InterfaceBridge, file: usize) -> usize; // Rml_FileHandle
         unsafe fn rust_load_file(
-            cpp_this: *mut RustFileInterface,
+            cpp_this: *mut InterfaceBridge,
             path: &str,
             out_data: &mut Vec<u8>,
         ) -> bool;

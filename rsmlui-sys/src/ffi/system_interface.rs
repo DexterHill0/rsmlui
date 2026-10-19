@@ -1,4 +1,4 @@
-use crate::interfaces::bridge::fat_from_cpp;
+use crate::interfaces::bridge::{InterfaceBridge, fat_from_cpp};
 
 /// Dispatch trait called by C++ when it invokes a virtual method on `RustSystemInterface`.
 ///
@@ -19,16 +19,16 @@ pub unsafe trait SystemInterfaceBridge {
     unsafe fn deactivate_keyboard(&mut self);
 }
 
-unsafe fn rust_get_elapsed_time(cpp_this: *mut RustSystemInterface) -> f64 {
+unsafe fn rust_get_elapsed_time(cpp_this: *mut InterfaceBridge) -> f64 {
     unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).get_elapsed_time() }
 }
 
-unsafe fn rust_translate_string(cpp_this: *mut RustSystemInterface, input: &str) -> String {
+unsafe fn rust_translate_string(cpp_this: *mut InterfaceBridge, input: &str) -> String {
     unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).translate_string(input) }
 }
 
 unsafe fn rust_join_path(
-    cpp_this: *mut RustSystemInterface,
+    cpp_this: *mut InterfaceBridge,
     document_path: &str,
     path: &str,
 ) -> String {
@@ -38,27 +38,27 @@ unsafe fn rust_join_path(
 }
 
 unsafe fn rust_log_message(
-    cpp_this: *mut RustSystemInterface,
+    cpp_this: *mut InterfaceBridge,
     level: crate::Rml_Log_Type,
     message: &str,
 ) -> bool {
     unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).log_message(level, message) }
 }
 
-unsafe fn rust_set_mouse_cursor(cpp_this: *mut RustSystemInterface, name: &str) {
+unsafe fn rust_set_mouse_cursor(cpp_this: *mut InterfaceBridge, name: &str) {
     unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).set_mouse_cursor(name) }
 }
 
-unsafe fn rust_set_clipboard_text(cpp_this: *mut RustSystemInterface, text: &str) {
+unsafe fn rust_set_clipboard_text(cpp_this: *mut InterfaceBridge, text: &str) {
     unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).set_clipboard_text(text) }
 }
 
-unsafe fn rust_get_clipboard_text(cpp_this: *mut RustSystemInterface) -> String {
+unsafe fn rust_get_clipboard_text(cpp_this: *mut InterfaceBridge) -> String {
     unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).get_clipboard_text() }
 }
 
 unsafe fn rust_activate_keyboard(
-    cpp_this: *mut RustSystemInterface,
+    cpp_this: *mut InterfaceBridge,
     caret_position: crate::Rml_Vector2f,
     line_height: f32,
 ) {
@@ -68,7 +68,7 @@ unsafe fn rust_activate_keyboard(
     }
 }
 
-unsafe fn rust_deactivate_keyboard(cpp_this: *mut RustSystemInterface) {
+unsafe fn rust_deactivate_keyboard(cpp_this: *mut InterfaceBridge) {
     unsafe { (*fat_from_cpp::<_, dyn SystemInterfaceBridge>(cpp_this)).deactivate_keyboard() }
 }
 
@@ -96,6 +96,13 @@ mod ffi {
         include!("rsmlui/Utils.h");
 
         type c_void = crate::utils::c_void;
+    }
+
+    #[namespace = "rsmlui::interfaces"]
+    unsafe extern "C++" {
+        include!("rsmlui/Utils.h");
+
+        type InterfaceBridge = crate::interfaces::bridge::InterfaceBridge;
     }
 
     #[namespace = "rsmlui::system_interface"]
@@ -164,27 +171,27 @@ mod ffi {
     }
 
     extern "Rust" {
-        unsafe fn rust_get_elapsed_time(cpp_this: *mut RustSystemInterface) -> f64;
-        unsafe fn rust_translate_string(cpp_this: *mut RustSystemInterface, input: &str) -> String;
+        unsafe fn rust_get_elapsed_time(cpp_this: *mut InterfaceBridge) -> f64;
+        unsafe fn rust_translate_string(cpp_this: *mut InterfaceBridge, input: &str) -> String;
         unsafe fn rust_join_path(
-            cpp_this: *mut RustSystemInterface,
+            cpp_this: *mut InterfaceBridge,
             document_path: &str,
             path: &str,
         ) -> String;
         unsafe fn rust_log_message(
-            cpp_this: *mut RustSystemInterface,
+            cpp_this: *mut InterfaceBridge,
             level: RmlLogType,
             message: &str,
         ) -> bool;
-        unsafe fn rust_set_mouse_cursor(cpp_this: *mut RustSystemInterface, name: &str);
-        unsafe fn rust_set_clipboard_text(cpp_this: *mut RustSystemInterface, text: &str);
-        unsafe fn rust_get_clipboard_text(cpp_this: *mut RustSystemInterface) -> String;
+        unsafe fn rust_set_mouse_cursor(cpp_this: *mut InterfaceBridge, name: &str);
+        unsafe fn rust_set_clipboard_text(cpp_this: *mut InterfaceBridge, text: &str);
+        unsafe fn rust_get_clipboard_text(cpp_this: *mut InterfaceBridge) -> String;
         unsafe fn rust_activate_keyboard(
-            cpp_this: *mut RustSystemInterface,
+            cpp_this: *mut InterfaceBridge,
             caret_position: Vector2f,
             line_height: f32,
         );
-        unsafe fn rust_deactivate_keyboard(cpp_this: *mut RustSystemInterface);
+        unsafe fn rust_deactivate_keyboard(cpp_this: *mut InterfaceBridge);
     }
 }
 

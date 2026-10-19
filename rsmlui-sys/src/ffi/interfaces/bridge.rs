@@ -3,33 +3,33 @@ use std::ptr::{self, DynMetadata, Pointee};
 
 #[cxx::bridge]
 mod ffi {
-
-    #[doc(hidden)]
-    pub struct InterfaceBridgeLayout {
-        pub cpp_vtable: *const c_void, // offset 0
-        pub rust_meta: *const c_void,  // offset 8 (DynMetadata is a single pointer)
-        pub rust_data: *mut c_void,    // offset 16
-    }
-
     #[namespace = "rsmlui"]
     unsafe extern "C++" {
         include!("rsmlui/Utils.h");
 
         type c_void = crate::utils::c_void;
     }
+
+    #[namespace = "rsmlui::interfaces"]
+    unsafe extern "C++" {
+        include!("rsmlui/Utils.h");
+
+        type InterfaceBridge;
+
+        unsafe fn get_meta_from_bridge(bridge: *mut InterfaceBridge) -> *const c_void;
+        unsafe fn get_data_from_bridge(bridge: *mut InterfaceBridge) -> *mut c_void;
+    }
 }
 
-#[doc(hidden)]
-pub use ffi::InterfaceBridgeLayout;
+pub(crate) use ffi::InterfaceBridge;
 
-/// Reconstructs a fat `*mut dyn Trait` pointer from a C++ `this` pointer whose memory layout
-/// matches [`InterfaceBridgeLayout`].
+/// Reconstructs a fat `*mut dyn Trait` pointer from a C++ `this` pointer whose class
+/// inherits the `InterfaceBridge` class.
 ///
 /// # Safety
 ///
-/// - `cpp_this` must be a valid, non-null pointer whose in-memory layout matches
-///   `InterfaceBridgeLayout` (vtable pointer at offset 0, `rust_meta` at offset 8,
-///   `rust_data` at offset 16).
+/// - `cpp_this` must be a valid, non-null pointer whose class MUST inherit from
+///   `InterfaceBridge``
 /// - The `rust_meta` and `rust_data` fields must have been written by a prior call to
 ///   `ptr::to_raw_parts` on a fat pointer of type `*mut Trait`.
 #[inline]
@@ -37,7 +37,8 @@ pub(crate) unsafe fn fat_from_cpp<CppThis, Trait>(cpp_this: *mut CppThis) -> *mu
 where
     Trait: ?Sized + Pointee<Metadata = DynMetadata<Trait>>,
 {
-    let bridge = unsafe { &*(cpp_this.cast::<InterfaceBridgeLayout>()) };
-    let meta: DynMetadata<Trait> = unsafe { transmute(bridge.rust_meta) };
-    ptr::from_raw_parts_mut(bridge.rust_data, meta)
+    let data = unsafe { ffi::get_data_from_bridge(cpp_this.cast()) };
+    let meta: DynMetadata<Trait> = unsafe { transmute(ffi::get_meta_from_bridge(cpp_this.cast())) };
+
+    ptr::from_raw_parts_mut(data, meta)
 }

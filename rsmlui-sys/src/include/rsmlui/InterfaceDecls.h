@@ -12,10 +12,11 @@
 
 namespace rsmlui::system_interface {
 
-struct RustSystemInterface: public Rml::SystemInterface {
+struct RustSystemInterface:
+    public Rml::SystemInterface,
+    public interfaces::InterfaceBridge {
     RustSystemInterface(const void* rust_meta, void* rust_data) :
-        rust_meta(rust_meta),
-        rust_data(rust_data) {}
+        interfaces::InterfaceBridge(rust_meta, rust_data) {}
 
     auto GetElapsedTime() -> double override;
     auto TranslateString(Rml::String& translated, const Rml::String& input)
@@ -33,21 +34,16 @@ struct RustSystemInterface: public Rml::SystemInterface {
     void
     ActivateKeyboard(Rml::Vector2f caret_position, float line_height) override;
     void DeactivateKeyboard() override;
-
-  public:
-    const void* rust_meta;
-    void* rust_data;
 };
-
-ASSERT_INTERFACE_LAYOUT(RustSystemInterface);
 
 } // namespace rsmlui::system_interface
 
 namespace rsmlui::render_interface {
-struct RustRenderInterface: public Rml::RenderInterface {
+struct RustRenderInterface:
+    public Rml::RenderInterface,
+    public interfaces::InterfaceBridge {
     RustRenderInterface(const void* rust_meta, void* rust_data) :
-        rust_meta(rust_meta),
-        rust_data(rust_data) {}
+        interfaces::InterfaceBridge(rust_meta, rust_data) {}
 
     auto CompileGeometry(
         Rml::Span<const Rml::Vertex> vertices,
@@ -100,22 +96,17 @@ struct RustRenderInterface: public Rml::RenderInterface {
         Rml::TextureHandle texture
     ) override;
     void ReleaseShader(Rml::CompiledShaderHandle shader) override;
-
-  public:
-    const void* rust_meta;
-    void* rust_data;
 };
-
-ASSERT_INTERFACE_LAYOUT(RustRenderInterface);
 
 } // namespace rsmlui::render_interface
 
 namespace rsmlui::file_interface {
 
-struct RustFileInterface: public Rml::FileInterface {
+struct RustFileInterface:
+    public Rml::FileInterface,
+    public interfaces::InterfaceBridge {
     RustFileInterface(const void* rust_meta, void* rust_data) :
-        rust_meta(rust_meta),
-        rust_data(rust_data) {}
+        interfaces::InterfaceBridge(rust_meta, rust_data) {}
 
     auto Open(const Rml::String& path) -> Rml::FileHandle override;
     void Close(Rml::FileHandle file) override;
@@ -126,26 +117,17 @@ struct RustFileInterface: public Rml::FileInterface {
     auto Length(Rml::FileHandle file) -> size_t override;
     auto LoadFile(const Rml::String& path, Rml::String& out_data)
         -> bool override;
-
-  public:
-    const void* rust_meta;
-    void* rust_data;
 };
-
-ASSERT_INTERFACE_LAYOUT(RustFileInterface);
 
 } // namespace rsmlui::file_interface
 
 namespace rsmlui::plugin {
 
-struct RustPluginInterface: public Rml::Plugin {
+struct RustPluginInterface:
+    public Rml::Plugin,
+    public interfaces::InterfaceBridge {
     RustPluginInterface(const void* rust_meta, void* rust_data) :
-        rust_meta(rust_meta),
-        rust_data(rust_data) {}
-
-  public:
-    const void* rust_meta;
-    void* rust_data;
+        interfaces::InterfaceBridge(rust_meta, rust_data) {}
 
     auto OnInitialise() -> void override;
     auto OnShutdown() -> void override;
@@ -163,14 +145,14 @@ struct RustPluginInterface: public Rml::Plugin {
         -> void override;
 };
 
-ASSERT_INTERFACE_LAYOUT(RustPluginInterface);
 } // namespace rsmlui::plugin
 
 namespace rsmlui::element_instancer {
-struct RustElementInstancer: public Rml::ElementInstancer {
+struct RustElementInstancer:
+    public Rml::ElementInstancer,
+    public interfaces::InterfaceBridge {
     RustElementInstancer(const void* rust_meta, void* rust_data) :
-        rust_meta(rust_meta),
-        rust_data(rust_data) {}
+        interfaces::InterfaceBridge(rust_meta, rust_data) {}
 
     auto InstanceElement(
         Rml::Element* parent,
@@ -179,12 +161,6 @@ struct RustElementInstancer: public Rml::ElementInstancer {
     ) -> Rml::ElementPtr override;
 
     auto ReleaseElement(Rml::Element* element) -> void override;
-
-  public:
-    const void* rust_meta;
-    void* rust_data;
 };
-
-ASSERT_INTERFACE_LAYOUT(RustElementInstancer);
 
 } // namespace rsmlui::element_instancer

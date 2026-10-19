@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::element::Element;
 use crate::element_document::ElementDocument;
-use crate::interfaces::bridge::fat_from_cpp;
+use crate::interfaces::bridge::{InterfaceBridge, fat_from_cpp};
 
 /// Dispatch trait called by C++ when it invokes a virtual method on `RustPluginInterface`.
 ///
@@ -24,14 +24,14 @@ pub unsafe trait PluginInterfaceBridge {
     unsafe fn on_data_model_destroy(&mut self, context: *mut Context, name: &str);
 }
 
-unsafe fn rust_on_initialize(cpp_this: *mut RustPluginInterface) {
+unsafe fn rust_on_initialize(cpp_this: *mut InterfaceBridge) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_initialize() }
 }
-unsafe fn rust_on_shutdown(cpp_this: *mut RustPluginInterface) {
+unsafe fn rust_on_shutdown(cpp_this: *mut InterfaceBridge) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_shutdown() }
 }
 unsafe fn rust_on_document_open(
-    cpp_this: *mut RustPluginInterface,
+    cpp_this: *mut InterfaceBridge,
     context: *mut Context,
     document_path: &str,
 ) {
@@ -40,34 +40,28 @@ unsafe fn rust_on_document_open(
             .on_document_open(context, document_path)
     }
 }
-unsafe fn rust_on_document_load(
-    cpp_this: *mut RustPluginInterface,
-    document: *mut ElementDocument,
-) {
+unsafe fn rust_on_document_load(cpp_this: *mut InterfaceBridge, document: *mut ElementDocument) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_document_load(document) }
 }
-unsafe fn rust_on_document_unload(
-    cpp_this: *mut RustPluginInterface,
-    document: *mut ElementDocument,
-) {
+unsafe fn rust_on_document_unload(cpp_this: *mut InterfaceBridge, document: *mut ElementDocument) {
     unsafe {
         (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_document_unload(document)
     }
 }
-unsafe fn rust_on_context_create(cpp_this: *mut RustPluginInterface, context: *mut Context) {
+unsafe fn rust_on_context_create(cpp_this: *mut InterfaceBridge, context: *mut Context) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_context_create(context) }
 }
-unsafe fn rust_on_context_destroy(cpp_this: *mut RustPluginInterface, context: *mut Context) {
+unsafe fn rust_on_context_destroy(cpp_this: *mut InterfaceBridge, context: *mut Context) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_context_destroy(context) }
 }
-unsafe fn rust_on_element_create(cpp_this: *mut RustPluginInterface, element: *mut Element) {
+unsafe fn rust_on_element_create(cpp_this: *mut InterfaceBridge, element: *mut Element) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_element_create(element) }
 }
-unsafe fn rust_on_element_destroy(cpp_this: *mut RustPluginInterface, element: *mut Element) {
+unsafe fn rust_on_element_destroy(cpp_this: *mut InterfaceBridge, element: *mut Element) {
     unsafe { (*fat_from_cpp::<_, dyn PluginInterfaceBridge>(cpp_this)).on_element_destroy(element) }
 }
 unsafe fn rust_on_data_model_create(
-    cpp_this: *mut RustPluginInterface,
+    cpp_this: *mut InterfaceBridge,
     context: *mut Context,
     name: &str,
 ) {
@@ -77,7 +71,7 @@ unsafe fn rust_on_data_model_create(
     }
 }
 unsafe fn rust_on_data_model_destroy(
-    cpp_this: *mut RustPluginInterface,
+    cpp_this: *mut InterfaceBridge,
     context: *mut Context,
     name: &str,
 ) {
@@ -108,6 +102,13 @@ mod ffi {
         type c_void = crate::utils::c_void;
     }
 
+    #[namespace = "rsmlui::interfaces"]
+    unsafe extern "C++" {
+        include!("rsmlui/Utils.h");
+
+        type InterfaceBridge = crate::interfaces::bridge::InterfaceBridge;
+    }
+
     #[namespace = "rsmlui::plugin"]
     unsafe extern "C++" {
         include!("rsmlui/PluginInterface.h");
@@ -130,38 +131,32 @@ mod ffi {
     }
 
     extern "Rust" {
-        unsafe fn rust_on_initialize(cpp_this: *mut RustPluginInterface);
-        unsafe fn rust_on_shutdown(cpp_this: *mut RustPluginInterface);
+        unsafe fn rust_on_initialize(cpp_this: *mut InterfaceBridge);
+        unsafe fn rust_on_shutdown(cpp_this: *mut InterfaceBridge);
         unsafe fn rust_on_document_open(
-            cpp_this: *mut RustPluginInterface,
+            cpp_this: *mut InterfaceBridge,
             context: *mut Context,
             document_path: &str,
         );
         unsafe fn rust_on_document_load(
-            cpp_this: *mut RustPluginInterface,
+            cpp_this: *mut InterfaceBridge,
             document: *mut ElementDocument,
         );
         unsafe fn rust_on_document_unload(
-            cpp_this: *mut RustPluginInterface,
+            cpp_this: *mut InterfaceBridge,
             document: *mut ElementDocument,
         );
-        unsafe fn rust_on_context_create(cpp_this: *mut RustPluginInterface, context: *mut Context);
-        unsafe fn rust_on_context_destroy(
-            cpp_this: *mut RustPluginInterface,
-            context: *mut Context,
-        );
-        unsafe fn rust_on_element_create(cpp_this: *mut RustPluginInterface, element: *mut Element);
-        unsafe fn rust_on_element_destroy(
-            cpp_this: *mut RustPluginInterface,
-            element: *mut Element,
-        );
+        unsafe fn rust_on_context_create(cpp_this: *mut InterfaceBridge, context: *mut Context);
+        unsafe fn rust_on_context_destroy(cpp_this: *mut InterfaceBridge, context: *mut Context);
+        unsafe fn rust_on_element_create(cpp_this: *mut InterfaceBridge, element: *mut Element);
+        unsafe fn rust_on_element_destroy(cpp_this: *mut InterfaceBridge, element: *mut Element);
         unsafe fn rust_on_data_model_create(
-            cpp_this: *mut RustPluginInterface,
+            cpp_this: *mut InterfaceBridge,
             context: *mut Context,
             name: &str,
         );
         unsafe fn rust_on_data_model_destroy(
-            cpp_this: *mut RustPluginInterface,
+            cpp_this: *mut InterfaceBridge,
             context: *mut Context,
             name: &str,
         );
