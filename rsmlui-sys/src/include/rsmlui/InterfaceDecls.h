@@ -8,6 +8,7 @@
 #include "RmlUi/Core/FileInterface.h"
 #include "RmlUi/Core/Plugin.h"
 #include "RmlUi/Core/RenderInterface.h"
+#include "RmlUi/Core/XMLNodeHandler.h"
 #include "src/ffi/interfaces/bridge.rs.h"
 
 namespace rsmlui::system_interface {
@@ -164,3 +165,28 @@ struct RustElementInstancer:
 };
 
 } // namespace rsmlui::element_instancer
+
+namespace rsmlui::xml_node_handler {
+struct RustXmlNodeHandler:
+    public Rml::XMLNodeHandler,
+    public interfaces::InterfaceBridge {
+    RustXmlNodeHandler(const void* rust_meta, void* rust_data) :
+        interfaces::InterfaceBridge(rust_meta, rust_data) {}
+
+    auto ElementStart(
+        Rml::XMLParser* parser,
+        const Rml::String& name,
+        const Rml::XMLAttributes& attributes
+    ) -> Rml::Element* override;
+
+    auto ElementEnd(Rml::XMLParser* parser, const Rml::String& name)
+        -> bool override;
+
+    auto ElementData(
+        Rml::XMLParser* parser,
+        const Rml::String& data,
+        Rml::XMLDataType type
+    ) -> bool override;
+};
+
+} // namespace rsmlui::xml_node_handler

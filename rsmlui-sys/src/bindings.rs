@@ -524,6 +524,15 @@ pub enum Rml_BlendMode {
     Blend = 0,
     Replace = 1,
 }
+#[repr(i32)]
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum Rml_XMLDataType {
+    Text = 0,
+    CDATA = 1,
+    InnerXML = 2,
+}
+pub use self::Rml_XMLDataType as Rml_XmlDataType;
 pub const Misc_STDIO_SEEK_CUR: i32 = 1;
 pub const Misc_STDIO_SEEK_END: i32 = 2;
 pub const Misc_STDIO_SEEK_SET: i32 = 0;

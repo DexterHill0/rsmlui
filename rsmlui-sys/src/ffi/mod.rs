@@ -18,3 +18,4 @@ pub mod render_interface;
 pub mod system_interface;
 pub mod utils;
 pub mod variant;
+pub mod xml_node_handler;

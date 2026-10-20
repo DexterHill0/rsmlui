@@ -4,6 +4,7 @@ pub mod document;
 pub mod handles;
 pub mod input;
 pub mod math;
+pub mod nodes;
 pub mod rectangle;
 pub mod renderer;
 pub mod style;

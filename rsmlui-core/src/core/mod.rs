@@ -6,5 +6,6 @@ pub mod font;
 #[rmldoc(file = "api_Rml-Log.md", name = "Rml::Log")]
 pub mod log;
 pub mod rml;
+pub mod xml_parser;
 
 use rsmlui_macros::rmldoc;

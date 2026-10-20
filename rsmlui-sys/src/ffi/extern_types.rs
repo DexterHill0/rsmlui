@@ -109,3 +109,8 @@ unsafe impl ExternType for crate::Rml_Log_Type {
     type Id = type_id!("rsmlui::log::RmlLogType");
     type Kind = cxx::kind::Trivial;
 }
+
+unsafe impl ExternType for crate::Rml_XmlDataType {
+    type Id = type_id!("rsmlui::xml::XmlDataType");
+    type Kind = cxx::kind::Trivial;
+}

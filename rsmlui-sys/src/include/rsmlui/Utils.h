@@ -1,5 +1,6 @@
 #pragma once
 
+#include <RmlUi/Core/BaseXMLParser.h>
 #include <RmlUi/Core/Log.h>
 
 #include <cstddef>
@@ -10,6 +11,10 @@ using c_void = void;
 
 namespace rsmlui::log {
 using RmlLogType = Rml::Log::Type;
+}
+
+namespace rsmlui::xml {
+using XmlDataType = Rml::XMLDataType;
 }
 
 namespace rsmlui::interfaces {

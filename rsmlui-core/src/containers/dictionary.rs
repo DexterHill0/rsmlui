@@ -1,7 +1,7 @@
 use rsmlui_sys::dictionary::{self as sys};
 
 use crate::containers::variant::{TypeVariant, Variant, VariantRef, VariantRefMut};
-use crate::object::constness::{Constness, Const, NonConst};
+use crate::object::constness::{Const, Constness, NonConst};
 use crate::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectPtr};
 use crate::object::ownership::{Foreign, Native, ObjectOwnership};
 
@@ -53,8 +53,9 @@ macro_rules! dictionary_methods {
         }
 
         pub fn try_get_variant<K: AsRef<str>>(&self, key: K) -> Option<VariantRef<$lt>> {
-            let variant =
-                unsafe { sys::dictionary_get_variant_const(self.0.as_ptr(), key.as_ref()) };
+            let key = key.as_ref();
+
+            let variant = unsafe { sys::dictionary_get_variant_const(self.0.as_ptr(), key) };
 
             if variant.is_null() {
                 return None;

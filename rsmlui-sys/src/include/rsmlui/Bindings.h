@@ -7,6 +7,7 @@
 
 namespace Rml {
 using Log_Type = Rml::Log::Type;
+using XmlDataType = Rml::XMLDataType;
 };
 
 namespace Misc {

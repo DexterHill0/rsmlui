@@ -255,6 +255,7 @@ fn main() {
         .blocklist_item("Rml::ColumnMajorMatrix.*")
         .blocklist_item("Rml::RowMajorMatrix.*")
         .allowlist_type("Rml::Log_Type")
+        .allowlist_type("Rml::XmlDataType")
         .allowlist_type("Rml::ModalFlag")
         .allowlist_type("Rml::FocusFlag")
         .allowlist_type("Rml::ScrollFlag")
@@ -320,6 +321,7 @@ fn main() {
         "src/ffi/element_document.rs",
         "src/ffi/element.rs",
         "src/ffi/element_instancer.rs",
+        "src/ffi/xml_node_handler.rs",
         "src/ffi/variant.rs",
         "src/ffi/dictionary.rs",
         "src/ffi/file_interface.rs",

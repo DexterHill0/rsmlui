@@ -328,9 +328,6 @@ EXCLUDE_SYMBOLS   = \
   Rml::Vector4::* \
   Rml::VoidMemberFunc \
   Rml::VoidMemberFunc::* \
-  Rml::XMLNodeHandler \
-  Rml::XMLNodeHandler::* \
-  Rml::XMLParser \
-  Rml::XMLParser::* \
+  Rml::XMLParser::ParseFrame \
   RmlUiAssertNonrecursive \
   RmlUiAssertNonrecursive::*
