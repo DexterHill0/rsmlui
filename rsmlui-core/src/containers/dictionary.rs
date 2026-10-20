@@ -244,6 +244,9 @@ mod printing {
 
     impl<'a> Debug for DictionaryRef<'a> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            // Safety: the iterator is consumed in one go by`entries`.
+            // No user code can modify the dictionary while inside this function, so
+            // the observed references cannot change.
             f.debug_map().entries(unsafe { self.iter() }).finish()
         }
     }
