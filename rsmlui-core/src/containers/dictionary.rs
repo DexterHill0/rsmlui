@@ -1,5 +1,6 @@
 use rsmlui_sys::dictionary::{self as sys};
 
+use crate::_private::{not_send_sync, not_unwind_safe};
 use crate::containers::variant::{TypeVariant, Variant, VariantRef, VariantRefMut};
 use crate::object::constness::{Const, Constness, NonConst};
 use crate::object::foreign::{ForeignDestroy, ForeignHandle, ForeignObject, ObjectPtr};
@@ -34,6 +35,46 @@ pub type DictionaryRef<'a> = DictionaryHandle<'a, Foreign, Const>;
 
 /// A mutably borrowed version of [`Dictionary`].
 pub type DictionaryRefMut<'a> = DictionaryHandle<'a, Foreign, NonConst>;
+
+pub struct Iter<'a> {
+    handle: DictionaryRef<'a>,
+    iter_base: *const (),
+}
+
+impl<'a> Iterator for Iter<'a> {
+    type Item = (&'a str, VariantRef<'a>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let item =
+            unsafe { sys::dictionary_iterator_next(self.handle.0.as_ptr(), self.iter_base.cast()) };
+
+        if item.finished {
+            debug_assert!(item.key.is_empty());
+            debug_assert!(item.value.is_null());
+
+            return None;
+        }
+
+        self.iter_base = item.iter_base.cast();
+
+        Some((item.key, unsafe { VariantRef::from_raw(item.value) }))
+    }
+
+    fn count(self) -> usize {
+        unsafe { sys::dictionary_iterator_count(self.handle.0.as_ptr()) }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let hint = unsafe {
+            sys::dictionary_iterator_size_hint(self.handle.0.as_ptr(), self.iter_base.cast())
+        };
+
+        (hint.lower, Some(hint.upper))
+    }
+}
+
+not_send_sync!(['a] Iter['a]);
+not_unwind_safe!(['a] Iter['a]);
 
 impl Default for Dictionary {
     fn default() -> Self {
@@ -74,6 +115,22 @@ macro_rules! dictionary_methods {
 
         pub fn get<K: AsRef<str>, T: TypeVariant + ?Sized>(&self, key: K) -> <T as ToOwned>::Owned {
             self.get_variant(key).get_as::<T>()
+        }
+
+        /// # Safety
+        ///
+        /// The iterator returns borrows into foreign memory. Therefore:
+        ///
+        /// - The dictionary MUST NOT be mutated while an iterator is active.
+        ///
+        /// This includes anything that could move or destroy it.
+        pub unsafe fn iter(&self) -> Iter<$lt> {
+            let begin = unsafe { sys::dictionary_iterator_begin(self.0.as_ptr()) };
+
+            Iter {
+                handle: unsafe { DictionaryRef::from_raw(self.0.as_ptr()) },
+                iter_base: begin.cast(),
+            }
         }
     };
 }
