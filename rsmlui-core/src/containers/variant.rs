@@ -1,10 +1,12 @@
+use std::fmt::Debug;
+
 use rsmlui_macros::rmldoc;
 use rsmlui_sys::variant::{self as sys};
 use sealed::sealed;
 
 use crate::_private::{FromSys, IntoSys};
 use crate::math::{Vec2, Vec3, Vec4};
-use crate::object::constness::{Constness, Const, NonConst};
+use crate::object::constness::{Const, Constness, NonConst};
 use crate::object::foreign::{
     ForeignDestroy, ForeignHandle, ForeignObject, ObjectMutPtr, ObjectPtr,
 };
@@ -44,7 +46,6 @@ unsafe impl ForeignDestroy for tags::TagVariant {
 }
 
 /// Shared handle newtype for both [`Variant`] and [`VariantRef`].
-#[derive(Debug)]
 #[repr(transparent)]
 pub struct VariantHandle<'a, M: ObjectOwnership<tags::TagVariant>, C: Constness>(
     ForeignHandle<'a, tags::TagVariant, M, C>,
@@ -310,7 +311,9 @@ impl TypeVariant for str {
 // setters
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<bool> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<bool>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: bool) {
         unsafe {
             sys::variant_set_bool(self.0.as_mut_ptr(), value);
@@ -319,7 +322,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<bool> for VariantH
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u8> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u8>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: u8) {
         unsafe {
             sys::variant_set_byte(self.0.as_mut_ptr(), value);
@@ -328,7 +333,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u8> for VariantHan
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i8> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i8>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: i8) {
         unsafe {
             sys::variant_set_char(self.0.as_mut_ptr(), value);
@@ -337,7 +344,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i8> for VariantHan
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<f32> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<f32>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: f32) {
         unsafe {
             sys::variant_set_float(self.0.as_mut_ptr(), value);
@@ -346,7 +355,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<f32> for VariantHa
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<f64> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<f64>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: f64) {
         unsafe {
             sys::variant_set_double(self.0.as_mut_ptr(), value);
@@ -355,7 +366,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<f64> for VariantHa
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i32> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i32>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: i32) {
         unsafe {
             sys::variant_set_int(self.0.as_mut_ptr(), value);
@@ -364,7 +377,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i32> for VariantHa
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i64> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i64>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: i64) {
         unsafe {
             sys::variant_set_int64(self.0.as_mut_ptr(), value);
@@ -373,7 +388,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<i64> for VariantHa
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u32> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u32>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: u32) {
         unsafe {
             sys::variant_set_uint(self.0.as_mut_ptr(), value);
@@ -382,7 +399,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u32> for VariantHa
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u64> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u64>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: u64) {
         unsafe {
             sys::variant_set_uint64(self.0.as_mut_ptr(), value);
@@ -391,7 +410,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<u64> for VariantHa
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec2> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec2>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: Vec2) {
         unsafe {
             sys::variant_set_vector2f(self.0.as_mut_ptr(), value.into_sys());
@@ -400,7 +421,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec2> for VariantH
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec3> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec3>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: Vec3) {
         unsafe {
             sys::variant_set_vector3f(self.0.as_mut_ptr(), value.into_sys());
@@ -409,7 +432,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec3> for VariantH
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec4> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Vec4>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: Vec4) {
         unsafe {
             sys::variant_set_vector4f(self.0.as_mut_ptr(), value.into_sys());
@@ -440,7 +465,9 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<&[ColorStop]>
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<&str> for VariantHandle<'a, M, NonConst> {
+impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<&str>
+    for VariantHandle<'a, M, NonConst>
+{
     fn set(&mut self, value: &str) {
         unsafe {
             sys::variant_set_str(self.0.as_mut_ptr(), value);
@@ -465,12 +492,120 @@ impl<'a, M: ObjectOwnership<tags::TagVariant>> TypeVariantSet<Variant>
 }
 
 #[sealed]
-impl<'a, M: ObjectOwnership<tags::TagVariant>, T> TypeVariantSet<&T> for VariantHandle<'a, M, NonConst>
+impl<'a, M: ObjectOwnership<tags::TagVariant>, T> TypeVariantSet<&T>
+    for VariantHandle<'a, M, NonConst>
 where
     Self: TypeVariantSet<T>,
     T: Clone,
 {
     fn set(&mut self, value: &T) {
         <VariantHandle<'a, M, NonConst> as TypeVariantSet<T>>::set(self, value.clone())
+    }
+}
+
+#[cfg(feature = "printing")]
+mod printing {
+    use super::*;
+
+    impl<'a, M: ObjectOwnership<tags::TagVariant>, C: Constness> VariantHandle<'a, M, C> {
+        fn ty(&self) -> sys::VariantType {
+            unsafe { sys::variant_get_type(self.0.as_ptr()) }
+        }
+    }
+
+    fn variant_type_to_str(ty: sys::VariantType) -> &'static str {
+        match ty {
+            sys::VariantType::NONE => "<unset>",
+            sys::VariantType::BOOL => "bool",
+            sys::VariantType::BYTE => "u8",
+            sys::VariantType::CHAR => "char",
+            sys::VariantType::FLOAT => "f32",
+            sys::VariantType::DOUBLE => "f64",
+            sys::VariantType::INT => "i32",
+            sys::VariantType::INT64 => "i64",
+            sys::VariantType::UINT => "u32",
+            sys::VariantType::UINT64 => "u64",
+            sys::VariantType::STRING => "str",
+            sys::VariantType::VECTOR2 => "Vec2",
+            sys::VariantType::VECTOR3 => "Vec3",
+            sys::VariantType::VECTOR4 => "Vec4",
+            sys::VariantType::COLOURB => "Colourb",
+            sys::VariantType::COLORSTOPLIST => "Vec<ColorStop>",
+            _ => unimplemented!(),
+        }
+    }
+
+    fn variant_value_to_string(ty: sys::VariantType, variant: *const sys::Variant) -> String {
+        unsafe {
+            match ty {
+                sys::VariantType::NONE => "None".to_owned(),
+                sys::VariantType::BOOL => {
+                    format!("{:?}", <bool as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::CHAR => {
+                    format!("{:?}", <i8 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::BYTE => {
+                    format!("{:?}", <u8 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::FLOAT => {
+                    format!("{:?}", <f32 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::DOUBLE => {
+                    format!("{:?}", <f64 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::INT => {
+                    format!("{:?}", <i32 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::INT64 => {
+                    format!("{:?}", <i64 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::UINT => {
+                    format!("{:?}", <u32 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::UINT64 => {
+                    format!("{:?}", <u64 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::STRING => <str as TypeVariant>::from_variant(variant),
+                sys::VariantType::VECTOR2 => {
+                    format!("{:?}", <Vec2 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::VECTOR3 => {
+                    format!("{:?}", <Vec3 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::VECTOR4 => {
+                    format!("{:?}", <Vec4 as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::COLOURB => {
+                    format!("{:?}", <Colorb as TypeVariant>::from_variant(variant))
+                },
+                sys::VariantType::COLORSTOPLIST => {
+                    format!("{:?}", <[ColorStop] as TypeVariant>::from_variant(variant))
+                },
+                _ => unimplemented!(),
+            }
+        }
+    }
+
+    #[cfg(feature = "printing")]
+    impl<'a, M: ObjectOwnership<tags::TagVariant>, C: Constness> Debug for VariantHandle<'a, M, C> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let ty = self.ty();
+
+            f.debug_struct("Variant")
+                .field("type", &variant_type_to_str(ty))
+                .field(
+                    "value",
+                    &variant_value_to_string(ty, unsafe { self.0.as_ptr() }),
+                )
+                .finish()
+        }
+    }
+}
+
+#[cfg(not(feature = "printing"))]
+impl<'a, M: ObjectOwnership<tags::TagVariant>, C: Constness> Debug for VariantHandle<'a, M, C> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Variant {{ <foreign> }}")
     }
 }

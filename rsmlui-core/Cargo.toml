@@ -17,7 +17,9 @@ bitflags = "2.11.1"
 glam = { version = "0.33", optional = true }
 
 [features]
-default = ["generate-documentation"]
+default = ["printing", "generate-documentation"]
+
+printing = []
 
 glam = ["dep:glam"]
 

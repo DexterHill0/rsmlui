@@ -9,7 +9,9 @@ rsmlui-core = { path = "../rsmlui-core", default-features = false }
 rsmlui-macros = { path = "../rsmlui-macros", default-features = false }
 
 [features]
-default = ["freetype", "generate-documentation"]
+default = ["printing", "freetype", "generate-documentation"]
+
+printing = ["rsmlui-core/printing"]
 
 generate-documentation = ["rsmlui-core/generate-documentation"]
 

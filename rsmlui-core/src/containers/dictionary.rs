@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use rsmlui_sys::dictionary::{self as sys};
 
 use crate::_private::{not_send_sync, not_unwind_safe};
@@ -233,5 +235,37 @@ impl<'a, M: ObjectOwnership<tags::TagDictionary>> DictionaryHandle<'a, M, NonCon
 
         self.try_get_variant_mut(key)
             .unwrap_or_else(|| panic!("no such key `{key}`"))
+    }
+}
+
+#[cfg(feature = "printing")]
+mod printing {
+    use super::*;
+
+    impl<'a> Debug for DictionaryRef<'a> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_map().entries(unsafe { self.iter() }).finish()
+        }
+    }
+
+    impl<'a, M: ObjectOwnership<tags::TagDictionary>> Debug for DictionaryHandle<'a, M, NonConst> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_map().entries(unsafe { self.iter() }).finish()
+        }
+    }
+
+    impl<'a> Debug for DictionaryHandle<'a, Native, Const> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_map().entries(unsafe { self.iter() }).finish()
+        }
+    }
+}
+
+#[cfg(not(feature = "printing"))]
+impl<'a, M: ObjectOwnership<tags::TagDictionary>, C: Constness> Debug
+    for DictionaryHandle<'a, M, C>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{ <foreign> }}")
     }
 }

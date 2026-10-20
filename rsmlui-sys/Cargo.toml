@@ -15,7 +15,9 @@ pkg-config = "0.3"
 cxx = "1.0"
 
 [features]
-default = ["freetype"]
+default = ["printing", "freetype"]
+
+printing = []
 
 cosmic-text = []
 freetype = []
