@@ -1,5 +1,6 @@
 use rsmlui_core::_private::{HasOwnedInterface, IntoSys, not_send_sync, not_unwind_safe};
 use rsmlui_core::Uncallable;
+use rsmlui_core::interfaces::driver::RenderDriver;
 use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::math::UVec2;
 use rsmlui_core::object::constness::NonConst;
@@ -51,7 +52,9 @@ not_send_sync!(UninitRendererGl3);
 
 /// Shared handle newtype for both [`RendererGl3`] and [`RendererGl3Ref`].
 #[repr(transparent)]
-pub struct Gl3Handle<'a, M: ObjectOwnership<tags::TagGl3>>(ForeignHandle<'a, tags::TagGl3, M, NonConst>);
+pub struct Gl3Handle<'a, M: ObjectOwnership<tags::TagGl3>>(
+    ForeignHandle<'a, tags::TagGl3, M, NonConst>,
+);
 
 /// Owns a C++-allocated `RenderInterface_GL3` instance.
 ///
@@ -142,6 +145,24 @@ impl<'a, M: ObjectOwnership<tags::TagGl3>> Gl3Handle<'a, M> {
         // Safety: `interface` is a valid, non-null `RenderInterface_GL3` and there is a
         // valid GL context alive, due to the invariant of `assume_init`.
         unsafe { gl3_render_interface_clear(self.0.as_mut_ptr()) }
+    }
+}
+
+impl<'a, M: ObjectOwnership<tags::TagGl3>> RenderDriver for Gl3Handle<'a, M> {
+    fn set_viewport(&mut self, dimensions: UVec2) {
+        Gl3Handle::set_viewport(self, dimensions);
+    }
+
+    fn begin_frame(&mut self) {
+        Gl3Handle::begin_frame(self);
+    }
+
+    fn end_frame(&mut self) {
+        Gl3Handle::end_frame(self);
+    }
+
+    fn clear(&mut self) {
+        Gl3Handle::clear(self);
     }
 }
 

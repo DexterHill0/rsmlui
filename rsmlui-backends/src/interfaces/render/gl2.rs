@@ -1,5 +1,6 @@
 use rsmlui_core::_private::{HasOwnedInterface, IntoSys};
 use rsmlui_core::Uncallable;
+use rsmlui_core::interfaces::driver::RenderDriver;
 use rsmlui_core::interfaces::object::IntoRawInterface;
 use rsmlui_core::math::UVec2;
 use rsmlui_core::object::constness::NonConst;
@@ -57,7 +58,9 @@ pub struct RendererGl2Uninit(ForeignHandle<'static, tags::TagGl2Uninit, Native, 
 
 /// Shared handle newtype for both [`RendererGl2`] and [`RendererGl2Ref`].
 #[repr(transparent)]
-pub struct Gl2Handle<'a, M: ObjectOwnership<tags::TagGl2>>(ForeignHandle<'a, tags::TagGl2, M, NonConst>);
+pub struct Gl2Handle<'a, M: ObjectOwnership<tags::TagGl2>>(
+    ForeignHandle<'a, tags::TagGl2, M, NonConst>,
+);
 
 /// Owns a C++-allocated `RenderInterface_GL2` instance.
 ///
@@ -150,6 +153,24 @@ impl<'a> RendererGl2Ref<'a> {
     ///   outlives `'a`.
     pub(crate) unsafe fn from_raw(raw: ObjectMutPtr<tags::TagGl2>) -> Self {
         Self(unsafe { ForeignHandle::<_, Foreign, NonConst>::from_raw(raw) })
+    }
+}
+
+impl<'a, M: ObjectOwnership<tags::TagGl2>> RenderDriver for Gl2Handle<'a, M> {
+    fn set_viewport(&mut self, dimensions: UVec2) {
+        Gl2Handle::set_viewport(self, dimensions);
+    }
+
+    fn begin_frame(&mut self) {
+        Gl2Handle::begin_frame(self);
+    }
+
+    fn end_frame(&mut self) {
+        Gl2Handle::end_frame(self);
+    }
+
+    fn clear(&mut self) {
+        Gl2Handle::clear(self);
     }
 }
 
