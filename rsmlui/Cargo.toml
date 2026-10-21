@@ -23,5 +23,6 @@ renderer-gl2 = ["rsmlui-backends/renderer-gl2"]
 renderer-gl3 = ["rsmlui-backends/renderer-gl3"]
 
 system-glfw = ["rsmlui-backends/system-glfw"]
+system-winit = ["rsmlui-backends/system-winit"]
 
 glfw-rs = ["rsmlui-backends/glfw-rs"]
