@@ -352,6 +352,24 @@ pub enum KeyCode {
     FirstCustomKey = 177,
 }
 
+#[non_exhaustive]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum MouseButton {
+    Left,
+    Right,
+    Middle,
+}
+
+impl From<MouseButton> for i32 {
+    fn from(value: MouseButton) -> Self {
+        match value {
+            MouseButton::Left => 0,
+            MouseButton::Right => 1,
+            MouseButton::Middle => 2,
+        }
+    }
+}
+
 #[sys_cast(bitflags(from = Rml_Input_KeyModifier, repr = u8))]
 bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

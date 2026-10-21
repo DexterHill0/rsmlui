@@ -1,6 +1,7 @@
 pub mod colour;
 pub mod cursor;
 pub mod document;
+pub mod event;
 pub mod handles;
 pub mod input;
 pub mod math;

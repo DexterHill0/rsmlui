@@ -4,10 +4,12 @@ use rsmlui_macros::rmldoc;
 use crate::_private::{IntoSys, not_send_sync};
 use crate::core::element_document::{ElementDocument, ElementDocumentHandle};
 use crate::error::Error;
-use crate::math::UVec2;
+use crate::math::{IVec2, UVec2, Vec2};
 use crate::object::constness::NonConst;
 use crate::object::foreign::{ForeignHandle, ForeignObject, ObjectMutPtr};
 use crate::object::ownership::Foreign;
+use crate::types::event::EventFlow;
+use crate::types::input::{KeyCode, KeyModifier, MouseButton};
 
 pub mod tags {
     pub enum TagContext {}
@@ -102,6 +104,142 @@ impl Context {
                 self.handle.as_mut_ptr(),
                 dimensions.into().into_sys(),
             )
+        }
+    }
+
+    #[rmldoc(name = "Rml::Context::ProcessMouseMove")]
+    pub fn process_mouse_move<T: Into<IVec2>>(
+        &mut self,
+        position: T,
+        key_modifier_state: KeyModifier,
+    ) -> bool {
+        let position: IVec2 = position.into();
+
+        unsafe {
+            rsmlui_sys::context::context_process_mouse_move(
+                self.handle.as_mut_ptr(),
+                position.x,
+                position.y,
+                key_modifier_state.into_sys(),
+            )
+        }
+    }
+
+    #[rmldoc(name = "Rml::Context::ProcessMouseButtonDown")]
+    pub fn process_mouse_button_down(
+        &mut self,
+        button_index: MouseButton,
+        key_modifier_state: KeyModifier,
+    ) -> bool {
+        unsafe {
+            rsmlui_sys::context::context_process_mouse_button_down(
+                self.handle.as_mut_ptr(),
+                button_index.into(),
+                key_modifier_state.into_sys(),
+            )
+        }
+    }
+
+    #[rmldoc(name = "Rml::Context::ProcessMouseButtonUp")]
+    pub fn process_mouse_button_up(
+        &mut self,
+        button_index: MouseButton,
+        key_modifier_state: KeyModifier,
+    ) -> bool {
+        unsafe {
+            rsmlui_sys::context::context_process_mouse_button_up(
+                self.handle.as_mut_ptr(),
+                button_index.into(),
+                key_modifier_state.into_sys(),
+            )
+        }
+    }
+
+    #[rmldoc(
+        name = "Rml::Context::ProcessMouseWheel",
+        refid = "class_rml_1_1_context_1a3e3f4b6b4fa42e8a069f886849b14ac8"
+    )]
+    pub fn process_mouse_wheel<T: Into<Vec2>>(
+        &mut self,
+        wheel_delta: T,
+        key_modifier_state: KeyModifier,
+    ) -> EventFlow {
+        let wheel_delta: Vec2 = wheel_delta.into();
+
+        unsafe {
+            rsmlui_sys::context::context_process_mouse_wheel(
+                self.handle.as_mut_ptr(),
+                wheel_delta.into_sys(),
+                key_modifier_state.into_sys(),
+            )
+            .into()
+        }
+    }
+
+    #[rmldoc(name = "Rml::Context::ProcessMouseLeave")]
+    pub fn process_mouse_leave(&mut self) -> EventFlow {
+        unsafe { rsmlui_sys::context::context_process_mouse_leave(self.handle.as_mut_ptr()).into() }
+    }
+
+    #[rmldoc(name = "Rml::Context::ProcessKeyDown")]
+    pub fn process_key_down(
+        &mut self,
+        key_identifier: KeyCode,
+        key_modifier_state: KeyModifier,
+    ) -> EventFlow {
+        unsafe {
+            rsmlui_sys::context::context_process_key_down(
+                self.handle.as_mut_ptr(),
+                key_identifier.into_sys(),
+                key_modifier_state.into_sys(),
+            )
+            .into()
+        }
+    }
+
+    #[rmldoc(name = "Rml::Context::ProcessKeyUp")]
+    pub fn process_key_up(
+        &mut self,
+        key_identifier: KeyCode,
+        key_modifier_state: KeyModifier,
+    ) -> EventFlow {
+        unsafe {
+            rsmlui_sys::context::context_process_key_up(
+                self.handle.as_mut_ptr(),
+                key_identifier.into_sys(),
+                key_modifier_state.into_sys(),
+            )
+            .into()
+        }
+    }
+
+    #[rmldoc(
+        name = "Rml::Context::ProcessTextInput",
+        refid = "class_rml_1_1_context_1a1eb37c3339a44947644ed8f57ee5bb3e"
+    )]
+    pub fn process_text_input_char(&mut self, character: char) -> EventFlow {
+        unsafe {
+            rsmlui_sys::context::context_process_text_input_char(
+                self.handle.as_mut_ptr(),
+                character as i8,
+            )
+            .into()
+        }
+    }
+
+    #[rmldoc(
+        name = "Rml::Context::ProcessTextInput",
+        refid = "class_rml_1_1_context_1a2f34194ca96c72923accbc4c28c6cbb7"
+    )]
+    pub fn process_text_input_string<T: Into<String>>(&mut self, string: T) -> EventFlow {
+        let string: String = string.into();
+
+        unsafe {
+            rsmlui_sys::context::context_process_text_input_string(
+                self.handle.as_mut_ptr(),
+                &string,
+            )
+            .into()
         }
     }
 }

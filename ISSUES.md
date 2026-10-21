@@ -4,3 +4,4 @@
 - Functions could return error codes instead of booleans for better debugging
 - void* user data pointer in callbacks
 - more cursor granularity?
+- comment in event handlers is wrong -  True if the event was not consumed (ie, was prevented from propagating by an element), false if it was. - clause in parens in wrong place
