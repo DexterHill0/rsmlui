@@ -21,6 +21,7 @@ pub struct Colorb {
 #[rmldoc(file = "api_Rml-Colour.md", name = "Rml::Colour")]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 #[sys_cast(struct(from = Rml_ColourbPremultiplied), gen_ref)]
+#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
 pub struct ColorbPremultiplied {
     #[sys(red)]
     pub r: u8,

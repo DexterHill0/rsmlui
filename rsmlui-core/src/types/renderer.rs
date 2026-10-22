@@ -84,6 +84,7 @@ pub enum ClipMaskOperation {
 #[sys_cast(struct(from = Rml_Vertex), gen_ref, gen_slice)]
 #[rmldoc(file = "api_Rml-Vertex.md", name = "Rml::Vertex")]
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
 pub struct Vertex {
     #[rmldoc(name = "Rml::Vertex::position")]
     pub position: Vec2,

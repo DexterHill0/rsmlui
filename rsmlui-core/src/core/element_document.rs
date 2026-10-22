@@ -34,7 +34,8 @@ impl ForeignObject for tags::TagElementDocument {
     type Object = rsmlui_sys::element_document::ElementDocument;
 }
 
-pub type ElementDocumentHandle = ForeignHandle<'static, tags::TagElementDocument, Foreign, NonConst>;
+pub type ElementDocumentHandle =
+    ForeignHandle<'static, tags::TagElementDocument, Foreign, NonConst>;
 
 #[rmldoc(file = "api_Rml-ElementDocument.md", name = "Rml::ElementDocument")]
 #[drop_tree(borrows(crate::core::context::Context))]

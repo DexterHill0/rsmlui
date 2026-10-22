@@ -8,19 +8,23 @@ rsmlui-sys = { path = "../rsmlui-sys", default-features = false }
 rsmlui-macros = { path = "../rsmlui-macros", default-features = false }
 drop-tree = { path = "../drop-tree" }
 
-mint = "0.5.9"
 thiserror = "2.0.17"
 sealed = "0.6.0"
 bon = "3.9.1"
 bitflags = "2.11.1"
 
+mint = { version = "0.5.9", optional = true }
 glam = { version = "0.33", optional = true }
+bytemuck = { version = "1", features = ["derive"], optional = true }
+
 
 [features]
 default = ["printing", "generate-documentation"]
 
 printing = []
 
+mint = ["dep:mint"]
 glam = ["dep:glam"]
+bytemuck = ["dep:bytemuck"]
 
 generate-documentation = ["rsmlui-macros/generate-documentation"]

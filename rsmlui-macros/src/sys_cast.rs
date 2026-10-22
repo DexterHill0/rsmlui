@@ -789,6 +789,24 @@ fn generate_struct(
             let owned_into = generate_owned_into_sys(sys_type, struct_name);
             let extra = generate_extra_impls(cast_args.flags, sys_type, struct_name);
             let size_alignment = generate_struct_size_alignment_assertions(struct_name, sys_type);
+            let sys_cast_impl = if cast_args.skip_impl {
+                quote! {}
+            } else {
+                quote! {
+                    #[automatically_derived]
+                    unsafe impl crate::utils::conversions::SysCast for #struct_name {
+                        type Sys = #sys_type;
+
+                        unsafe fn validate(ptr: *const #sys_type) -> bool {
+                            unsafe { true #(&& #validate_fields)* }
+                        }
+
+                        fn validate_core(value: &Self) -> bool {
+                            true #(&& #validate_core_fields)*
+                        }
+                    }
+                }
+            };
 
             Ok(quote! {
                 #input
@@ -802,18 +820,7 @@ fn generate_struct(
                     #(#field_ty_checks)*
                 };
 
-                #[automatically_derived]
-                unsafe impl crate::utils::conversions::SysCast for #struct_name {
-                    type Sys = #sys_type;
-
-                    unsafe fn validate(ptr: *const #sys_type) -> bool {
-                        unsafe { true #(&& #validate_fields)* }
-                    }
-
-                    fn validate_core(value: &Self) -> bool {
-                        true #(&& #validate_core_fields)*
-                    }
-                }
+                #sys_cast_impl
 
                 #owned_from
                 #extra

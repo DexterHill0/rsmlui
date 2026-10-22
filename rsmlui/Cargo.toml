@@ -16,6 +16,8 @@ printing = ["rsmlui-core/printing"]
 generate-documentation = ["rsmlui-core/generate-documentation"]
 
 glam = ["rsmlui-core/glam"]
+mint = ["rsmlui-core/mint"]
+bytemuck = ["rsmlui-core/bytemuck"]
 
 freetype = ["rsmlui-backends/freetype"]
 

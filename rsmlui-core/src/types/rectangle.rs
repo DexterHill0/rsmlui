@@ -31,7 +31,7 @@ macro_rules! impl_rectangle {
             pub fn from_position_size(pos: $vec, size: $vec) -> Self {
                 Self {
                     p0: pos,
-                    p1: <$vec>::new(pos.0.x + size.0.x, pos.0.y + size.0.y),
+                    p1: <$vec>::new(pos.x + size.x, pos.y + size.y),
                 }
             }
 
@@ -69,7 +69,7 @@ macro_rules! impl_rectangle {
             }
 
             pub const fn top_right(&self) -> $vec {
-                <$vec>::new(self.p1.0.x, self.p0.0.y)
+                <$vec>::new(self.p1.x, self.p0.y)
             }
 
             pub const fn bottom_right(&self) -> $vec {
@@ -77,7 +77,7 @@ macro_rules! impl_rectangle {
             }
 
             pub const fn bottom_left(&self) -> $vec {
-                <$vec>::new(self.p0.0.x, self.p1.0.y)
+                <$vec>::new(self.p0.x, self.p1.y)
             }
 
             pub fn center(&self) -> $vec {
@@ -88,27 +88,27 @@ macro_rules! impl_rectangle {
             }
 
             pub const fn left(&self) -> $scalar {
-                self.p0.0.x
+                self.p0.x
             }
 
             pub const fn right(&self) -> $scalar {
-                self.p1.0.x
+                self.p1.x
             }
 
             pub const fn top(&self) -> $scalar {
-                self.p0.0.y
+                self.p0.y
             }
 
             pub const fn bottom(&self) -> $scalar {
-                self.p1.0.y
+                self.p1.y
             }
 
             pub const fn width(&self) -> $scalar {
-                self.p1.0.x - self.p0.0.x
+                self.p1.x - self.p0.x
             }
 
             pub const fn height(&self) -> $scalar {
-                self.p1.0.y - self.p0.0.y
+                self.p1.y - self.p0.y
             }
 
             pub fn extend(&self, v: $vec) -> Self {
@@ -173,21 +173,21 @@ macro_rules! impl_rectangle {
             }
 
             pub const fn intersects(&self, other: Self) -> bool {
-                self.p0.0.x < other.p1.0.x
-                    && self.p1.0.x > other.p0.0.x
-                    && self.p0.0.y < other.p1.0.y
-                    && self.p1.0.y > other.p0.0.y
+                self.p0.x < other.p1.x
+                    && self.p1.x > other.p0.x
+                    && self.p0.y < other.p1.y
+                    && self.p1.y > other.p0.y
             }
 
             pub const fn contains(&self, point: $vec) -> bool {
-                point.0.x >= self.p0.0.x
-                    && point.0.x <= self.p1.0.x
-                    && point.0.y >= self.p0.0.y
-                    && point.0.y <= self.p1.0.y
+                point.x >= self.p0.x
+                    && point.x <= self.p1.x
+                    && point.y >= self.p0.y
+                    && point.y <= self.p1.y
             }
 
             pub const fn valid(&self) -> bool {
-                self.p0.0.x <= self.p1.0.x && self.p0.0.y <= self.p1.0.y
+                self.p0.x <= self.p1.x && self.p0.y <= self.p1.y
             }
         }
     };

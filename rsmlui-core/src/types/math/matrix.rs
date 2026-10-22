@@ -3,15 +3,41 @@ use std::ops::{Deref, DerefMut};
 use rsmlui_macros::sys_cast;
 use rsmlui_sys::Rml_Matrix4f;
 
-// `Rml_Matrix4f` is simply an array so `transparent` can't specify any fields
-// that makes it a touch more unsafe but neither the sys nore mint types are
-// likely to ever change
+/// A column-major 4x4 matrix, stored as four columns of four components.
+///
+/// With the bindgen bug specified in `rsmlui-sys`'s build.rs, the `Rml_Matrix4f`
+/// is manually defined in the bindings rather than being auto-generated, so
+/// really the assertions here are only proving that those two types match, but
+/// don't prove that `Rml_Matrix4f` actually matches what's defined in C++.
+/// I hightly doubt the shape in C++ will change, or at least not before bindgen
+/// is fixed (I hope...).
 #[sys_cast(struct(from = Rml_Matrix4f, transparent), gen_ref)]
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Mat4(pub mint::ColumnMatrix4<f32>);
+#[cfg_attr(feature = "bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
+pub struct Mat4(pub [[f32; 4]; 4]);
+
+impl Mat4 {
+    pub const IDENTITY: Self = Self([
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ]);
+    pub const ZERO: Self = Self([[0.0; 4]; 4]);
+
+    /// Builds a matrix from four columns.
+    pub const fn from_cols_array_2d(cols: [[f32; 4]; 4]) -> Self {
+        Self(cols)
+    }
+
+    /// Returns the matrix as four columns.
+    pub const fn to_cols_array_2d(self) -> [[f32; 4]; 4] {
+        self.0
+    }
+}
 
 impl Deref for Mat4 {
-    type Target = mint::ColumnMatrix4<f32>;
+    type Target = [[f32; 4]; 4];
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -26,30 +52,53 @@ impl DerefMut for Mat4 {
 
 impl Default for Mat4 {
     fn default() -> Self {
-        let zero = mint::Vector4 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-            w: 0.0,
-        };
-
-        Self(mint::ColumnMatrix4 {
-            x: zero,
-            y: zero,
-            z: zero,
-            w: zero,
-        })
+        Self::ZERO
     }
 }
 
-impl From<mint::ColumnMatrix4<f32>> for Mat4 {
-    fn from(m: mint::ColumnMatrix4<f32>) -> Self {
-        Self(m)
+impl From<[[f32; 4]; 4]> for Mat4 {
+    fn from(cols: [[f32; 4]; 4]) -> Self {
+        Self(cols)
     }
 }
-impl From<Mat4> for mint::ColumnMatrix4<f32> {
+
+impl From<Mat4> for [[f32; 4]; 4] {
     fn from(m: Mat4) -> Self {
         m.0
+    }
+}
+
+#[cfg(feature = "mint")]
+mod mint_impls {
+    use super::*;
+
+    impl From<mint::ColumnMatrix4<f32>> for Mat4 {
+        fn from(m: mint::ColumnMatrix4<f32>) -> Self {
+            Self([
+                [m.x.x, m.x.y, m.x.z, m.x.w],
+                [m.y.x, m.y.y, m.y.z, m.y.w],
+                [m.z.x, m.z.y, m.z.z, m.z.w],
+                [m.w.x, m.w.y, m.w.z, m.w.w],
+            ])
+        }
+    }
+
+    impl From<Mat4> for mint::ColumnMatrix4<f32> {
+        fn from(m: Mat4) -> Self {
+            let column = |c: [f32; 4]| mint::Vector4 {
+                x: c[0],
+                y: c[1],
+                z: c[2],
+                w: c[3],
+            };
+
+            mint::ColumnMatrix4 {
+                x: column(m.0[0]),
+                y: column(m.0[1]),
+                z: column(m.0[2]),
+                w: column(m.0[3]),
+            }
+        }
     }
 }
 
@@ -59,45 +108,13 @@ mod glam_impls {
 
     impl From<glam::Mat4> for Mat4 {
         fn from(m: glam::Mat4) -> Self {
-            Self(mint::ColumnMatrix4 {
-                x: mint::Vector4 {
-                    x: m.x_axis.x,
-                    y: m.x_axis.y,
-                    z: m.x_axis.z,
-                    w: m.x_axis.w,
-                },
-                y: mint::Vector4 {
-                    x: m.y_axis.x,
-                    y: m.y_axis.y,
-                    z: m.y_axis.z,
-                    w: m.y_axis.w,
-                },
-                z: mint::Vector4 {
-                    x: m.z_axis.x,
-                    y: m.z_axis.y,
-                    z: m.z_axis.z,
-                    w: m.z_axis.w,
-                },
-                w: mint::Vector4 {
-                    x: m.w_axis.x,
-                    y: m.w_axis.y,
-                    z: m.w_axis.z,
-                    w: m.w_axis.w,
-                },
-            })
+            Self(m.to_cols_array_2d())
         }
     }
 
     impl From<Mat4> for glam::Mat4 {
         fn from(m: Mat4) -> Self {
-            let c = m.0;
-
-            glam::Mat4::from_cols(
-                glam::Vec4::new(c.x.x, c.x.y, c.x.z, c.x.w),
-                glam::Vec4::new(c.y.x, c.y.y, c.y.z, c.y.w),
-                glam::Vec4::new(c.z.x, c.z.y, c.z.z, c.z.w),
-                glam::Vec4::new(c.w.x, c.w.y, c.w.z, c.w.w),
-            )
+            glam::Mat4::from_cols_array_2d(&m.0)
         }
     }
 }
