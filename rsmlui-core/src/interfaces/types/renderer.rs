@@ -19,6 +19,7 @@ use sealed::sealed;
 use crate::_private::HasOwnedInterface;
 use crate::containers::dictionary::DictionaryRef;
 use crate::interfaces::bridge::BridgedHandle;
+use crate::interfaces::driver::RenderDriver;
 use crate::interfaces::object::InterfaceObject;
 use crate::math::{IVec2, Mat4, Vec2};
 use crate::types::colour::Colorb;
@@ -763,6 +764,24 @@ unsafe impl<T: RenderInterfaceBehaviour> RenderInterfaceBridge for RenderInterfa
     #[inline]
     unsafe fn release_shader(&mut self, shader: rsmlui_sys::Rml_CompiledShaderHandle) {
         T::release_shader(self, CompiledShaderHandle(shader));
+    }
+}
+
+impl<T: RenderInterfaceBehaviour + RenderDriver> RenderDriver for RenderInterface<T> {
+    fn set_viewport(&mut self, dimensions: crate::math::UVec2) {
+        T::set_viewport(self, dimensions);
+    }
+
+    fn begin_frame(&mut self) {
+        T::begin_frame(self);
+    }
+
+    fn end_frame(&mut self) {
+        T::end_frame(self);
+    }
+
+    fn clear(&mut self) {
+        T::clear(self);
     }
 }
 

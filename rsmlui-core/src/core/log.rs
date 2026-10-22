@@ -88,3 +88,12 @@ macro_rules! _assert {
     }};
 }
 pub use _assert as assert;
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! _fatal {
+    ($message:literal $(, $($args:tt)*)?) => {{
+        $crate::core::log::message($crate::core::log::LogLevel::Assert, format!($message $(, $($args)*)?));
+    }};
+}
+pub use _fatal as fatal;
