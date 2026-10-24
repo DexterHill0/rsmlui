@@ -21,7 +21,7 @@ use crate::containers::dictionary::DictionaryRef;
 use crate::interfaces::bridge::BridgedHandle;
 use crate::interfaces::driver::RenderDriver;
 use crate::interfaces::object::InterfaceObject;
-use crate::math::{IVec2, Mat4, Vec2};
+use crate::math::{IVec2, Mat4, UVec2, Vec2};
 use crate::types::colour::Colorb;
 use crate::types::handles::{
     CompiledFilterHandle, CompiledGeometryHandle, CompiledShaderHandle, LayerHandle, TextureHandle,
@@ -174,9 +174,9 @@ pub trait RenderInterfaceBehaviour {
     #[rmldoc(name = "Rml::RenderInterface::RenderGeometry")]
     fn render_geometry(
         self: &mut RenderInterfaceObject<Self>,
-        geometry: CompiledGeometryHandle,
+        geometry_handle: CompiledGeometryHandle,
         translation: Vec2,
-        texture: TextureHandle,
+        texture_handle: Option<TextureHandle>,
     ) where
         Self: Sized;
 
@@ -194,13 +194,13 @@ pub trait RenderInterfaceBehaviour {
     fn generate_texture(
         self: &mut RenderInterfaceObject<Self>,
         source: &[u8],
-        texture_dimensions: IVec2,
+        texture_dimensions: UVec2,
     ) -> Option<TextureHandle>
     where
         Self: Sized;
 
     #[rmldoc(name = "Rml::RenderInterface::ReleaseTexture")]
-    fn release_texture(self: &mut RenderInterfaceObject<Self>, texture: TextureHandle)
+    fn release_texture(self: &mut RenderInterfaceObject<Self>, texture_handle: TextureHandle)
     where
         Self: Sized;
 
@@ -226,7 +226,7 @@ pub trait RenderInterfaceBehaviour {
     fn render_to_clip_mask(
         self: &mut RenderInterfaceObject<Self>,
         operation: ClipMaskOperation,
-        geometry: CompiledGeometryHandle,
+        geometry_handle: CompiledGeometryHandle,
         translation: Vec2,
     ) where
         Self: Sized,
@@ -235,7 +235,7 @@ pub trait RenderInterfaceBehaviour {
             render_interface_default_render_to_clip_mask(
                 self.bridge_ptr(),
                 operation.into_sys(),
-                geometry.into_sys(),
+                geometry_handle.into_sys(),
                 translation.into_sys(),
             )
         }
@@ -265,8 +265,8 @@ pub trait RenderInterfaceBehaviour {
     #[rmldoc(name = "Rml::RenderInterface::CompositeLayers")]
     fn composite_layers(
         self: &mut RenderInterfaceObject<Self>,
-        source: LayerHandle,
-        destination: LayerHandle,
+        source_handle: LayerHandle,
+        destination_handle: LayerHandle,
         blend_mode: BlendMode,
         filters: &[CompiledFilterHandle],
     ) where
@@ -275,8 +275,8 @@ pub trait RenderInterfaceBehaviour {
         unsafe {
             render_interface_default_composite_layers(
                 self.bridge_ptr(),
-                source.into_sys(),
-                destination.into_sys(),
+                source_handle.into_sys(),
+                destination_handle.into_sys(),
                 blend_mode.into_sys(),
                 filters.into_sys(),
             )
@@ -347,11 +347,13 @@ pub trait RenderInterfaceBehaviour {
     }
 
     #[rmldoc(name = "Rml::RenderInterface::ReleaseFilter")]
-    fn release_filter(self: &mut RenderInterfaceObject<Self>, filter: CompiledFilterHandle)
+    fn release_filter(self: &mut RenderInterfaceObject<Self>, filter_handle: CompiledFilterHandle)
     where
         Self: Sized,
     {
-        unsafe { render_interface_default_release_filter(self.bridge_ptr(), filter.into_sys()) }
+        unsafe {
+            render_interface_default_release_filter(self.bridge_ptr(), filter_handle.into_sys())
+        }
     }
 
     #[rmldoc(name = "Rml::RenderInterface::CompileShader")]
@@ -382,30 +384,32 @@ pub trait RenderInterfaceBehaviour {
     #[rmldoc(name = "Rml::RenderInterface::RenderShader")]
     fn render_shader(
         self: &mut RenderInterfaceObject<Self>,
-        shader: CompiledShaderHandle,
-        geometry: CompiledGeometryHandle,
+        shader_handle: CompiledShaderHandle,
+        geometry_handle: CompiledGeometryHandle,
         translation: Vec2,
-        texture: TextureHandle,
+        texture_handle: TextureHandle,
     ) where
         Self: Sized,
     {
         unsafe {
             render_interface_default_render_shader(
                 self.bridge_ptr(),
-                shader.into_sys(),
-                geometry.into_sys(),
+                shader_handle.into_sys(),
+                geometry_handle.into_sys(),
                 translation.into_sys(),
-                texture.into_sys(),
+                texture_handle.into_sys(),
             )
         }
     }
 
     #[rmldoc(name = "Rml::RenderInterface::ReleaseShader")]
-    fn release_shader(self: &mut RenderInterfaceObject<Self>, shader: CompiledShaderHandle)
+    fn release_shader(self: &mut RenderInterfaceObject<Self>, shader_handle: CompiledShaderHandle)
     where
         Self: Sized,
     {
-        unsafe { render_interface_default_release_shader(self.bridge_ptr(), shader.into_sys()) }
+        unsafe {
+            render_interface_default_release_shader(self.bridge_ptr(), shader_handle.into_sys())
+        }
     }
 }
 
@@ -432,7 +436,11 @@ unsafe impl<T: RenderInterfaceBehaviour> RenderInterfaceBridge for RenderInterfa
             self,
             CompiledGeometryHandle(geometry),
             FromSys::from_sys(translation),
-            TextureHandle(texture),
+            if texture == 0 {
+                None
+            } else {
+                Some(TextureHandle(texture))
+            },
         );
     }
 

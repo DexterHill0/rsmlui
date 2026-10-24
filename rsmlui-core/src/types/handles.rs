@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 use rsmlui_macros::sys_cast;
 use rsmlui_sys::{
     Rml_CompiledFilterHandle, Rml_CompiledGeometryHandle, Rml_CompiledShaderHandle, Rml_FileHandle,
@@ -9,8 +11,20 @@ use rsmlui_sys::{
 pub struct CompiledGeometryHandle(pub(crate) Rml_CompiledGeometryHandle);
 
 impl CompiledGeometryHandle {
-    pub const fn new(id: usize) -> Self {
-        Self(id)
+    pub const fn new(id: NonZeroUsize) -> Self {
+        Self(id.get())
+    }
+}
+
+impl From<CompiledGeometryHandle> for usize {
+    fn from(value: CompiledGeometryHandle) -> Self {
+        value.0
+    }
+}
+
+impl From<NonZeroUsize> for CompiledGeometryHandle {
+    fn from(value: NonZeroUsize) -> Self {
+        Self(value.get())
     }
 }
 
@@ -19,8 +33,20 @@ impl CompiledGeometryHandle {
 pub struct CompiledShaderHandle(pub(crate) Rml_CompiledShaderHandle);
 
 impl CompiledShaderHandle {
-    pub const fn new(id: usize) -> Self {
-        Self(id)
+    pub const fn new(id: NonZeroUsize) -> Self {
+        Self(id.get())
+    }
+}
+
+impl From<CompiledShaderHandle> for usize {
+    fn from(value: CompiledShaderHandle) -> Self {
+        value.0
+    }
+}
+
+impl From<NonZeroUsize> for CompiledShaderHandle {
+    fn from(value: NonZeroUsize) -> Self {
+        Self(value.get())
     }
 }
 
@@ -29,8 +55,20 @@ impl CompiledShaderHandle {
 pub struct CompiledFilterHandle(pub(crate) Rml_CompiledFilterHandle);
 
 impl CompiledFilterHandle {
-    pub const fn new(id: usize) -> Self {
-        Self(id)
+    pub const fn new(id: NonZeroUsize) -> Self {
+        Self(id.get())
+    }
+}
+
+impl From<CompiledFilterHandle> for usize {
+    fn from(value: CompiledFilterHandle) -> Self {
+        value.0
+    }
+}
+
+impl From<NonZeroUsize> for CompiledFilterHandle {
+    fn from(value: NonZeroUsize) -> Self {
+        Self(value.get())
     }
 }
 
@@ -39,8 +77,20 @@ impl CompiledFilterHandle {
 pub struct LayerHandle(pub(crate) Rml_LayerHandle);
 
 impl LayerHandle {
-    pub const fn new(id: usize) -> Self {
-        Self(id)
+    pub const fn new(id: NonZeroUsize) -> Self {
+        Self(id.get())
+    }
+}
+
+impl From<LayerHandle> for usize {
+    fn from(value: LayerHandle) -> Self {
+        value.0
+    }
+}
+
+impl From<NonZeroUsize> for LayerHandle {
+    fn from(value: NonZeroUsize) -> Self {
+        Self(value.get())
     }
 }
 
@@ -54,8 +104,20 @@ impl TextureHandle {
     /// Represents an invalid texture handle. It should only be used to indicate an error while trying to load the texture.
     pub const INVALID: Self = Self(0);
 
-    pub const fn new(id: usize) -> Self {
-        Self(id)
+    pub const fn new(id: NonZeroUsize) -> Self {
+        Self(id.get())
+    }
+}
+
+impl From<TextureHandle> for usize {
+    fn from(value: TextureHandle) -> Self {
+        value.0
+    }
+}
+
+impl From<NonZeroUsize> for TextureHandle {
+    fn from(value: NonZeroUsize) -> Self {
+        Self(value.get())
     }
 }
 
@@ -66,7 +128,19 @@ pub struct FileHandle(pub(crate) Rml_FileHandle);
 impl FileHandle {
     pub const INVALID: Self = Self(0);
 
-    pub const fn new(id: usize) -> Self {
-        Self(id)
+    pub const fn new(id: NonZeroUsize) -> Self {
+        Self(id.get())
+    }
+}
+
+impl From<FileHandle> for usize {
+    fn from(value: FileHandle) -> Self {
+        value.0
+    }
+}
+
+impl From<NonZeroUsize> for FileHandle {
+    fn from(value: NonZeroUsize) -> Self {
+        Self(value.get())
     }
 }
